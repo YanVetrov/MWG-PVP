@@ -1,6 +1,7 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
 const path = require("path");
+const webpack = require("webpack");
 module.exports = {
   mode: "development",
   devServer: {
@@ -21,6 +22,9 @@ module.exports = {
           to: "assets",
         },
       ],
+    }),
+    new webpack.ProvidePlugin({
+      PIXI: "pixi.js",
     }),
     new HTMLWebpackPlugin({
       template: "build/index.html",
