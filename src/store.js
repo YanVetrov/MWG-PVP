@@ -79,4 +79,17 @@ const units = base.map((el, i) => {
   sprite.height = 120;
   return sprite;
 });
-export default units;
+let store = {
+  state: null,
+  id: null,
+  bg: null,
+  gameScene: null,
+  target: null,
+  clicked: true,
+  blockedUI: false,
+  cellsInLine: 50,
+  countLines: 20,
+  unit: {},
+  units,
+};
+export default store;
