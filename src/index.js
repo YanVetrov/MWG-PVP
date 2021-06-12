@@ -27,7 +27,7 @@ const app = new Application({
   width: window.innerWidth,
   height: window.innerHeight,
   antialias: true,
-  resolution: window.devicePixelRatio,
+  resolution: 1,
 });
 document.body.appendChild(app.view);
 
