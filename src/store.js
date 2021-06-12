@@ -87,9 +87,13 @@ let store = {
   target: null,
   clicked: true,
   blockedUI: false,
-  cellsInLine: 50,
-  countLines: 20,
+  cellsInLine: 15,
+  countLines: 10,
   unit: {},
+  cash: [],
+  visibleZone: [],
+  x: 0,
+  y: 0,
   units,
 };
 export default store;

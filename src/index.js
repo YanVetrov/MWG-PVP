@@ -33,30 +33,93 @@ document.body.appendChild(app.view);
 
 store.gameScene = new Container();
 store.gameScene.sortableChildren = true;
+store.gameScene.zIndex = 2;
+app.stage.sortableChildren = true;
 app.renderer.backgroundColor = "0x202020";
 app.renderer.autoResize = true;
 store.unit = store.units[1];
 app.loader.add("./assets/sheet.json").load(setup);
-
+let sprites = [];
 function setup() {
   store.id = app.loader.resources["./assets/sheet.json"].textures;
   app.stage.addChild(store.gameScene);
   store.gameScene.addChild(border);
   store.gameScene.addChild(circle);
+  store.gameScene.x = 500;
+  store.gameScene.y = 300;
   store.units.forEach((el) => {
     el.zIndex = 1;
     store.gameScene.addChild(el);
   });
   let arr = Object.keys(sheet.frames).filter((el) => !el.match("r.png"));
-  for (let i = 0; i <= store.cellsInLine * store.countLines; i++) {
+  for (let i = 0; i < 40000; i++) {
     let random = Math.ceil(Math.random() * arr.length - 1);
     let name = arr[random];
     let sprite = new Sprite(store.id[name]);
-    addSprite(sprite, i);
+    sprite.posX = i % 200;
+    sprite.posY = Math.floor(i / 200);
+    if (i % 200 === 0) sprites.push([]);
+    sprites[Math.floor(i / 200)].push(sprite);
   }
-  circle.x = store.unit.ground.x + 20;
-  circle.y = store.unit.ground.y + 35;
+  // console.log(sprites);
+  renderField();
+  // circle.x = store.unit.ground.x + 20;
+  // circle.y = store.unit.ground.y + 35;
 }
+let joystick = Sprite.from("./assets/joistik.png");
+joystick.x = window.innerWidth / 2;
+joystick.zIndex = 3;
+app.stage.addChild(joystick);
+joystick.angle = 90;
+joystick.y = 50;
+joystick.interactive = true;
+joystick.buttonMode = true;
+joystick.on("pointerdown", (e) => {
+  if (store.y === 0) return 0;
+  store.y--;
+  renderField();
+});
+let joystick_down = Sprite.from("./assets/joistik.png");
+joystick_down.x = window.innerWidth / 2;
+joystick_down.y = window.innerHeight - 50;
+joystick_down.zIndex = 3;
+
+app.stage.addChild(joystick_down);
+joystick_down.interactive = true;
+joystick_down.buttonMode = true;
+joystick_down.angle = -90;
+joystick_down.on("pointerdown", (e) => {
+  store.y++;
+  renderField();
+});
+
+let joystick_left = Sprite.from("./assets/joistik.png");
+joystick_left.x = 0;
+joystick_left.y = window.innerHeight / 2;
+joystick_left.zIndex = 3;
+
+app.stage.addChild(joystick_left);
+joystick_left.interactive = true;
+joystick_left.buttonMode = true;
+// joystick_left.angle = -90;
+joystick_left.on("pointerdown", (e) => {
+  if (store.x === 0) return 0;
+  store.x--;
+  renderField();
+});
+let joystick_right = Sprite.from("./assets/joistik.png");
+joystick_right.x = window.innerWidth - 50;
+joystick_right.y = window.innerHeight / 2;
+joystick_right.zIndex = 3;
+
+app.stage.addChild(joystick_right);
+joystick_right.interactive = true;
+joystick_right.buttonMode = true;
+joystick_right.angle = 180;
+joystick_right.on("pointerdown", (e) => {
+  store.x++;
+  renderField();
+});
 window.addEventListener("mousewheel", (e) => {
   let { x, y } = store.gameScene.scale;
   if (e.deltaY > 0 && x > 0.1) {
@@ -173,28 +236,29 @@ window.addEventListener("mouseup", (e) => {
 });
 function addSprite(target, i) {
   let index = i;
-  if (index === 0) return 0;
+  // if (index === 0) return 0;
   let multipler = (target.height - 2) * Math.ceil(i / store.cellsInLine) - 1;
+  if (index === 0) i = 1;
   i = i % store.cellsInLine;
   target.width = 256;
   target.height = 128;
-  target.x = (i * (target.width - 2)) / 2 - 250;
-  target.y = (i * (target.height - 2)) / 2 - 250 + multipler;
+  let multiplerX = 0;
+  // if (i === 0 && index !== 0) multiplerX = -128;
+  let multiplerY = 0;
+  // if (i === 0 && index !== 0) multiplerY = 128;
+  target.x = (i * (target.width - 2)) / 2 - 250 + multiplerX;
+  target.y = (i * (target.height - 2)) / 2 - 250 + multipler + multiplerY;
   target.interactive = true;
   target.buttonMode = true;
-  target.posX = i;
-  target.posY = Math.floor(index / store.cellsInLine);
-  if (store.units[index]) {
+  if (store.units[index] && !store.units[index].ground) {
     store.units[index].x = target.x + 60;
     store.units[index].y = target.y - 10;
+    store.units[index].posX = target.posX;
+    store.units[index].posY = target.posY;
     store.units[index].ground = target;
     target.unit = store.units[index];
   }
-  let bord = getBorder();
-  bord.x = target.x;
-  bord.y = target.y;
   store.gameScene.addChild(target);
-  store.gameScene.addChild(bord);
   target.on("pointerover", (e) => {
     target.alpha = 0.8;
     console.log(store.gameScene);
@@ -204,6 +268,7 @@ function addSprite(target, i) {
   });
   target.on("pointerup", (e) => {
     if (store.blockedUI) return 0;
+    circle.alpha = 1;
     if (e.target.unit) {
       store.unit = e.target.unit;
       gsap.to(circle, {
@@ -220,6 +285,9 @@ function addSprite(target, i) {
       store.unit.ground.unit = null;
       store.unit.ground = target;
       target.unit = store.unit;
+      store.unit.posX = target.posX;
+      store.unit.posY = target.posY;
+      store.unit.alpha = 1;
       gsap.to(circle, {
         x: e.target.x + 20,
         y: e.target.y + 35,
@@ -241,4 +309,31 @@ function addSprite(target, i) {
     app.stage.addChild(store.text);
   });
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
+}
+function renderField() {
+  store.visibleZone.forEach((el) => store.gameScene.removeChild(el));
+  store.visibleZone = [];
+  sprites.slice(store.y, store.y + store.countLines).forEach((el, i) => {
+    el.slice(store.x, store.x + store.cellsInLine).forEach((cell) =>
+      store.visibleZone.push(cell)
+    );
+  });
+  store.visibleZone.forEach((el, i) => addSprite(el, i));
+  store.units.forEach((el) => {
+    let ground = store.visibleZone.find(
+      (gr) => gr.posX === el.posX && gr.posY === el.posY
+    );
+    if (ground) {
+      el.x = ground.x + 60;
+      el.y = ground.y - 10;
+      el.alpha = 1;
+      if (el === store.unit) {
+        circle.x = ground.x + 20;
+        circle.y = ground.y + 35;
+      }
+    } else {
+      el.alpha = 0;
+      if (el === store.unit) circle.alpha = 0;
+    }
+  });
 }
