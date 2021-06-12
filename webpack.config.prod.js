@@ -27,12 +27,14 @@ module.exports = {
     ],
   },
   plugins: [
-    new CopyWebpackPlugin([
-      {
-        from: "build/assets",
-        to: "assets",
-      },
-    ]),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "src/assets",
+          to: "assets",
+        },
+      ],
+    }),
     new HTMLWebpackPlugin({
       template: "build/index.html",
       filename: "index.html",
