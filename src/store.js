@@ -22,17 +22,17 @@ let base = [
     shardCode: "SHR",
     lvl: 3,
   },
-  // {
-  //   id: 126539,
-  //   name: "hamster",
-  //   type: "miner",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "hamster",
-  //   shardCode: "SHH",
-  //   lvl: 1,
-  // },
+  {
+    id: 126539,
+    name: "hamster",
+    type: "miner",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "hamster",
+    shardCode: "SHH",
+    lvl: 1,
+  },
   {
     id: 126334,
     name: "ant",
@@ -75,6 +75,7 @@ const units = base.map((el, i) => {
   );
   sprite.x = 250 * i + 65;
   sprite.y = 250 * i - 25;
+  sprite.zIndex = 1;
   sprite.width = 120;
   sprite.height = 120;
   return sprite;
@@ -89,8 +90,10 @@ let store = {
   blockedUI: false,
   cellsInLine: 15,
   countLines: 10,
-  unit: {},
+  map: [],
+  unit: units[2],
   cash: [],
+  text: {},
   visibleZone: [],
   x: 0,
   y: 0,
