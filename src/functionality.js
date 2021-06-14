@@ -10,6 +10,7 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.height = 130;
   joystick.interactive = true;
   joystick.buttonMode = true;
+  joystick.alpha = 0.8;
   joystick.scale.y = 1 / window.devicePixelRatio;
   joystick.scale.x = 1 / window.devicePixelRatio;
   joystick.on("pointerdown", () => {
