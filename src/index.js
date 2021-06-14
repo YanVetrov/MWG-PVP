@@ -113,10 +113,11 @@ function addSprite(target, i) {
   let index = i;
   let multipler = (target.height - 2) * Math.ceil(i / store.cellsInLine) - 1;
   let multiplerX = -(target.width * Math.floor(i / store.cellsInLine));
+  // let multiplerX = 0;
   if (multipler === 0) multipler = 200;
   // if (index === 0) i = 1;
   i = i % store.cellsInLine;
-  target.x = (i * (target.width - 2)) / 2 - 250 + multiplerX / 2;
+  target.x = (i * (target.width - 2)) / 2 - 250 + multiplerX / 2 + i;
   if (i === 0) i = 1;
   target.y = (i * (target.height - 2)) / 2 - 250 + multipler / 2;
   target.interactive = true;
