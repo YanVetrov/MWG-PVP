@@ -70,8 +70,7 @@ let base = [
 const units = base.map((el, i) => {
   let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
   ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
-    (key) =>
-      (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
+    key => (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
   );
   sprite.x = 250 * i + 65;
   sprite.y = 250 * i - 25;
@@ -83,18 +82,21 @@ const units = base.map((el, i) => {
 let store = {
   state: null,
   id: null,
+  mountains: null,
   bg: null,
   gameScene: null,
   target: null,
   clicked: true,
   blockedUI: false,
-  cellsInLine: 15,
-  countLines: 10,
+  cellsInLine: 40,
+  countLines: 40,
   map: [],
   unit: units[2],
   cash: [],
   text: {},
   visibleZone: [],
+  defaultPosX: 1400,
+  defaultPosY: -450,
   x: 0,
   y: 0,
   units,

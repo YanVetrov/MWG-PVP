@@ -6,6 +6,8 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.zIndex = 3;
   joystick.angle = angle;
   joystick.y = y;
+  joystick.width = 100;
+  joystick.height = 130;
   joystick.interactive = true;
   joystick.buttonMode = true;
   joystick.scale.y = 1 / window.devicePixelRatio;
