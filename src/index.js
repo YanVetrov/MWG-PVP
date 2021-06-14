@@ -50,7 +50,7 @@ function setup() {
     store.id
   );
   renderMap();
-  enableInteractiveMap(store.gameScene);
+  // enableInteractiveMap(store.gameScene);
   store.units.forEach(el => {
     let random = Math.floor(Math.random() * (store.visibleZone.length - 5));
     setUnit(el, store.visibleZone[random + 5]);
@@ -95,8 +95,10 @@ function addSprite(target, i) {
   target.buttonMode = true;
 
   store.gameScene.addChild(target);
+  if (target.unclickable) return 0;
   target.on("pointerover", e => {
     target.alpha = 0.8;
+    console.log(e.target.width, e.target.height);
   });
   target.on("pointerout", e => {
     target.alpha = 1;
@@ -156,23 +158,17 @@ function renderMap() {
   );
 }
 
-function getMontain() {
+function getMontain(i = 1) {
   let names = Object.keys(montains.frames);
   let container = new Container();
   let sprite = Sprite.from("./assets/Wall048.png");
   let random = Math.ceil(Math.random() * names.length - 1);
   let name = names[random];
   let mountain = new Sprite(store.mountains[name]);
-  mountain.scale.x = 0.8;
-  mountain.scale.y = 0.8;
-  sprite.y = container.y;
-  sprite.x = container.x;
-  mountain.x = sprite.x;
-  mountain.y = sprite.y;
   container.addChild(sprite);
   container.addChild(mountain);
   container.unclickable = true;
-  container.width = 256;
-  container.height = 128;
+  container.sortableChildren = true;
+  container.zIndex = i;
   return container;
 }

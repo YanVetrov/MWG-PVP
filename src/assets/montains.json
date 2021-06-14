@@ -142,26 +142,7 @@
 				"h": 102
 			}
 		},
-		"Wall031.png": {
-			"frame": {
-				"x": 490,
-				"y": 109,
-				"w": 166,
-				"h": 138
-			},
-			"rotated": false,
-			"trimmed": false,
-			"spriteSourceSize": {
-				"x": 0,
-				"y": 0,
-				"w": 166,
-				"h": 138
-			},
-			"sourceSize": {
-				"w": 166,
-				"h": 138
-			}
-		},
+
 		"Wall032.png": {
 			"frame": {
 				"x": 751,
