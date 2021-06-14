@@ -50,13 +50,41 @@ function setup() {
     store.id
   );
   renderMap();
-  // enableInteractiveMap(store.gameScene);
+  enableInteractiveMap(store.gameScene);
   store.units.forEach(el => {
     let random = Math.floor(Math.random() * (store.visibleZone.length - 5));
     setUnit(el, store.visibleZone[random + 5]);
   });
 }
-
+let ju = createJoystic({ x: window.innerWidth / 2, y: 0, angle: 90 }, () => {
+  store.x--;
+  store.y--;
+  renderMap();
+});
+let jd = createJoystic(
+  { x: window.innerWidth / 2 - 100, y: window.innerHeight, angle: -90 },
+  () => {
+    store.x++;
+    store.y++;
+    renderMap();
+  }
+);
+let jl = createJoystic(
+  { x: 0, y: window.innerHeight / 2 - 100, angle: 0 },
+  () => {
+    store.y++;
+    store.x--;
+    renderMap();
+  }
+);
+let jr = createJoystic(
+  { x: window.innerWidth, y: window.innerHeight / 2, angle: 180 },
+  () => {
+    store.y--;
+    store.x++;
+    renderMap();
+  }
+);
 let jur = createJoystic({ x: window.innerWidth, y: 100, angle: 135 }, () => {
   store.y--;
   renderMap();
@@ -79,7 +107,7 @@ let jdr = createJoystic(
     renderMap();
   }
 );
-[jdl, jdr, jul, jur].forEach(el => app.stage.addChild(el));
+[ju, jd, jr, jl, jdl, jdr, jul, jur].forEach(el => app.stage.addChild(el));
 
 function addSprite(target, i) {
   let index = i;
@@ -98,7 +126,6 @@ function addSprite(target, i) {
   if (target.unclickable) return 0;
   target.on("pointerover", e => {
     target.alpha = 0.8;
-    console.log(e.target.width, e.target.height);
   });
   target.on("pointerout", e => {
     target.alpha = 1;
@@ -128,27 +155,34 @@ function renderMap() {
   store.visibleZone = [];
   let y = store.y;
   let x = store.x;
+  let endLines = store.y + store.countLines;
   if (y < 0) y = 0;
   if (x < 0) x = 0;
-  let lines = store.map.slice(y, store.y + store.countLines);
-  if (store.y < y) {
+
+  let lines = store.map.slice(y, endLines);
+  if (store.y < y || endLines > store.map.length - 1) {
     let count = Math.abs(y - store.y);
-    // console.log(count);
+    if (count === 0) count = Math.abs(endLines - store.map.length - 1);
     for (let i = 0; i < count; i++) {
       let newLine = [];
       for (let k = 0; k < store.cellsInLine; k++) {
         newLine.push(getMontain());
       }
-      lines.unshift(newLine);
+      if (store.y < 0) lines.unshift(newLine);
+      else lines.push(newLine);
     }
   }
   lines.forEach((el, i) => {
     let count = 0;
     let line = [...el];
+    let endLine = store.x + store.cellsInLine;
     if (store.x < x) count = Math.abs(x - store.x);
-    line = line.slice(x, store.x + store.cellsInLine);
+    line = line.slice(x, endLine);
+    if (line.length < store.cellsInLine)
+      count = Math.abs(store.cellsInLine - line.length);
     for (let i = 0; i < count; i++) {
-      line.unshift(getMontain());
+      if (store.x < x) line.unshift(getMontain());
+      else line.push(getMontain());
     }
     line.forEach(cell => store.visibleZone.push(cell));
   });
