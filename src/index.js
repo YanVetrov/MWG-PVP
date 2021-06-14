@@ -50,7 +50,7 @@ function setup() {
     store.id
   );
   renderMap();
-  enableInteractiveMap(store.gameScene);
+  // enableInteractiveMap(store.gameScene);
   store.units.forEach(el => {
     let random = Math.floor(Math.random() * (store.visibleZone.length - 5));
     setUnit(el, store.visibleZone[random + 5]);
