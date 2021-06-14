@@ -17,7 +17,7 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
 }
 function initMap(arr, store) {
   let map = [];
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 40000; i++) {
     let random = Math.ceil(Math.random() * arr.length - 1);
     let name = arr[random];
     let sprite = new Sprite(store[name]);

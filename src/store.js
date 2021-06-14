@@ -88,7 +88,7 @@ let store = {
   target: null,
   clicked: true,
   blockedUI: false,
-  cellsInLine: 100,
+  cellsInLine: 40,
   countLines: 40,
   map: [],
   unit: units[2],
