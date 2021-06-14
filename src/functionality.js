@@ -12,7 +12,12 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.buttonMode = true;
   joystick.scale.y = 1 / window.devicePixelRatio;
   joystick.scale.x = 1 / window.devicePixelRatio;
-  joystick.on("pointerdown", handler);
+  joystick.on("pointerdown", () => {
+    handler();
+    joystick.interval = setInterval(() => handler(), 150);
+  });
+  joystick.on("pointerup", () => clearInterval(joystick.interval));
+
   return joystick;
 }
 function initMap(arr, store) {
