@@ -21,8 +21,8 @@ function initMap(arr, store) {
     let random = Math.ceil(Math.random() * arr.length - 1);
     let name = arr[random];
     let sprite = new Sprite(store[name]);
-    sprite.posX = i % 200;
-    sprite.posY = Math.floor(i / 200);
+    sprite.posX = (i % 200) + 1;
+    sprite.posY = Math.floor(i / 200) + 1;
     if (i % 200 === 0) map.push([]);
     map[Math.floor(i / 200)].push(sprite);
   }
