@@ -1,13 +1,14 @@
 import { Application, Sprite, Container, Polygon } from "pixi.js";
 import {
   initMap,
-  createJoystic,
   sortUnit,
   enableInteractiveMap,
   moveUnit,
   moveCircle,
   updateText,
   setUnit,
+  getMontain,
+  getJoystics,
 } from "./functionality";
 import sheet from "./assets/sheet.json";
 import montains from "./assets/montains.json";
@@ -50,64 +51,15 @@ function setup() {
     store.id
   );
   renderMap();
-  // enableInteractiveMap(store.gameScene);
   store.units.forEach(el => {
     let random = Math.floor(Math.random() * (store.visibleZone.length - 5));
     setUnit(el, store.visibleZone[random + 5]);
   });
+  renderMap();
+  let joystics = getJoystics(store, renderMap);
+  joystics.forEach(joy => app.stage.addChild(joy));
+  // enableInteractiveMap(store.gameScene);
 }
-let ju = createJoystic({ x: window.innerWidth / 2, y: 0, angle: 90 }, () => {
-  store.x--;
-  store.y--;
-  renderMap();
-});
-let jd = createJoystic(
-  { x: window.innerWidth / 2 - 100, y: window.innerHeight, angle: -90 },
-  () => {
-    store.x++;
-    store.y++;
-    renderMap();
-  }
-);
-let jl = createJoystic(
-  { x: 0, y: window.innerHeight / 2 - 100, angle: 0 },
-  () => {
-    store.y++;
-    store.x--;
-    renderMap();
-  }
-);
-let jr = createJoystic(
-  { x: window.innerWidth, y: window.innerHeight / 2, angle: 180 },
-  () => {
-    store.y--;
-    store.x++;
-    renderMap();
-  }
-);
-let jur = createJoystic({ x: window.innerWidth, y: 100, angle: 135 }, () => {
-  store.y--;
-  renderMap();
-});
-let jdl = createJoystic(
-  { x: 0, y: window.innerHeight - 100, angle: -45 },
-  () => {
-    store.y++;
-    renderMap();
-  }
-);
-let jul = createJoystic({ x: 100, y: -10, angle: 45 }, () => {
-  store.x--;
-  renderMap();
-});
-let jdr = createJoystic(
-  { x: window.innerWidth - 100, y: window.innerHeight, angle: 225 },
-  () => {
-    store.x++;
-    renderMap();
-  }
-);
-[ju, jd, jr, jl, jdl, jdr, jul, jur].forEach(el => app.stage.addChild(el));
 
 function addSprite(target, i) {
   let index = i;
@@ -167,7 +119,7 @@ function renderMap() {
     for (let i = 0; i < count; i++) {
       let newLine = [];
       for (let k = 0; k < store.cellsInLine; k++) {
-        newLine.push(getMontain());
+        newLine.push(getMontain(montains.frames, store.mountains));
       }
       if (store.y < 0) lines.unshift(newLine);
       else lines.push(newLine);
@@ -182,8 +134,9 @@ function renderMap() {
     if (line.length < store.cellsInLine)
       count = Math.abs(store.cellsInLine - line.length);
     for (let i = 0; i < count; i++) {
-      if (store.x < x) line.unshift(getMontain());
-      else line.push(getMontain());
+      if (store.x < x)
+        line.unshift(getMontain(montains.frames, store.mountains));
+      else line.push(getMontain(montains.frames, store.mountains));
     }
     line.forEach(cell => store.visibleZone.push(cell));
   });
@@ -191,19 +144,4 @@ function renderMap() {
   store.units.forEach(el =>
     sortUnit(el, store.unit, store.visibleZone, circle)
   );
-}
-
-function getMontain(i = 1) {
-  let names = Object.keys(montains.frames);
-  let container = new Container();
-  let sprite = Sprite.from("./assets/Wall048.png");
-  let random = Math.ceil(Math.random() * names.length - 1);
-  let name = names[random];
-  let mountain = new Sprite(store.mountains[name]);
-  container.addChild(sprite);
-  container.addChild(mountain);
-  container.unclickable = true;
-  container.sortableChildren = true;
-  container.zIndex = i;
-  return container;
 }

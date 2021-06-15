@@ -1,4 +1,4 @@
-import { Sprite, Text } from "pixi.js";
+import { Sprite, Text, Container } from "pixi.js";
 import { gsap } from "gsap";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   let joystick = Sprite.from("./assets/joistik.png");
@@ -21,6 +21,71 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
 
   return joystick;
 }
+function getMontain(frames, store) {
+  let names = Object.keys(frames);
+  let container = new Container();
+  let sprite = Sprite.from("./assets/Wall048.png");
+  let random = Math.ceil(Math.random() * names.length - 1);
+  let name = names[random];
+  let mountain = new Sprite(store[name]);
+  container.addChild(sprite);
+  container.addChild(mountain);
+  container.unclickable = true;
+  container.sortableChildren = true;
+  container.zIndex = 1;
+  return container;
+}
+function getJoystics(store, renderMap) {
+  let joystics = [
+    createJoystic({ x: window.innerWidth / 2, y: 0, angle: 90 }, () => {
+      store.x--;
+      store.y--;
+      renderMap();
+    }),
+    createJoystic(
+      { x: window.innerWidth / 2 - 100, y: window.innerHeight, angle: -90 },
+      () => {
+        store.x++;
+        store.y++;
+        renderMap();
+      }
+    ),
+    createJoystic({ x: 0, y: window.innerHeight / 2 - 100, angle: 0 }, () => {
+      store.y++;
+      store.x--;
+      renderMap();
+    }),
+    createJoystic(
+      { x: window.innerWidth, y: window.innerHeight / 2, angle: 180 },
+      () => {
+        store.y--;
+        store.x++;
+        renderMap();
+      }
+    ),
+    createJoystic({ x: window.innerWidth, y: 100, angle: 135 }, () => {
+      store.y--;
+      renderMap();
+    }),
+    createJoystic({ x: 0, y: window.innerHeight - 100, angle: -45 }, () => {
+      store.y++;
+      renderMap();
+    }),
+    createJoystic({ x: 100, y: -10, angle: 45 }, () => {
+      store.x--;
+      renderMap();
+    }),
+    createJoystic(
+      { x: window.innerWidth - 100, y: window.innerHeight, angle: 225 },
+      () => {
+        store.x++;
+        renderMap();
+      }
+    ),
+  ];
+  return joystics;
+}
+
 function initMap(arr, store) {
   let map = [];
   for (let i = 0; i < 40000; i++) {
@@ -220,4 +285,6 @@ export {
   moveUnit,
   updateText,
   getDirection,
+  getMontain,
+  getJoystics,
 };
