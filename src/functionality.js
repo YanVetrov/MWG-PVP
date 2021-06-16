@@ -83,20 +83,20 @@ function getJoystics(store, renderMap) {
         renderMap();
       }
     ),
-    createJoystic({ x: window.innerWidth, y: 30, angle: 135 }, () => {
+    createJoystic({ x: window.innerWidth, y: 40, angle: 135 }, () => {
       store.y--;
       renderMap();
     }),
-    createJoystic({ x: 0, y: window.innerHeight - 30, angle: -45 }, () => {
+    createJoystic({ x: 0, y: window.innerHeight - 40, angle: -45 }, () => {
       store.y++;
       renderMap();
     }),
-    createJoystic({ x: 30, y: -5, angle: 45 }, () => {
+    createJoystic({ x: 40, y: -5, angle: 45 }, () => {
       store.x--;
       renderMap();
     }),
     createJoystic(
-      { x: window.innerWidth - 30, y: window.innerHeight, angle: 225 },
+      { x: window.innerWidth - 40, y: window.innerHeight, angle: 225 },
       () => {
         store.x++;
         renderMap();
