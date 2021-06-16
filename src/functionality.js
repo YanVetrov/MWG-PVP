@@ -9,7 +9,7 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.y = y;
   joystick.interactive = true;
   joystick.buttonMode = true;
-  joystick.alpha = 1;
+  joystick.alpha = 0.6;
   joystick.scale.y = 0.5 / window.devicePixelRatio;
   joystick.scale.x = 0.5 / window.devicePixelRatio;
   let dropShadowFilter = new DropShadowFilter();
