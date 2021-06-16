@@ -1,4 +1,5 @@
 import { Sprite, Text, Container } from "pixi.js";
+import { DropShadowFilter } from "@pixi/filter-drop-shadow";
 import { gsap } from "gsap";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   let joystick = Sprite.from("./assets/joistik.png");
@@ -6,13 +7,32 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.zIndex = 3;
   joystick.angle = angle;
   joystick.y = y;
-  joystick.width = 100;
-  joystick.height = 130;
   joystick.interactive = true;
   joystick.buttonMode = true;
-  joystick.alpha = 0.8;
-  joystick.scale.y = 1 / window.devicePixelRatio;
-  joystick.scale.x = 1 / window.devicePixelRatio;
+  joystick.alpha = 1;
+  joystick.scale.y = 0.5 / window.devicePixelRatio;
+  joystick.scale.x = 0.5 / window.devicePixelRatio;
+  let dropShadowFilter = new DropShadowFilter();
+  dropShadowFilter.color = 0xac90fe;
+  dropShadowFilter.alpha = 1;
+  dropShadowFilter.blur = 6;
+  dropShadowFilter.quality = 2;
+  dropShadowFilter.distance = 1;
+  joystick.filters = [dropShadowFilter];
+  joystick.on("pointerover", e => {
+    gsap.to(joystick.scale, {
+      x: joystick.scale.x + 0.03,
+      y: joystick.scale.y + 0.03,
+      duration: 0.3,
+    });
+  });
+  joystick.on("pointerout", e => {
+    gsap.to(joystick.scale, {
+      x: joystick.scale.x - 0.03,
+      y: joystick.scale.y - 0.03,
+      duration: 0.3,
+    });
+  });
   joystick.on("pointerdown", () => {
     handler();
     joystick.interval = setInterval(() => handler(), 150);
@@ -43,14 +63,14 @@ function getJoystics(store, renderMap) {
       renderMap();
     }),
     createJoystic(
-      { x: window.innerWidth / 2 - 100, y: window.innerHeight, angle: -90 },
+      { x: window.innerWidth / 2 - 50, y: window.innerHeight, angle: -90 },
       () => {
         store.x++;
         store.y++;
         renderMap();
       }
     ),
-    createJoystic({ x: 0, y: window.innerHeight / 2 - 100, angle: 0 }, () => {
+    createJoystic({ x: 0, y: window.innerHeight / 2 - 50, angle: 0 }, () => {
       store.y++;
       store.x--;
       renderMap();
@@ -63,20 +83,20 @@ function getJoystics(store, renderMap) {
         renderMap();
       }
     ),
-    createJoystic({ x: window.innerWidth, y: 100, angle: 135 }, () => {
+    createJoystic({ x: window.innerWidth, y: 30, angle: 135 }, () => {
       store.y--;
       renderMap();
     }),
-    createJoystic({ x: 0, y: window.innerHeight - 100, angle: -45 }, () => {
+    createJoystic({ x: 0, y: window.innerHeight - 30, angle: -45 }, () => {
       store.y++;
       renderMap();
     }),
-    createJoystic({ x: 100, y: -10, angle: 45 }, () => {
+    createJoystic({ x: 30, y: -5, angle: 45 }, () => {
       store.x--;
       renderMap();
     }),
     createJoystic(
-      { x: window.innerWidth - 100, y: window.innerHeight, angle: 225 },
+      { x: window.innerWidth - 30, y: window.innerHeight, angle: 225 },
       () => {
         store.x++;
         renderMap();
