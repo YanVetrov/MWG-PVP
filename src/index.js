@@ -184,24 +184,42 @@ function initMiniMap() {
 function renderMiniMap() {
   if (store.cashMinimap) store.miniMap.removeChild(store.cashMinimap);
   store.cashMinimap = new Graphics();
-  let size = 0.5;
+  let size = 1;
   let scale = 0.1;
   let realSquareSize = store.miniMap.width * size * scale;
   let oneLine = Math.floor(store.miniMap.width / realSquareSize);
   let countLines = Math.floor(store.miniMap.height / realSquareSize);
-  for (let line = 0; line < countLines; line++) {
-    for (let cell = 0; cell < oneLine; cell++) {
+  let mapWidth = store.allMapCount * 0.005;
+  let oneCellInset = Math.ceil(mapWidth / oneLine);
+  for (let line = 1; line <= countLines; line++) {
+    for (let cell = 1; cell <= oneLine; cell++) {
       let color = 0x00aa00;
       let alpha = 0;
-      let unit = store.units.find(el => el.posY === line && el.posX === cell);
-      let point = store.objectsOnMap.find(
-        el => el.posY === line && el.posX === cell
-      );
-      if (unit || point) alpha = 1;
-      if (point) color = 0xcc90fe;
+      let lineColor = 0xffffff;
+      // color = 0xcc90fe;
+      for (let x = (cell - 1) * oneCellInset; x < cell * oneCellInset; x++) {
+        for (let y = (line - 1) * oneCellInset; y < line * oneCellInset; y++) {
+          if (store.units.some(el => el.posX === x + 1 && el.posY === y + 1))
+            alpha = 1;
+          if (
+            store.objectsOnMap.some(
+              el => el.posX === x + 1 && el.posY === y + 1
+            )
+          ) {
+            color = 0xcc90fe;
+            alpha = 1;
+          }
+        }
+      }
+
       store.cashMinimap.beginFill(color, alpha);
-      store.cashMinimap.lineStyle(0.015, 0xffffff, 0.3);
-      store.cashMinimap.drawRect(size * cell, size * line, size, size);
+      store.cashMinimap.lineStyle(0.1, lineColor, 0.2);
+      store.cashMinimap.drawRect(
+        size * (cell - 1),
+        size * (line - 1),
+        size,
+        size
+      );
       store.cashMinimap.scale.x = scale;
       store.cashMinimap.scale.y = scale;
       store.cashMinimap.endFill();
