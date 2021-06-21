@@ -67,6 +67,18 @@ let base = [
     lvl: 6,
   },
 ];
+const objectsOnMap = [
+  { name: "garage mini", image: "garage1" },
+  { name: "garage big", image: "garage2" },
+].map(el => {
+  let sprite = Sprite.from(`./assets/${el.image}.png`);
+
+  sprite.width = 120;
+  sprite.height = 120;
+  sprite.zIndex = 1;
+  sprite.name = el.name;
+  return sprite;
+});
 const units = base.map((el, i) => {
   let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
   ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
@@ -77,6 +89,7 @@ const units = base.map((el, i) => {
   sprite.zIndex = 1;
   sprite.width = 120;
   sprite.height = 120;
+  sprite.name = el.name;
   return sprite;
 });
 let store = {
@@ -91,6 +104,8 @@ let store = {
   cellsInLine: 40,
   countLines: 40,
   map: [],
+  allMapCount: 40000,
+  miniMap: null,
   unit: units[2],
   cash: [],
   text: {},
@@ -100,5 +115,6 @@ let store = {
   x: 0,
   y: 0,
   units,
+  objectsOnMap,
 };
 export default store;

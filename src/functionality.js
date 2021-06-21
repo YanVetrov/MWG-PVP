@@ -1,45 +1,57 @@
-import { Sprite, Text, Container } from "pixi.js";
+import { Sprite, Text, Container, Point, Graphics } from "pixi.js";
 import { DropShadowFilter } from "@pixi/filter-drop-shadow";
 import { gsap } from "gsap";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   let joystick = Sprite.from("./assets/joistik.png");
-  joystick.x = x;
-  joystick.zIndex = 3;
-  joystick.angle = angle;
-  joystick.y = y;
-  joystick.interactive = true;
-  joystick.buttonMode = true;
+  let joyContainer = new Container();
+  joyContainer.sortableChildren = true;
+  joyContainer.x = x;
+  joyContainer.zIndex = 3;
+  joyContainer.angle = angle;
+  joyContainer.y = y;
+  joyContainer.interactive = true;
+  joyContainer.buttonMode = true;
   joystick.alpha = 0.6;
-  joystick.scale.y = 0.5 / window.devicePixelRatio;
-  joystick.scale.x = 0.5 / window.devicePixelRatio;
+  joystick.zIndex = 2;
+  joyContainer.scale.y = 0.5 / window.devicePixelRatio;
+  joyContainer.scale.x = 0.5 / window.devicePixelRatio;
   let dropShadowFilter = new DropShadowFilter();
   dropShadowFilter.color = 0xac90fe;
-  dropShadowFilter.alpha = 1;
+  dropShadowFilter.alpha = 2;
   dropShadowFilter.blur = 6;
-  dropShadowFilter.quality = 2;
+  dropShadowFilter.quality = 3;
   dropShadowFilter.distance = 1;
+  const border = new Graphics();
+  joyContainer.addChild(border);
+  border.zIndex = 1;
+  border.beginFill(0xac90fe, 1);
+  border.lineStyle(0, 0xffffff, 1);
+  border.drawPolygon([50, 100, 210, 195, 210, 0]);
+  border.endFill();
+  border.x -= 55;
+  border.y -= 0;
   joystick.filters = [dropShadowFilter];
-  joystick.on("pointerover", e => {
+  joyContainer.on("pointerover", e => {
     gsap.to(joystick.scale, {
       x: joystick.scale.x + 0.03,
       y: joystick.scale.y + 0.03,
       duration: 0.3,
     });
   });
-  joystick.on("pointerout", e => {
+  joyContainer.on("pointerout", e => {
     gsap.to(joystick.scale, {
       x: joystick.scale.x - 0.03,
       y: joystick.scale.y - 0.03,
       duration: 0.3,
     });
   });
-  joystick.on("pointerdown", () => {
+  joyContainer.on("pointerdown", () => {
     handler();
     joystick.interval = setInterval(() => handler(), 150);
   });
-  joystick.on("pointerup", () => clearInterval(joystick.interval));
-
-  return joystick;
+  joyContainer.on("pointerup", () => clearInterval(joystick.interval));
+  joyContainer.addChild(joystick);
+  return joyContainer;
 }
 function getMontain(frames, store) {
   let names = Object.keys(frames);
@@ -106,16 +118,17 @@ function getJoystics(store, renderMap) {
   return joystics;
 }
 
-function initMap(arr, store) {
+function initMap(arr, store, count) {
   let map = [];
-  for (let i = 0; i < 40000; i++) {
+  let multiplier = count * 0.005;
+  for (let i = 0; i < count; i++) {
     let random = Math.ceil(Math.random() * arr.length - 1);
     let name = arr[random];
     let sprite = new Sprite(store[name]);
-    sprite.posX = (i % 200) + 1;
-    sprite.posY = Math.floor(i / 200) + 1;
-    if (i % 200 === 0) map.push([]);
-    map[Math.floor(i / 200)].push(sprite);
+    sprite.posX = (i % multiplier) + 1;
+    sprite.posY = Math.floor(i / multiplier) + 1;
+    if (i % multiplier === 0) map.push([]);
+    map[Math.floor(i / multiplier)].push(sprite);
   }
   return map;
 }
@@ -130,7 +143,7 @@ function sortUnit(unit, activeUnit, zone, circle) {
       circle.y = ground.y + 35;
     }
   } else {
-    unit.alpha = 0;
+    // unit.alpha = 0;
     if (unit === activeUnit) circle.alpha = 0;
   }
 }
@@ -287,13 +300,14 @@ function getDirection(fromPlace, toPlace) {
   if (fromPlace.x < toPlace.x && fromPlace.y > toPlace.y) return "ur";
   if (fromPlace.x > toPlace.x && fromPlace.y < toPlace.y) return "dl";
 }
-function setUnit(unit, ground) {
+function setUnit(unit, ground, unclickable = false) {
   unit.x = ground.x + 60;
   unit.y = ground.y - 10;
   unit.posX = ground.posX;
   unit.posY = ground.posY;
   unit.ground = ground;
   ground.unit = unit;
+  ground.unclickable = unclickable;
 }
 export {
   initMap,
