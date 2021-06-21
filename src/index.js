@@ -66,7 +66,7 @@ function setup() {
   renderMap();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
-  enableInteractiveMap(store.gameScene);
+  // enableInteractiveMap(store.gameScene);
 }
 
 function addSprite(target, i) {
