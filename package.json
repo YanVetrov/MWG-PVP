@@ -6,7 +6,8 @@
   "dependencies": {
     "gsap": "^3.6.1",
     "pixi-filters": "^4.1.2",
-    "pixi.js": "^6.0.4"
+    "pixi.js": "^6.0.4",
+    "puxi.js": "0.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",

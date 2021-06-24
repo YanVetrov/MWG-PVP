@@ -1,4 +1,11 @@
-import { Application, Sprite, Container, Polygon, Graphics } from "pixi.js";
+import {
+  Application,
+  Sprite,
+  Container,
+  Polygon,
+  Graphics,
+  Text,
+} from "pixi.js";
 import {
   initMap,
   sortUnit,
@@ -12,7 +19,8 @@ import {
   background,
 } from "./functionality";
 import sheet from "./assets/sheet.json";
-import montains from "./assets/montains.json";
+import top_bottom from "./assets/top_bottom.json";
+import right_left from "./assets/right_left.json";
 import { getBorder, getCircle } from "./graphics";
 import store from "./store";
 import { gsap } from "gsap";
@@ -27,8 +35,12 @@ const app = new Application({
   antialias: true,
   resolution: 1,
 });
+// const uxStage = new PUXI.Stage({
+//   width: 512,
+//   height: 512,
+// });
+// app.stage.addChild(uxStage);
 document.body.appendChild(app.view);
-
 store.gameScene = new Container();
 store.gameScene.sortableChildren = true;
 store.gameScene.zIndex = 2;
@@ -40,10 +52,17 @@ app.stage.addChild(store.gameScene);
 app.stage.sortableChildren = true;
 app.renderer.backgroundColor = "0x202020";
 app.renderer.autoResize = true;
-app.loader.add("./assets/sheet.json").add("./assets/montains.json").load(setup);
+app.loader
+  .add("./assets/sheet.json")
+  .add("./assets/top_bottom.json")
+  .add("./assets/right_left.json")
+  .load(setup);
 function setup() {
   store.id = app.loader.resources["./assets/sheet.json"].textures;
-  store.mountains = app.loader.resources["./assets/montains.json"].textures;
+  store.mountains_tb =
+    app.loader.resources["./assets/top_bottom.json"].textures;
+  store.mountains_rl =
+    app.loader.resources["./assets/right_left.json"].textures;
   // store.gameScene.addChild(border);
   store.gameScene.addChild(circle);
   store.map = initMap(
@@ -52,10 +71,9 @@ function setup() {
     store.allMapCount
   );
   renderMap();
-  store.units.forEach(el => {
+  store.units.forEach((el, i) => {
     store.gameScene.addChild(el);
-    let random = Math.floor(Math.random() * (store.visibleZone.length - 5));
-    setUnit(el, store.visibleZone[random + 5]);
+    setUnit(el, store.visibleZone[i + 5]);
   });
 
   store.objectsOnMap.forEach((el, i) => {
@@ -64,22 +82,23 @@ function setup() {
     store.gameScene.addChild(el);
   });
   renderMap();
+  checkUnits();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
-  // enableInteractiveMap(store.gameScene);
+  enableInteractiveMap(store.gameScene);
 }
 
 function addSprite(target, i) {
   let index = i;
-  let multipler = (target.height - 2) * Math.ceil(i / store.cellsInLine) - 1;
-  let multiplerX = -(target.width * Math.floor(i / store.cellsInLine));
+  let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
+  let multiplerX = -(256 * Math.floor(i / store.cellsInLine));
   // let multiplerX = 0;
   if (multipler === 0) multipler = 200;
   // if (index === 0) i = 1;
   i = i % store.cellsInLine;
-  target.x = (i * (target.width - 2)) / 2 - 250 + multiplerX / 2 + i;
+  target.x = (i * (256 - 2)) / 2 - 250 + multiplerX / 2 + i;
   if (i === 0) i = 1;
-  target.y = (i * (target.height - 2)) / 2 - 250 + multipler / 2;
+  target.y = (i * (128 - 2)) / 2 - 250 + multipler / 2;
   target.interactive = true;
   target.buttonMode = true;
 
@@ -101,7 +120,8 @@ function addSprite(target, i) {
     }
 
     if (store.unit.ground && !e.target.unit) {
-      moveUnit(store.unit, e.target);
+      if (store.unit.locked) return false;
+      if (!moveUnit(store.unit, e.target)) return 0;
       moveCircle(circle, e.target);
     }
     updateText(
@@ -129,7 +149,7 @@ function renderMap() {
     for (let i = 0; i < count; i++) {
       let newLine = [];
       for (let k = 0; k < store.cellsInLine; k++) {
-        newLine.push(getMontain(montains.frames, store.mountains));
+        newLine.push(getMontain(top_bottom.frames, store.mountains_tb));
       }
       if (store.y < 0) lines.unshift(newLine);
       else lines.push(newLine);
@@ -145,8 +165,8 @@ function renderMap() {
       count = Math.abs(store.cellsInLine - line.length);
     for (let i = 0; i < count; i++) {
       if (store.x < x)
-        line.unshift(getMontain(montains.frames, store.mountains));
-      else line.push(getMontain(montains.frames, store.mountains));
+        line.unshift(getMontain(right_left.frames, store.mountains_rl));
+      else line.push(getMontain(right_left.frames, store.mountains_rl));
     }
     line.forEach(cell => store.visibleZone.push(cell));
   });
@@ -227,4 +247,17 @@ function renderMiniMap() {
     }
   }
   store.miniMap.addChild(store.cashMinimap);
+}
+function checkUnits() {
+  setInterval(() => {
+    store.units.forEach(el => {
+      if (Date.now() > el.lockedTime) {
+        el.lockedTime = 0;
+        el.alpha = 1;
+      } else {
+        el.alpha = 0.5;
+        el.timerText = Math.ceil((el.lockedTime - Date.now()) / 1000);
+      }
+    });
+  }, 1000);
 }

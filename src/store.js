@@ -1,4 +1,4 @@
-import { Sprite, Texture } from "pixi.js";
+import { Sprite, Texture, Container, Text } from "pixi.js";
 let base = [
   {
     id: 126335,
@@ -11,61 +11,61 @@ let base = [
     shardCode: "SHS",
     lvl: 4,
   },
-  // {
-  //   id: 126336,
-  //   name: "raccoon",
-  //   type: "battle",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "raccoon",
-  //   shardCode: "SHR",
-  //   lvl: 3,
-  // },
-  // {
-  //   id: 126539,
-  //   name: "hamster",
-  //   type: "miner",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "hamster",
-  //   shardCode: "SHH",
-  //   lvl: 1,
-  // },
-  // {
-  //   id: 126334,
-  //   name: "ant",
-  //   type: "battle",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "ant",
-  //   shardCode: "SHA",
-  //   lvl: 5,
-  // },
-  // {
-  //   id: 126341,
-  //   name: "elephantor",
-  //   type: "battle",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "elephantor",
-  //   shardCode: "SHE",
-  //   lvl: 2,
-  // },
-  // {
-  //   id: 126332,
-  //   name: "wolf",
-  //   type: "battle",
-  //   locked: false,
-  //   unlockedTime: 0,
-  //   inGame: false,
-  //   image: "wolf",
-  //   shardCode: "SHW",
-  //   lvl: 6,
-  // },
+  {
+    id: 126336,
+    name: "raccoon",
+    type: "battle",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "raccoon",
+    shardCode: "SHR",
+    lvl: 3,
+  },
+  {
+    id: 126539,
+    name: "hamster",
+    type: "miner",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "hamster",
+    shardCode: "SHH",
+    lvl: 1,
+  },
+  {
+    id: 126334,
+    name: "ant",
+    type: "battle",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "ant",
+    shardCode: "SHA",
+    lvl: 5,
+  },
+  {
+    id: 126341,
+    name: "elephantor",
+    type: "battle",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "elephantor",
+    shardCode: "SHE",
+    lvl: 2,
+  },
+  {
+    id: 126332,
+    name: "wolf",
+    type: "battle",
+    locked: false,
+    unlockedTime: 0,
+    inGame: false,
+    image: "wolf",
+    shardCode: "SHW",
+    lvl: 6,
+  },
 ];
 const objectsOnMap = [
   { name: "garage mini", image: "garage1" },
@@ -84,13 +84,39 @@ const units = base.map((el, i) => {
   ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
     key => (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
   );
-  sprite.x = 250 * i + 65;
-  sprite.y = 250 * i - 25;
-  sprite.zIndex = 1;
+  let container = new Container();
+  container.zIndex = 1;
   sprite.width = 120;
   sprite.height = 120;
-  sprite.name = el.name;
-  return sprite;
+  container.name = el.name;
+  container.locked = false;
+  container.lockedTime = 0;
+  container.timerText = new Text("", { fill: 0xefefef, fontSize: 15 });
+  container.timerText.x = 50;
+  container.unit = sprite;
+  container.addChild(container.timerText);
+  container.addChild(sprite);
+  let obj = new Proxy(container, {
+    set(item, prop, val, prox) {
+      if (prop === "lockedTime") {
+        item.locked = !!val;
+        if (!val) item.timerText.text = null;
+      }
+      if (prop === "timerText") {
+        if (!val) val = "";
+        item.timerText.text = val;
+        return true;
+      }
+      if (prop === "alpha") {
+        item.unit.alpha = val;
+        return true;
+      }
+      item[prop] = val;
+      return true;
+    },
+  });
+
+  return obj;
 });
 let store = {
   state: null,

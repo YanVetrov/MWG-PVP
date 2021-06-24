@@ -2,7 +2,7 @@ import { Sprite, Text, Container, Point, Graphics } from "pixi.js";
 import { DropShadowFilter } from "@pixi/filter-drop-shadow";
 import { gsap } from "gsap";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
-  let joystick = Sprite.from("./assets/joistik.png");
+  let joystick = Sprite.from("./assets/joystic.png");
   let joyContainer = new Container();
   joyContainer.sortableChildren = true;
   joyContainer.x = x;
@@ -11,26 +11,26 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joyContainer.y = y;
   joyContainer.interactive = true;
   joyContainer.buttonMode = true;
-  joystick.alpha = 0.6;
+  joystick.alpha = 1;
   joystick.zIndex = 2;
   joyContainer.scale.y = 0.5 / window.devicePixelRatio;
   joyContainer.scale.x = 0.5 / window.devicePixelRatio;
-  let dropShadowFilter = new DropShadowFilter();
-  dropShadowFilter.color = 0xac90fe;
-  dropShadowFilter.alpha = 2;
-  dropShadowFilter.blur = 6;
-  dropShadowFilter.quality = 3;
-  dropShadowFilter.distance = 1;
-  const border = new Graphics();
-  joyContainer.addChild(border);
-  border.zIndex = 1;
-  border.beginFill(0xac90fe, 1);
-  border.lineStyle(0, 0xffffff, 1);
-  border.drawPolygon([50, 100, 210, 195, 210, 0]);
-  border.endFill();
-  border.x -= 55;
-  border.y -= 0;
-  joystick.filters = [dropShadowFilter];
+  // let dropShadowFilter = new DropShadowFilter();
+  // dropShadowFilter.color = 0xac90fe;
+  // dropShadowFilter.alpha = 2;
+  // dropShadowFilter.blur = 6;
+  // dropShadowFilter.quality = 3;
+  // dropShadowFilter.distance = 1;
+  // const border = new Graphics();
+  // joyContainer.addChild(border);
+  // border.zIndex = 1;
+  // border.beginFill(0xac90fe, 1);
+  // border.lineStyle(0, 0xffffff, 1);
+  // border.drawPolygon([50, 100, 210, 195, 210, 0]);
+  // border.endFill();
+  // border.x -= 55;
+  // border.y -= 0;
+  // joystick.filters = [dropShadowFilter];
   joyContainer.on("pointerover", e => {
     gsap.to(joystick.scale, {
       x: joystick.scale.x + 0.03,
@@ -60,6 +60,12 @@ function getMontain(frames, store) {
   let random = Math.ceil(Math.random() * names.length - 1);
   let name = names[random];
   let mountain = new Sprite(store[name]);
+  mountain.width = 200;
+  mountain.height = 200;
+  sprite.width = 256;
+  container.height = 128;
+  mountain.x = 30;
+  mountain.y = -70;
   container.addChild(sprite);
   container.addChild(mountain);
   container.unclickable = true;
@@ -122,11 +128,15 @@ function initMap(arr, store, count) {
   let map = [];
   let multiplier = count * 0.005;
   for (let i = 0; i < count; i++) {
+    let y = Math.floor(i / multiplier) + 1;
+    let x = (i % multiplier) + 1;
     let random = Math.ceil(Math.random() * arr.length - 1);
     let name = arr[random];
-    let sprite = new Sprite(store[name]);
-    sprite.posX = (i % multiplier) + 1;
-    sprite.posY = Math.floor(i / multiplier) + 1;
+    let sprite;
+    if (x <= 10 && y <= 10) sprite = Sprite.from("./assets/city.png");
+    else sprite = new Sprite(store[name]);
+    sprite.posX = x;
+    sprite.posY = y;
     if (i % multiplier === 0) map.push([]);
     map[Math.floor(i / multiplier)].push(sprite);
   }
@@ -261,7 +271,10 @@ function enableInteractiveMap(zone) {
   });
 }
 function moveUnit(unit, ground) {
-  unit.texture = unit[getDirection(unit.ground, ground)];
+  let multiX = Math.abs(unit.posX - ground.posX);
+  let multiY = Math.abs(unit.posY - ground.posY);
+  if (multiX > 1 || multiY > 1) return false;
+  unit.unit.texture = unit.unit[getDirection(unit.ground, ground)];
   unit.ground.unit = null;
   unit.ground = ground;
   ground.unit = unit;
@@ -274,14 +287,19 @@ function moveUnit(unit, ground) {
     duration: 0.5,
     ease: "back.out(1)",
   });
+  unit.lockedTime = Date.now() + 10000;
+  unit.alpha = 0.5;
+  return true;
 }
 function moveCircle(circle, ground, duration = 0.5) {
-  gsap.to(circle, {
-    x: ground.x + 20,
-    y: ground.y + 35,
-    duration,
-    ease: "back.out(1)",
-  });
+  // gsap.to(circle, {
+  //   x: ground.x + 20,
+  //   y: ground.y + 35,
+  //   duration,
+  //   ease: "back.out(1)",
+  // });
+  circle.x = ground.x + 20;
+  circle.y = ground.y + 35;
 }
 function updateText(container, textNode, text) {
   container.removeChild(textNode.text);
