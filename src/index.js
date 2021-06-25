@@ -35,11 +35,6 @@ const app = new Application({
   antialias: true,
   resolution: 1,
 });
-// const uxStage = new PUXI.Stage({
-//   width: 512,
-//   height: 512,
-// });
-// app.stage.addChild(uxStage);
 document.body.appendChild(app.view);
 store.gameScene = new Container();
 store.gameScene.sortableChildren = true;
@@ -63,6 +58,7 @@ function setup() {
     app.loader.resources["./assets/top_bottom.json"].textures;
   store.mountains_rl =
     app.loader.resources["./assets/right_left.json"].textures;
+  console.log(store.mountains_rl, store.mountains_tb);
   // store.gameScene.addChild(border);
   store.gameScene.addChild(circle);
   store.map = initMap(
