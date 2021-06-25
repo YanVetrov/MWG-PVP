@@ -58,7 +58,7 @@ function setup() {
     app.loader.resources["./assets/top_bottom.json"].textures;
   store.mountains_rl =
     app.loader.resources["./assets/right_left.json"].textures;
-  console.log(store.mountains_rl, store.mountains_tb);
+  console.log(app.loader.resources);
   // store.gameScene.addChild(border);
   store.gameScene.addChild(circle);
   store.map = initMap(
