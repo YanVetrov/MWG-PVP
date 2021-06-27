@@ -82,7 +82,7 @@ let store = {
   cash: [],
   text: {},
   visibleZone: [],
-  defaultPosX: 1300,
+  defaultPosX: 1200,
   defaultPosY: -250,
   x: 0,
   y: 0,
