@@ -144,7 +144,6 @@ function renderMap() {
   let endLines = store.y + store.countLines;
   if (y < 0) y = 0;
   if (x < 0) x = 0;
-
   let lines = store.map.slice(y, endLines);
   if (store.y < y || endLines > store.map.length - 1) {
     let count = Math.abs(y - store.y);

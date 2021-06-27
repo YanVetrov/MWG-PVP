@@ -4,6 +4,11 @@ const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
 
 module.exports = {
   mode: "production",
+  resolve: {
+    fallback: {
+      crypto: false,
+    },
+  },
   module: {
     rules: [
       {

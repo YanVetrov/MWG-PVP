@@ -153,7 +153,7 @@ function sortUnit(unit, activeUnit, zone, circle) {
       circle.y = ground.y + 35;
     }
   } else {
-    // unit.alpha = 0;
+    unit.alpha = 0;
     if (unit === activeUnit) circle.alpha = 0;
   }
 }

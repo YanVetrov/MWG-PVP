@@ -51,7 +51,7 @@ function createUnits(arr) {
           return true;
         }
         if (prop === "alpha") {
-          item.unit.alpha = val;
+          item.alpha = val;
           return true;
         }
         item[prop] = val;
@@ -82,7 +82,7 @@ let store = {
   cash: [],
   text: {},
   visibleZone: [],
-  defaultPosX: 600,
+  defaultPosX: 1300,
   defaultPosY: -250,
   x: 0,
   y: 0,
