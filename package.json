@@ -7,7 +7,10 @@
     "gsap": "^3.6.1",
     "pixi-filters": "^4.1.2",
     "pixi.js": "^6.0.4",
-    "puxi.js": "0.0.5"
+    "puxi.js": "0.0.5",
+    "ual-anchor": "^1.0.6",
+    "ual-plainjs-renderer": "^0.3.0",
+    "ual-wax": "^1.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",

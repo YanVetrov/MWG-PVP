@@ -18,14 +18,17 @@ import {
   getJoystics,
   background,
 } from "./functionality";
+
 import sheet from "./assets/sheet.json";
 import top_bottom from "./assets/top_bottom.json";
 import right_left from "./assets/right_left.json";
 import { getBorder, getCircle } from "./graphics";
-import store from "./store";
+import { initUal } from "./auth";
+import { store, getIngameTanks } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
+import { UALJs } from "ual-plainjs-renderer/dist/UALJs";
 initGsap();
 let border = getBorder();
 let circle = getCircle();
@@ -36,6 +39,7 @@ const app = new Application({
   resolution: 1,
 });
 document.body.appendChild(app.view);
+
 store.gameScene = new Container();
 store.gameScene.sortableChildren = true;
 store.gameScene.zIndex = 2;
@@ -67,10 +71,6 @@ function setup() {
     store.allMapCount
   );
   renderMap();
-  store.units.forEach((el, i) => {
-    store.gameScene.addChild(el);
-    setUnit(el, store.visibleZone[i + 5]);
-  });
 
   store.objectsOnMap.forEach((el, i) => {
     i *= 3;
@@ -81,7 +81,18 @@ function setup() {
   checkUnits();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
-  // enableInteractiveMap(store.gameScene);
+  initUal(async e => {
+    console.log(e);
+    store.user = e[0];
+    await getIngameTanks();
+    store.units.forEach((el, i) => {
+      store.gameScene.addChild(el);
+      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 5]);
+    });
+    renderMap();
+    console.log(store.units);
+  });
+  enableInteractiveMap(store.gameScene);
 }
 
 function addSprite(target, i) {
@@ -120,11 +131,7 @@ function addSprite(target, i) {
       if (!moveUnit(store.unit, e.target)) return 0;
       moveCircle(circle, e.target);
     }
-    updateText(
-      app.stage,
-      store,
-      `X:${store.unit.ground.posX} Y:${store.unit.ground.posY}`
-    );
+    updateText(app.stage, store, `X:${e.target.posX} Y:${e.target.posY}`);
     renderMiniMap();
   });
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
@@ -141,6 +148,7 @@ function renderMap() {
   let lines = store.map.slice(y, endLines);
   if (store.y < y || endLines > store.map.length - 1) {
     let count = Math.abs(y - store.y);
+    if (count > 7) count = 7;
     if (count === 0) count = Math.abs(endLines - store.map.length - 1);
     for (let i = 0; i < count; i++) {
       let newLine = [];
@@ -159,6 +167,7 @@ function renderMap() {
     line = line.slice(x, endLine);
     if (line.length < store.cellsInLine)
       count = Math.abs(store.cellsInLine - line.length);
+
     for (let i = 0; i < count; i++) {
       if (store.x < x)
         line.unshift(getMontain(right_left.frames, store.mountains_rl));

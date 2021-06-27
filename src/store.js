@@ -1,72 +1,6 @@
 import { Sprite, Texture, Container, Text } from "pixi.js";
-let base = [
-  {
-    id: 126335,
-    name: "skunk",
-    type: "battle",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "skunk",
-    shardCode: "SHS",
-    lvl: 4,
-  },
-  {
-    id: 126336,
-    name: "raccoon",
-    type: "battle",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "raccoon",
-    shardCode: "SHR",
-    lvl: 3,
-  },
-  {
-    id: 126539,
-    name: "hamster",
-    type: "miner",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "hamster",
-    shardCode: "SHH",
-    lvl: 1,
-  },
-  {
-    id: 126334,
-    name: "ant",
-    type: "battle",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "ant",
-    shardCode: "SHA",
-    lvl: 5,
-  },
-  {
-    id: 126341,
-    name: "elephantor",
-    type: "battle",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "elephantor",
-    shardCode: "SHE",
-    lvl: 2,
-  },
-  {
-    id: 126332,
-    name: "wolf",
-    type: "battle",
-    locked: false,
-    unlockedTime: 0,
-    inGame: false,
-    image: "wolf",
-    shardCode: "SHW",
-    lvl: 6,
-  },
-];
+
+import base from "./units_templates.js";
 const objectsOnMap = [
   { name: "garage mini", image: "garage1" },
   { name: "garage big", image: "garage2" },
@@ -79,45 +13,57 @@ const objectsOnMap = [
   sprite.name = el.name;
   return sprite;
 });
-const units = base.map((el, i) => {
-  let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
-  ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
-    key => (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
-  );
-  let container = new Container();
-  container.zIndex = 1;
-  sprite.width = 120;
-  sprite.height = 120;
-  container.name = el.name;
-  container.locked = false;
-  container.lockedTime = 0;
-  container.timerText = new Text("", { fill: 0xefefef, fontSize: 15 });
-  container.timerText.x = 50;
-  container.unit = sprite;
-  container.addChild(container.timerText);
-  container.addChild(sprite);
-  let obj = new Proxy(container, {
-    set(item, prop, val, prox) {
-      if (prop === "lockedTime") {
-        item.locked = !!val;
-        if (!val) item.timerText.text = null;
-      }
-      if (prop === "timerText") {
-        if (!val) val = "";
-        item.timerText.text = val;
+function createUnits(arr) {
+  return arr.map((el, i) => {
+    let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
+    ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
+      key =>
+        (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
+    );
+    let container = new Container();
+    container.zIndex = 6;
+    sprite.width = 120;
+    sprite.height = 120;
+    container.name = el.name;
+    container.locked = false;
+    container.lockedTime = 0;
+    container.timerText = new Text("", { fill: 0xefefef, fontSize: 15 });
+    container.timerText.x = 50;
+    container.timerText.y = -20;
+    container.hpText = new Text(`${el.hp}/${el.strength}`, {
+      fill: 0x00ffaa,
+      fontSize: 15,
+    });
+    container.hpText.x = 50;
+    container.unit = sprite;
+    container.addChild(container.timerText);
+    container.addChild(container.hpText);
+    container.addChild(sprite);
+    let obj = new Proxy(container, {
+      set(item, prop, val, prox) {
+        if (prop === "lockedTime") {
+          item.locked = !!val;
+          if (!val) item.timerText.text = null;
+        }
+        if (prop === "timerText") {
+          if (!val) val = "";
+          item.timerText.text = val;
+          return true;
+        }
+        if (prop === "alpha") {
+          item.unit.alpha = val;
+          return true;
+        }
+        item[prop] = val;
         return true;
-      }
-      if (prop === "alpha") {
-        item.unit.alpha = val;
-        return true;
-      }
-      item[prop] = val;
-      return true;
-    },
-  });
+      },
+    });
 
-  return obj;
-});
+    return obj;
+  });
+}
+const units = createUnits(base);
+
 let store = {
   state: null,
   id: null,
@@ -127,20 +73,70 @@ let store = {
   target: null,
   clicked: true,
   blockedUI: false,
-  cellsInLine: 40,
-  countLines: 40,
+  cellsInLine: 20,
+  countLines: 20,
   map: [],
   allMapCount: 40000,
   miniMap: null,
-  unit: units[0],
+  unit: {},
   cash: [],
   text: {},
   visibleZone: [],
-  defaultPosX: 1400,
-  defaultPosY: -450,
+  defaultPosX: 600,
+  defaultPosY: -250,
   x: 0,
   y: 0,
-  units,
+  user: null,
+  units: [],
   objectsOnMap,
 };
-export default store;
+async function getIngameTanks() {
+  let account = await store.user.getAccountName();
+  let started = Date.now();
+  let response = await store.user.rpc.get_table_rows({
+    json: true,
+    code: "metalwargame",
+    scope: "metalwargame",
+    table: "units",
+    limit: 10000,
+    key_type: "i64",
+    lower_bound: account,
+    upper_bound: account,
+    index_position: 2,
+    reverse: true,
+  });
+  let end = Date.now();
+  let ping = end - started;
+  store.ping = ping;
+  let arr = [];
+  if (!response) {
+    console.log();
+  } else {
+    let selfTanks = response.rows.filter(
+      el => el.owner === store.user.accountName
+    );
+    console.log(selfTanks);
+    selfTanks.forEach(el => {
+      let tank = base.find(key => el.template_id === key.id);
+      if (!tank) {
+      } else {
+        let locked = el.next_availability * 1000 > Date.now();
+        let unlockedTime = el.next_availability * 1000;
+
+        tank = {
+          ...el,
+          ...tank,
+          inGame: true,
+          id: el.asset_id,
+          repair: Math.ceil((el.strength - el.hp) / 2),
+          locked,
+          unlockedTime,
+        };
+        arr.push(tank);
+      }
+    });
+  }
+  store.units = createUnits([...arr]);
+  store.unit = store.units[0];
+}
+export { store, getIngameTanks };
