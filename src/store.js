@@ -50,10 +50,6 @@ function createUnits(arr) {
           item.timerText.text = val;
           return true;
         }
-        if (prop === "alpha") {
-          item.alpha = val;
-          return true;
-        }
         item[prop] = val;
         return true;
       },
@@ -83,7 +79,7 @@ let store = {
   text: {},
   visibleZone: [],
   defaultPosX: 1200,
-  defaultPosY: -250,
+  defaultPosY: -400,
   x: 0,
   y: 0,
   user: null,

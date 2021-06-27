@@ -76,8 +76,8 @@ function getMontain(frames, store) {
 function getJoystics(store, renderMap) {
   let joystics = [
     createJoystic({ x: window.innerWidth / 2, y: 0, angle: 90 }, () => {
-      store.x--;
-      store.y--;
+      if (store.x > -5) store.x--;
+      if (store.y > -5) store.y--;
       renderMap();
     }),
     createJoystic(
@@ -90,19 +90,19 @@ function getJoystics(store, renderMap) {
     ),
     createJoystic({ x: 0, y: window.innerHeight / 2 - 50, angle: 0 }, () => {
       store.y++;
-      store.x--;
+      if (store.x > -5) store.x--;
       renderMap();
     }),
     createJoystic(
       { x: window.innerWidth, y: window.innerHeight / 2, angle: 180 },
       () => {
-        store.y--;
+        if (store.y > -5) store.y--;
         store.x++;
         renderMap();
       }
     ),
     createJoystic({ x: window.innerWidth, y: 40, angle: 135 }, () => {
-      store.y--;
+      if (store.y > -5) store.y--;
       renderMap();
     }),
     createJoystic({ x: 0, y: window.innerHeight - 40, angle: -45 }, () => {
@@ -110,7 +110,7 @@ function getJoystics(store, renderMap) {
       renderMap();
     }),
     createJoystic({ x: 40, y: -5, angle: 45 }, () => {
-      store.x--;
+      if (store.x > -5) store.x--;
       renderMap();
     }),
     createJoystic(
@@ -147,6 +147,7 @@ function sortUnit(unit, activeUnit, zone, circle) {
   if (ground) {
     unit.x = ground.x + 60;
     unit.y = ground.y - 10;
+    unit.visible = true;
     unit.alpha = 1;
     if (unit === activeUnit) {
       circle.x = ground.x + 20;
@@ -154,6 +155,7 @@ function sortUnit(unit, activeUnit, zone, circle) {
     }
   } else {
     unit.alpha = 0;
+    unit.visible = false;
     if (unit === activeUnit) circle.alpha = 0;
   }
 }

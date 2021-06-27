@@ -92,7 +92,10 @@ function setup() {
     renderMap();
     console.log(store.units);
   });
-  // enableInteractiveMap(store.gameScene);
+  document.getElementById("dev").addEventListener("click", e => {
+    enableInteractiveMap(store.gameScene);
+    e.target.style.visibility = "hidden";
+  });
 }
 
 function addSprite(target, i) {
@@ -147,8 +150,8 @@ function renderMap() {
   let lines = store.map.slice(y, endLines);
   if (store.y < y || endLines > store.map.length - 1) {
     let count = Math.abs(y - store.y);
-    if (count > 7) count = 7;
     if (count === 0) count = Math.abs(endLines - store.map.length - 1);
+    if (count < -5) count = -5;
     for (let i = 0; i < count; i++) {
       let newLine = [];
       for (let k = 0; k < store.cellsInLine; k++) {
