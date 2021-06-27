@@ -92,7 +92,7 @@ function setup() {
     renderMap();
     console.log(store.units);
   });
-  enableInteractiveMap(store.gameScene);
+  // enableInteractiveMap(store.gameScene);
 }
 
 function addSprite(target, i) {
