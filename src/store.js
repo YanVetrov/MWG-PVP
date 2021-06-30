@@ -2,14 +2,15 @@ import { Sprite, Texture, Container, Text } from "pixi.js";
 
 import base from "./units_templates.js";
 const objectsOnMap = [
-  { name: "garage mini", image: "garage1" },
-  { name: "garage big", image: "garage2" },
+  { name: "garage mini", image: "garage1", posX: 1, posY: 1 },
+  { name: "garage big", image: "garage2", posX: 2, posY: 1 },
 ].map(el => {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
-
   sprite.width = 120;
   sprite.height = 120;
   sprite.zIndex = 1;
+  sprite.posX = el.posX;
+  sprite.posY = el.posY;
   sprite.name = el.name;
   return sprite;
 });
@@ -26,7 +27,7 @@ function createUnits(arr) {
     sprite.height = 120;
     container.name = el.name;
     container.locked = false;
-    container.lockedTime = 0;
+    container.lt = 0;
     container.timerText = new Text("", { fill: 0xefefef, fontSize: 15 });
     container.timerText.x = 50;
     container.timerText.y = -20;
@@ -39,23 +40,30 @@ function createUnits(arr) {
     container.addChild(container.timerText);
     container.addChild(container.hpText);
     container.addChild(sprite);
-    let obj = new Proxy(container, {
-      set(item, prop, val, prox) {
-        if (prop === "lockedTime") {
-          item.locked = !!val;
-          if (!val) item.timerText.text = null;
+    Object.defineProperty(container, "timer", {
+      get() {
+        return this.timerText.text;
+      },
+      set(val) {
+        if (!val) val = "";
+        this.timerText.text = val;
+      },
+    });
+    Object.defineProperty(container, "lockedTime", {
+      get() {
+        return this.lt;
+      },
+      set(val) {
+        this.lt = val;
+        if (!val) {
+          val = null;
+          this.timer = 0;
         }
-        if (prop === "timerText") {
-          if (!val) val = "";
-          item.timerText.text = val;
-          return true;
-        }
-        item[prop] = val;
-        return true;
+        this.locked = !!val;
       },
     });
 
-    return obj;
+    return container;
   });
 }
 const units = createUnits(base);
@@ -86,6 +94,7 @@ let store = {
   units: [],
   objectsOnMap,
 };
+const setExampleUnits = () => (store.units = createUnits(base));
 async function getIngameTanks() {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -135,4 +144,4 @@ async function getIngameTanks() {
   store.units = createUnits([...arr]);
   store.unit = store.units[0];
 }
-export { store, getIngameTanks };
+export { store, getIngameTanks, setExampleUnits };

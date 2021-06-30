@@ -62,7 +62,6 @@ function setup() {
     app.loader.resources["./assets/top_bottom.json"].textures;
   store.mountains_rl =
     app.loader.resources["./assets/right_left.json"].textures;
-  console.log(app.loader.resources);
   // store.gameScene.addChild(border);
   store.gameScene.addChild(circle);
   store.map = initMap(
@@ -71,10 +70,24 @@ function setup() {
     store.allMapCount
   );
   renderMap();
-
+  for (let i = 1; i < 1000; i++) {
+    let sprite = Sprite.from("./assets/mountain.png");
+    sprite.zIndex = 1;
+    sprite.scale.x = 0.4;
+    sprite.scale.y = 0.4;
+    sprite.diffX = -20;
+    sprite.diffY = -55;
+    sprite.alpha = 0.75;
+    store.objectsOnMap.push(sprite);
+  }
   store.objectsOnMap.forEach((el, i) => {
-    i *= 3;
-    setUnit(el, store.visibleZone[i], true);
+    let randomY = Math.floor(Math.random() * (100 - 10)) + 10;
+    let randomX = Math.floor(Math.random() * (100 - 10)) + 10;
+    setUnit(
+      el,
+      store.map.filter(el => !el.unit)[el.posY || randomY][el.posX || randomX],
+      true
+    );
     store.gameScene.addChild(el);
   });
   renderMap();
@@ -82,7 +95,6 @@ function setup() {
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
   initUal(async e => {
-    console.log(e);
     store.user = e[0];
     await getIngameTanks();
     store.units.forEach((el, i) => {
@@ -90,7 +102,6 @@ function setup() {
       setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 5]);
     });
     renderMap();
-    console.log(store.units);
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
@@ -132,14 +143,14 @@ function addSprite(target, i) {
     if (store.unit.ground && !e.target.unit) {
       if (store.unit.locked) return false;
       if (!moveUnit(store.unit, e.target)) return 0;
-      moveCircle(circle, e.target);
+      // moveCircle(circle, e.target);
     }
     updateText(app.stage, store, `X:${e.target.posX} Y:${e.target.posY}`);
-    renderMiniMap();
+    // renderMiniMap();
   });
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
 }
-function renderMap() {
+async function renderMap() {
   store.visibleZone.forEach(el => store.gameScene.removeChild(el));
   store.visibleZone = [];
   let y = store.y;
@@ -179,10 +190,10 @@ function renderMap() {
   });
   store.visibleZone.forEach((el, i) => addSprite(el, i));
   store.units.forEach(el =>
-    sortUnit(el, store.unit, store.visibleZone, circle)
+    sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
   );
   store.objectsOnMap.forEach(el =>
-    sortUnit(el, store.unit, store.visibleZone, circle)
+    sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
   );
   initMiniMap();
   renderMiniMap();
@@ -208,7 +219,7 @@ function initMiniMap() {
   app.stage.addChild(store.miniMap);
   renderMiniMap();
 }
-function renderMiniMap() {
+async function renderMiniMap() {
   if (store.cashMinimap) store.miniMap.removeChild(store.cashMinimap);
   store.cashMinimap = new Graphics();
   let size = 1;
@@ -228,14 +239,14 @@ function renderMiniMap() {
         for (let y = (line - 1) * oneCellInset; y < line * oneCellInset; y++) {
           if (store.units.some(el => el.posX === x + 1 && el.posY === y + 1))
             alpha = 1;
-          if (
-            store.objectsOnMap.some(
-              el => el.posX === x + 1 && el.posY === y + 1
-            )
-          ) {
-            color = 0xcc90fe;
-            alpha = 1;
-          }
+          // if (
+          //   store.objectsOnMap.some(
+          //     el => el.posX === x + 1 && el.posY === y + 1
+          //   )
+          // ) {
+          //   color = 0xcc90fe;
+          //   alpha = 1;
+          // }
         }
       }
 
@@ -258,12 +269,13 @@ function renderMiniMap() {
 function checkUnits() {
   setInterval(() => {
     store.units.forEach(el => {
+      if (el.lockedTime === 0) return 0;
       if (Date.now() > el.lockedTime) {
         el.lockedTime = 0;
         el.alpha = 1;
       } else {
         el.alpha = 0.5;
-        el.timerText = Math.ceil((el.lockedTime - Date.now()) / 1000);
+        el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
       }
     });
   }, 1000);

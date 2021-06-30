@@ -15,22 +15,6 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joystick.zIndex = 2;
   joyContainer.scale.y = 0.5 / window.devicePixelRatio;
   joyContainer.scale.x = 0.5 / window.devicePixelRatio;
-  // let dropShadowFilter = new DropShadowFilter();
-  // dropShadowFilter.color = 0xac90fe;
-  // dropShadowFilter.alpha = 2;
-  // dropShadowFilter.blur = 6;
-  // dropShadowFilter.quality = 3;
-  // dropShadowFilter.distance = 1;
-  // const border = new Graphics();
-  // joyContainer.addChild(border);
-  // border.zIndex = 1;
-  // border.beginFill(0xac90fe, 1);
-  // border.lineStyle(0, 0xffffff, 1);
-  // border.drawPolygon([50, 100, 210, 195, 210, 0]);
-  // border.endFill();
-  // border.x -= 55;
-  // border.y -= 0;
-  // joystick.filters = [dropShadowFilter];
   joyContainer.on("pointerover", e => {
     gsap.to(joystick.scale, {
       x: joystick.scale.x + 0.03,
@@ -142,24 +126,26 @@ function initMap(arr, store, count) {
   }
   return map;
 }
-function sortUnit(unit, activeUnit, zone, circle) {
+async function sortUnit(unit, activeUnit, zone, container, circle) {
   let ground = zone.find(gr => gr.posX === unit.posX && gr.posY === unit.posY);
   if (ground) {
-    unit.x = ground.x + 60;
-    unit.y = ground.y - 10;
+    let x = unit.diffX || 60;
+    let y = unit.diffY || -10;
+    unit.x = ground.x + x;
+    unit.y = ground.y + y;
+    container.addChild(unit);
     unit.visible = true;
-    unit.alpha = 1;
     if (unit === activeUnit) {
       circle.x = ground.x + 20;
       circle.y = ground.y + 35;
     }
   } else {
-    unit.alpha = 0;
     unit.visible = false;
+    container.removeChild(unit);
     if (unit === activeUnit) circle.alpha = 0;
   }
 }
-function enableInteractiveMap(zone) {
+async function enableInteractiveMap(zone) {
   window.addEventListener("mousewheel", e => {
     let { x, y } = zone.scale;
     if (e.deltaY > 0 && x > 0.1) {
@@ -272,9 +258,10 @@ function enableInteractiveMap(zone) {
     setTimeout(() => (zone.blockedUI = false), 100);
   });
 }
-function moveUnit(unit, ground) {
+async function moveUnit(unit, ground) {
   let multiX = Math.abs(unit.posX - ground.posX);
   let multiY = Math.abs(unit.posY - ground.posY);
+  console.log(multiX, multiY);
   if (multiX > 1 || multiY > 1) return false;
   unit.unit.texture = unit.unit[getDirection(unit.ground, ground)];
   unit.ground.unit = null;
@@ -293,17 +280,11 @@ function moveUnit(unit, ground) {
   unit.alpha = 0.5;
   return true;
 }
-function moveCircle(circle, ground, duration = 0.5) {
-  // gsap.to(circle, {
-  //   x: ground.x + 20,
-  //   y: ground.y + 35,
-  //   duration,
-  //   ease: "back.out(1)",
-  // });
+async function moveCircle(circle, ground, duration = 0.5) {
   circle.x = ground.x + 20;
   circle.y = ground.y + 35;
 }
-function updateText(container, textNode, text) {
+async function updateText(container, textNode, text) {
   container.removeChild(textNode.text);
   textNode.text = new Text(`${text}`, { fontSize: 30, fill: 0xffffff });
   textNode.text.zIndex = 3;
@@ -321,8 +302,9 @@ function getDirection(fromPlace, toPlace) {
   if (fromPlace.x > toPlace.x && fromPlace.y < toPlace.y) return "dl";
 }
 function setUnit(unit, ground, unclickable = false) {
-  unit.x = ground.x + 60;
-  unit.y = ground.y - 10;
+  // unit.x = ground.x + 60;
+  // unit.y = ground.y - 10;
+  if (ground.unit) return console.log("ground is busy");
   unit.posX = ground.posX;
   unit.posY = ground.posY;
   unit.ground = ground;
