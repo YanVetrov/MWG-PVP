@@ -22,6 +22,19 @@
             right: 115px;
         }
 
+        #signout {
+            position: fixed;
+            z-index: 5;
+            top: 15px;
+            right: 115px;
+            font-size: 25px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: #eee;
+            background: rgba(0, 0, 0, 0.5);
+            visibility: hidden;
+        }
+
         #dev {
             position: fixed;
             z-index: 5;
@@ -34,8 +47,10 @@
 
 <body>
     <div id="login">
-
     </div>
+    <button id="signout">
+        sign out
+    </button>
     <button id="dev">не нажимать</button>
 </body>
 

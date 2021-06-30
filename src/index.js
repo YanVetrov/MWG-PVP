@@ -95,6 +95,7 @@ function setup() {
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
   initUal(async e => {
+    if (e[0].wax) e[0].rpc = e[0].wax.rpc;
     store.user = e[0];
     await getIngameTanks();
     store.units.forEach((el, i) => {
@@ -106,6 +107,21 @@ function setup() {
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
     e.target.style.visibility = "hidden";
+  });
+  document.getElementById("signout").addEventListener("click", e => {
+    localStorage.clear();
+    location.reload();
+    // store.units.forEach(el => store.gameScene.removeChild(el));
+    // initUal(async e => {
+    //   if (e[0].wax) e[0].rpc = e[0].wax.rpc;
+    //   store.user = e[0];
+    //   await getIngameTanks();
+    //   store.units.forEach((el, i) => {
+    //     store.gameScene.addChild(el);
+    //     setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 5]);
+    //   });
+    //   renderMap();
+    // });
   });
 }
 
