@@ -20,17 +20,17 @@ module.exports = {
       },
     ],
   },
-  optimization: {
-    minimizer: [
-      new UglifyJSPlugin({
-        uglifyOptions: {
-          output: {
-            comments: false,
-          },
-        },
-      }),
-    ],
-  },
+  // optimization: {
+  //   minimizer: [
+  //     new UglifyJSPlugin({
+  //       uglifyOptions: {
+  //         output: {
+  //           comments: false,
+  //         },
+  //       },
+  //     }),
+  //   ],
+  // },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [

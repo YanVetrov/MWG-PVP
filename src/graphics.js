@@ -13,7 +13,7 @@ function getCircle() {
   const circle = new Graphics();
 
   circle.beginFill(0xffffff, 0);
-  circle.lineStyle(3, 0x99ffaa, 1);
+  circle.lineStyle(1, 0x99ffaa, 1);
   circle.drawCircle(50, 50, 50);
   circle.endFill();
   circle.skew.y = -0.2;
