@@ -37,10 +37,10 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   joyContainer.addChild(joystick);
   return joyContainer;
 }
-function getMontain(frames, store) {
+function getMontain(frames, store, id) {
   let names = Object.keys(frames);
   let container = new Container();
-  let sprite = Sprite.from("./assets/Wall048.png");
+  let sprite = new Sprite(id["Wall005.png"]);
   let random = Math.ceil(Math.random() * names.length - 1);
   let name = names[random];
   let mountain = new Sprite(store[name]);

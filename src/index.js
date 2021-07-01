@@ -183,7 +183,9 @@ async function renderMap() {
     for (let i = 0; i < count; i++) {
       let newLine = [];
       for (let k = 0; k < store.cellsInLine; k++) {
-        newLine.push(getMontain(top_bottom.frames, store.mountains_tb));
+        newLine.push(
+          getMontain(top_bottom.frames, store.mountains_tb, store.id)
+        );
       }
       if (store.y < 0) lines.unshift(newLine);
       else lines.push(newLine);
@@ -200,8 +202,11 @@ async function renderMap() {
 
     for (let i = 0; i < count; i++) {
       if (store.x < x)
-        line.unshift(getMontain(right_left.frames, store.mountains_rl));
-      else line.push(getMontain(right_left.frames, store.mountains_rl));
+        line.unshift(
+          getMontain(right_left.frames, store.mountains_rl, store.id)
+        );
+      else
+        line.push(getMontain(right_left.frames, store.mountains_rl, store.id));
     }
     line.forEach(cell => store.visibleZone.push(cell));
   });
