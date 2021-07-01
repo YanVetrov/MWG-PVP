@@ -5,6 +5,8 @@ import {
   Polygon,
   Graphics,
   Text,
+  AnimatedSprite,
+  Texture,
 } from "pixi.js";
 import {
   initMap,
@@ -17,6 +19,7 @@ import {
   getMontain,
   getJoystics,
   background,
+  getDirection,
 } from "./functionality";
 
 import sheet from "./assets/sheet.json";
@@ -104,7 +107,7 @@ function setup() {
     await getIngameTanks();
     store.units.forEach((el, i) => {
       store.gameScene.addChild(el);
-      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 5]);
+      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 50]);
     });
     renderMap();
   });
@@ -156,8 +159,14 @@ function addSprite(target, i) {
     if (store.gameScene.blockedUI) return 0;
     circle.alpha = 1;
     if (e.target.unit) {
-      store.unit = e.target.unit;
+      // store.unit = e.target.unit;
       moveCircle(circle, store.unit.ground, 0.2);
+      if (store.unit !== e.target.unit) {
+        if (store.unit.locked) return false;
+        store.unit.unit.texture =
+          store.unit.unit[getDirection(store.unit.ground, e.target)];
+        unitAction(store.unit, e.target);
+      }
     }
 
     if (store.unit.ground && !e.target.unit) {
@@ -304,4 +313,37 @@ function checkUnits() {
       }
     });
   }, 1000);
+}
+
+function unitAction(unit, target) {
+  let fire = new AnimatedSprite(
+    ["fire.png", "fire1.png", "fire2.png"].map(el =>
+      Texture.from(`./assets/${el}`)
+    )
+  );
+  let obj = {
+    ur: { x: 60, y: 25 },
+    r: { x: 60, y: 35 },
+    dr: { x: 70, y: 70 },
+    u: { x: 40, y: 15 },
+
+    ul: { x: 10, y: 25 },
+    l: { x: 10, y: 35 },
+    dl: { x: 0, y: 60 },
+    d: { x: 40, y: 80 },
+  };
+  fire.x = obj[getDirection(unit.ground, target)].x;
+  fire.y = obj[getDirection(unit.ground, target)].y;
+  fire.zIndex = 9;
+  fire.animationSpeed = 0.5;
+  fire.scale.x = 0.5;
+  fire.scale.y = 0.5;
+  fire.play();
+  unit.addChild(fire);
+  let { x, y } = target;
+  x -= unit.x - 85;
+  y -= unit.y - 35;
+  unit.lockedTime = Date.now() + 10000;
+  unit.alpha = 0.5;
+  gsap.to(fire, { x, y, duration: 1 }).then(r => unit.removeChild(fire));
 }

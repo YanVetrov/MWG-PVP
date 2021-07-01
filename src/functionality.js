@@ -291,6 +291,7 @@ async function updateText(container, textNode, text) {
   container.addChild(textNode.text);
 }
 function getDirection(fromPlace, toPlace) {
+  console.log(fromPlace.x, fromPlace.y, toPlace.x, toPlace.y);
   if (fromPlace.x > toPlace.x && fromPlace.y == toPlace.y) return "l";
   if (fromPlace.x < toPlace.x && fromPlace.y == toPlace.y) return "r";
   if (fromPlace.y > toPlace.y && fromPlace.x == toPlace.x) return "u";
@@ -300,6 +301,7 @@ function getDirection(fromPlace, toPlace) {
   if (fromPlace.x < toPlace.x && fromPlace.y < toPlace.y) return "dr";
   if (fromPlace.x < toPlace.x && fromPlace.y > toPlace.y) return "ur";
   if (fromPlace.x > toPlace.x && fromPlace.y < toPlace.y) return "dl";
+  return "ul";
 }
 function setUnit(unit, ground, unclickable = false) {
   // unit.x = ground.x + 60;
