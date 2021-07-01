@@ -70,7 +70,7 @@ function setup() {
     store.allMapCount
   );
   renderMap();
-  for (let i = 1; i < 1000; i++) {
+  for (let i = 1; i < 100; i++) {
     let sprite = Sprite.from("./assets/mountain.png");
     sprite.zIndex = 1;
     sprite.scale.x = 0.4;
