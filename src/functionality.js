@@ -277,7 +277,6 @@ async function moveUnit(unit, ground) {
     ease: "back.out(1)",
   });
   unit.lockedTime = Date.now() + 10000;
-  unit.alpha = 0.5;
   return true;
 }
 async function moveCircle(circle, ground, duration = 0.5) {

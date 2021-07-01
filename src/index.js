@@ -306,9 +306,9 @@ function checkUnits() {
       if (el.lockedTime === 0) return 0;
       if (Date.now() > el.lockedTime) {
         el.lockedTime = 0;
-        el.alpha = 1;
+        el.unit.alpha = 1;
       } else {
-        el.alpha = 0.5;
+        el.unit.alpha = 0.5;
         el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
       }
     });
@@ -344,6 +344,6 @@ function unitAction(unit, target) {
   x -= unit.x - 85;
   y -= unit.y - 35;
   unit.lockedTime = Date.now() + 10000;
-  unit.alpha = 0.5;
+  unit.unit.alpha = 0.5;
   gsap.to(fire, { x, y, duration: 1 }).then(r => unit.removeChild(fire));
 }
