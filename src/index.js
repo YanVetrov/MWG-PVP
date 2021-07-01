@@ -343,7 +343,7 @@ function unitAction(unit, target) {
   let { x, y } = target;
   x -= unit.x - 85;
   y -= unit.y - 35;
-  unit.lockedTime = Date.now() + 10000;
+  unit.lockedTime = Date.now() + 5000;
   unit.unit.alpha = 0.5;
   gsap.to(fire, { x, y, duration: 1 }).then(r => unit.removeChild(fire));
 }
