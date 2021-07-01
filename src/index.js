@@ -81,8 +81,9 @@ function setup() {
     store.objectsOnMap.push(sprite);
   }
   store.objectsOnMap.forEach((el, i) => {
-    let randomY = Math.floor(Math.random() * (100 - 10)) + 10;
-    let randomX = Math.floor(Math.random() * (100 - 10)) + 10;
+    let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
+    let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
+    el.alpha = 0.8;
     setUnit(
       el,
       store.map.filter(el => !el.unit)[el.posY || randomY][el.posX || randomX],
