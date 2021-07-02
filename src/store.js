@@ -100,6 +100,7 @@ function createUnits(arr) {
     sprite.width = 120;
     sprite.height = 120;
     sprite.dir = "ul";
+    Object.keys(el).forEach(key => (sprite[key] = el[key]));
     Object.defineProperty(sprite, "direction", {
       get() {
         return this.dir;
@@ -113,11 +114,16 @@ function createUnits(arr) {
     container.name = el.name;
     container.locked = false;
     container.lt = 0;
-    container.timerText = new Text("", { fill: 0xefefef, fontSize: 15 });
+    container.timerText = new Text("", {
+      fill: 0xefefef,
+      fontFamily: "metalwar",
+      fontSize: 15,
+    });
     container.timerText.x = 50;
     container.timerText.y = -20;
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
       fill: 0x00ffaa,
+      fontFamily: "metalwar",
       fontSize: 15,
     });
     container.hpText.x = 50;
@@ -145,6 +151,18 @@ function createUnits(arr) {
           this.timer = 0;
         }
         this.locked = !!val;
+      },
+    });
+    Object.defineProperty(container, "health", {
+      get() {
+        return this.unit.hp;
+      },
+      set(val) {
+        let color = 0x00ffaa;
+        if (val < 10) color = 0xff9999;
+        this.unit.hp = val;
+        this.hpText.style.fill = color;
+        this.hpText.text = `${val}/${this.unit.strength}`;
       },
     });
 

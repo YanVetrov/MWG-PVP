@@ -285,7 +285,11 @@ async function moveCircle(circle, ground, duration = 0.5) {
 }
 async function updateText(container, textNode, text) {
   container.removeChild(textNode.text);
-  textNode.text = new Text(`${text}`, { fontSize: 30, fill: 0xffffff });
+  textNode.text = new Text(`${text}`, {
+    fontSize: 30,
+    fontFamily: "metalwar",
+    fill: 0xffffff,
+  });
   textNode.text.zIndex = 3;
   container.addChild(textNode.text);
 }

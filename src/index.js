@@ -31,7 +31,8 @@ import { store, getIngameTanks } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
-import { UALJs } from "ual-plainjs-renderer/dist/UALJs";
+// let FontFaceObserver = require('fontfaceobserver');
+// let metalfont = new FontFaceObserver()
 initGsap();
 let border = getBorder();
 let circle = getCircle();
@@ -58,6 +59,7 @@ app.loader
   .add("./assets/sheet.json")
   .add("./assets/top_bottom.json")
   .add("./assets/right_left.json")
+  .add("metalfont", "./assets/font1.ttf")
   .load(setup);
 function setup() {
   store.id = app.loader.resources["./assets/sheet.json"].textures;
@@ -358,6 +360,7 @@ async function unitAction(unit, target) {
   crash.x = 30;
   crash.y = -100;
   target.unit.alpha = 0;
+  target.unit.health = 0;
   crash.scale.x = 1.5;
   crash.scale.y = 1.5;
   crash.play();
@@ -369,3 +372,6 @@ async function unitAction(unit, target) {
     target.removeChild(crash);
   }, 1000);
 }
+window.addEventListener("resize", e => {
+  app.renderer.resize(window.innerWidth, window.innerHeight);
+});
