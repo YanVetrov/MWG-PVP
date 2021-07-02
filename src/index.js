@@ -163,8 +163,7 @@ function addSprite(target, i) {
       moveCircle(circle, store.unit.ground, 0.2);
       if (store.unit !== e.target.unit) {
         if (store.unit.locked) return false;
-        store.unit.unit.texture =
-          store.unit.unit[getDirection(store.unit.ground, e.target)];
+        store.unit.unit.direction = getDirection(store.unit.ground, e.target);
         unitAction(store.unit, e.target);
       }
     }
@@ -315,9 +314,14 @@ function checkUnits() {
   }, 1000);
 }
 
-function unitAction(unit, target) {
+async function unitAction(unit, target) {
   let fire = new AnimatedSprite(
     ["fire.png", "fire1.png", "fire2.png"].map(el =>
+      Texture.from(`./assets/${el}`)
+    )
+  );
+  let crash = new AnimatedSprite(
+    ["crash.png", "crash1.png", "crash2.png"].map(el =>
       Texture.from(`./assets/${el}`)
     )
   );
@@ -339,11 +343,29 @@ function unitAction(unit, target) {
   fire.scale.x = 0.5;
   fire.scale.y = 0.5;
   fire.play();
+  unit.zIndex = 10;
   unit.addChild(fire);
   let { x, y } = target;
   x -= unit.x - 85;
   y -= unit.y - 35;
-  unit.lockedTime = Date.now() + 5000;
-  unit.unit.alpha = 0.5;
-  gsap.to(fire, { x, y, duration: 1 }).then(r => unit.removeChild(fire));
+  // unit.lockedTime = Date.now() + 5000;
+  // unit.unit.alpha = 0.5;
+  await gsap.to(fire, { x, y, duration: 0.5 });
+  unit.zIndex = 1;
+  unit.removeChild(fire);
+  target.addChild(crash);
+  crash.animationSpeed = 0.2;
+  crash.x = 30;
+  crash.y = -100;
+  target.unit.alpha = 0;
+  crash.scale.x = 1.5;
+  crash.scale.y = 1.5;
+  crash.play();
+  setTimeout(async () => {
+    target.unit.unit.texture =
+      target.unit.unit.broken[target.unit.unit.direction];
+    gsap.to(target.unit, { alpha: 1, duration: 1 });
+    await gsap.to(crash, { alpha: 0, duration: 1 });
+    target.removeChild(crash);
+  }, 1000);
 }

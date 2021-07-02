@@ -263,7 +263,7 @@ async function moveUnit(unit, ground) {
   let multiY = Math.abs(unit.posY - ground.posY);
   console.log(multiX, multiY);
   if (multiX > 1 || multiY > 1) return false;
-  unit.unit.texture = unit.unit[getDirection(unit.ground, ground)];
+  unit.unit.direction = getDirection(unit.ground, ground);
   unit.ground.unit = null;
   unit.ground = ground;
   ground.unit = unit;

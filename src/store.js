@@ -1,4 +1,4 @@
-import { Sprite, Texture, Container, Text } from "pixi.js";
+import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 const objectsOnMap = [
@@ -88,14 +88,28 @@ const objectsOnMap = [
 function createUnits(arr) {
   return arr.map((el, i) => {
     let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
-    ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(
-      key =>
-        (sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`))
-    );
+    ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(key => {
+      sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`);
+      if (!sprite.broken) sprite.broken = {};
+      sprite.broken[key] = Texture.from(
+        `./assets/cards/${el.image}/broken/${key}.png`
+      );
+    });
     let container = new Container();
     container.zIndex = 6;
     sprite.width = 120;
     sprite.height = 120;
+    sprite.dir = "ul";
+    Object.defineProperty(sprite, "direction", {
+      get() {
+        return this.dir;
+      },
+      set(val) {
+        if (!val) return "invalid";
+        this.dir = val;
+        this.texture = this[val];
+      },
+    });
     container.name = el.name;
     container.locked = false;
     container.lt = 0;
