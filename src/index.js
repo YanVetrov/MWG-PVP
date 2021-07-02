@@ -350,7 +350,7 @@ async function unitAction(unit, target) {
   y -= unit.y - 35;
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
-  await gsap.to(fire, { x, y, duration: 0.5 });
+  await gsap.to(fire, { x, y, duration: 0.5, ease: "sign.out" });
   unit.zIndex = 1;
   unit.removeChild(fire);
   target.addChild(crash);
