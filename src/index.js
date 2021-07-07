@@ -21,7 +21,7 @@ import {
   background,
   getDirection,
 } from "./functionality";
-
+import { sound } from "@pixi/sound";
 import sheet from "./assets/sheet.json";
 import top_bottom from "./assets/top_bottom.json";
 import right_left from "./assets/right_left.json";
@@ -31,8 +31,11 @@ import { store, getIngameTanks } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
-// let FontFaceObserver = require('fontfaceobserver');
-// let metalfont = new FontFaceObserver()
+sound.add("crash", "./assets/sound/crash.mp3");
+sound.add("fire", "./assets/sound/fire.mp3");
+sound.add("go", "./assets/sound/go.mp3");
+sound.add("teleport", "./assets/sound/teleport.mp3");
+window.sound = name => sound.play(name || "go");
 initGsap();
 let border = getBorder();
 let circle = getCircle();
@@ -109,13 +112,27 @@ function setup() {
     await getIngameTanks();
     store.units.forEach((el, i) => {
       store.gameScene.addChild(el);
-      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 50]);
+      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 40]);
     });
     renderMap();
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
     e.target.style.visibility = "hidden";
+  });
+  document.getElementById("prev").addEventListener("click", e => {
+    let i = store.units.indexOf(store.unit);
+    i--;
+    if (i < 0) i = 0;
+    store.unit = store.units[i];
+    moveCircle(circle, store.unit.ground, 0.2);
+  });
+  document.getElementById("next").addEventListener("click", e => {
+    let i = store.units.indexOf(store.unit);
+    i++;
+    if (i > store.units.length - 1) i = store.units.length - 1;
+    store.unit = store.units[i];
+    moveCircle(circle, store.unit.ground, 0.2);
   });
   document.getElementById("signout").addEventListener("click", e => {
     localStorage.clear();
@@ -352,7 +369,9 @@ async function unitAction(unit, target) {
   y -= unit.y - 35;
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
+  window.sound("fire");
   await gsap.to(fire, { x, y, duration: 0.5, ease: "sign.out" });
+  window.sound("crash");
   unit.zIndex = 1;
   unit.removeChild(fire);
   target.addChild(crash);

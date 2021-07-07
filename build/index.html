@@ -45,6 +45,23 @@
             visibility: hidden;
         }
 
+        #prev,
+        #next {
+            position: fixed;
+            z-index: 9;
+            top: 15px;
+            right: 455px;
+            font-size: 15px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: #eee;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        #next {
+            right: 305px;
+        }
+
         #dev {
             position: fixed;
             z-index: 5;
@@ -60,6 +77,12 @@
     </div>
     <button id="signout">
         sign out
+    </button>
+    <button id="prev">
+        prev unit
+    </button>
+    <button id="next">
+        next unit
     </button>
     <button id="dev">не нажимать</button>
 </body>

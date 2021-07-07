@@ -94,6 +94,11 @@ function createUnits(arr) {
       sprite.broken[key] = Texture.from(
         `./assets/cards/${el.image}/broken/${key}.png`
       );
+      if (el.type === "validator") {
+        sprite["stake_" + key] = Texture.from(
+          `./assets/cards/${el.image}/stake_${key}.png`
+        );
+      }
     });
     let container = new Container();
     container.zIndex = 6;
@@ -106,6 +111,7 @@ function createUnits(arr) {
         return this.dir;
       },
       set(val) {
+        console.log(val, this[val]);
         if (!val) return "invalid";
         this.dir = val;
         this.texture = this[val];
@@ -165,6 +171,21 @@ function createUnits(arr) {
         this.hpText.text = `${val}/${this.unit.strength}`;
       },
     });
+    container.stakeValidator = function () {
+      if (!this.unit.type === "validator")
+        return console.log("not validator =" + this.unit.type);
+      this.unit.direction = "stake_" + this.unit.direction;
+      window.sound("teleport");
+      this.locked = true;
+    };
+    if (el.type === "validator") {
+      container.buttonMode = true;
+      container.interactive = true;
+      container.on("pointerup", e => {
+        if (!container.active) return true;
+        container.stakeValidator();
+      });
+    }
 
     return container;
   });
@@ -185,7 +206,7 @@ let store = {
   map: [],
   allMapCount: 40000,
   miniMap: null,
-  unit: {},
+  u: {},
   cash: [],
   text: {},
   visibleZone: [],
@@ -197,6 +218,16 @@ let store = {
   units: [],
   objectsOnMap,
 };
+Object.defineProperty(store, "unit", {
+  get() {
+    return this.u;
+  },
+  set(unit) {
+    this.u.active = false;
+    unit.active = true;
+    this.u = unit;
+  },
+});
 const setExampleUnits = () => (store.units = createUnits(base));
 async function getIngameTanks() {
   let account = await store.user.getAccountName();
@@ -244,7 +275,9 @@ async function getIngameTanks() {
       }
     });
   }
-  store.units = createUnits([...arr]);
+  let validator = base.find(el => el.type === "validator");
+  let wolf2 = base.find(el => el.name === "wolf2");
+  store.units = createUnits([...arr, validator, wolf2]);
   store.unit = store.units[0];
 }
 export { store, getIngameTanks, setExampleUnits };

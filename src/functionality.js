@@ -270,6 +270,7 @@ async function moveUnit(unit, ground) {
   unit.posX = ground.posX;
   unit.posY = ground.posY;
   unit.alpha = 1;
+  window.sound("go");
   gsap.to(unit, {
     x: ground.x + 60,
     y: ground.y - 10,
