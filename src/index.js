@@ -188,7 +188,7 @@ function addSprite(target, i) {
     }
 
     if (store.unit.ground && !e.target.unit) {
-      if (store.unit.locked) return false;
+      // if (store.unit.locked) return false;
       if (!moveUnit(store.unit, e.target)) return 0;
       // moveCircle(circle, e.target);
     }
@@ -340,15 +340,15 @@ async function unitAction(unit, target) {
     )
   );
   let obj = {
-    ur: { x: 60, y: 25 },
-    r: { x: 60, y: 35 },
-    dr: { x: 70, y: 70 },
-    u: { x: 40, y: 15 },
+    ur: { x: 80, y: 25 },
+    r: { x: 90, y: 45 },
+    dr: { x: 90, y: 70 },
+    u: { x: 50, y: 15 },
 
     ul: { x: 10, y: 25 },
-    l: { x: 10, y: 35 },
-    dl: { x: 0, y: 60 },
-    d: { x: 40, y: 80 },
+    l: { x: 0, y: 45 },
+    dl: { x: 0, y: 80 },
+    d: { x: 50, y: 90 },
   };
   let fires = (() => {
     let arr = [];
@@ -362,8 +362,8 @@ async function unitAction(unit, target) {
       fire.y = obj[getDirection(unit.ground, target)].y;
       fire.zIndex = 11;
       fire.animationSpeed = 0.5;
-      fire.scale.x = 0.5;
-      fire.scale.y = 0.5;
+      fire.scale.x = 0.3;
+      fire.scale.y = 0.3;
       fire.play();
       arr.push(fire);
     }
