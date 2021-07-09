@@ -334,11 +334,6 @@ function checkUnits() {
 }
 
 async function unitAction(unit, target) {
-  let fire = new AnimatedSprite(
-    ["fire.png", "fire1.png", "fire2.png"].map(el =>
-      Texture.from(`./assets/${el}`)
-    )
-  );
   let crash = new AnimatedSprite(
     ["crash.png", "crash1.png", "crash2.png"].map(el =>
       Texture.from(`./assets/${el}`)
@@ -355,25 +350,45 @@ async function unitAction(unit, target) {
     dl: { x: 0, y: 60 },
     d: { x: 40, y: 80 },
   };
-  fire.x = obj[getDirection(unit.ground, target)].x;
-  fire.y = obj[getDirection(unit.ground, target)].y;
-  fire.zIndex = 9;
-  fire.animationSpeed = 0.5;
-  fire.scale.x = 0.5;
-  fire.scale.y = 0.5;
-  fire.play();
+  let fires = (() => {
+    let arr = [];
+    for (let i = 0; i < 3; i++) {
+      let fire = new AnimatedSprite(
+        ["fire.png", "fire1.png", "fire2.png"].map(el =>
+          Texture.from(`./assets/${el}`)
+        )
+      );
+      fire.x = obj[getDirection(unit.ground, target)].x;
+      fire.y = obj[getDirection(unit.ground, target)].y;
+      fire.zIndex = 11;
+      fire.animationSpeed = 0.5;
+      fire.scale.x = 0.5;
+      fire.scale.y = 0.5;
+      fire.play();
+      arr.push(fire);
+    }
+    return arr;
+  })();
   unit.zIndex = 10;
-  unit.addChild(fire);
+  fires.forEach(fire => unit.addChild(fire));
   let { x, y } = target;
   x -= unit.x - 85;
   y -= unit.y - 35;
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
   window.sound("fire");
-  await gsap.to(fire, { x, y, duration: 0.5, ease: "sign.out" });
+  gsap.to(fires[0], { x, y, duration: 0.5, ease: "sign.out" });
+  gsap.to(fires[1], { x, y, delay: 0.1, duration: 0.5, ease: "sign.out" });
+  await gsap.to(fires[2], {
+    x,
+    y,
+    delay: 0.3,
+    duration: 0.5,
+    ease: "sign.out",
+  });
   window.sound("crash");
   unit.zIndex = 1;
-  unit.removeChild(fire);
+  fires.forEach(fire => unit.removeChild(fire));
   target.addChild(crash);
   crash.animationSpeed = 0.2;
   crash.x = 30;
