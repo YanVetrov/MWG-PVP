@@ -389,22 +389,42 @@ async function unitAction(unit, target) {
   window.sound("crash");
   unit.zIndex = 1;
   fires.forEach(fire => unit.removeChild(fire));
-  target.addChild(crash);
+  target.unit.addChild(crash);
   crash.animationSpeed = 0.2;
-  crash.x = 30;
-  crash.y = -100;
-  target.unit.alpha = 0;
-  target.unit.health = 0;
-  crash.scale.x = 1.5;
-  crash.scale.y = 1.5;
+  crash.x = 35;
+  crash.y = 30;
+  // target.unit.alpha = 0;
+  target.unit.health -= 20;
+  if (target.unit.health < 0) {
+    target.unit.health = 0;
+    crash.scale.x = 1.5;
+    crash.scale.y = 1.5;
+    target.unit.unit.alpha = 0;
+    crash.x = -20;
+    crash.y = -90;
+    crash.play();
+    setTimeout(async () => {
+      target.unit.unit.texture =
+        target.unit.unit.broken[target.unit.unit.direction];
+      gsap.to(target.unit.unit, { alpha: 1, duration: 2 });
+      gsap.to(crash.scale, { x: 1.2, y: 1.2, duration: 2 });
+      gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
+      await gsap.to(crash, { alpha: 0, duration: 2 });
+      target.unit.removeChild(crash);
+    }, 2000);
+    return 0;
+  }
+  crash.zIndex = 3;
+  crash.scale.x = 0.3;
+  crash.scale.y = 0.3;
   crash.play();
   setTimeout(async () => {
-    target.unit.unit.texture =
-      target.unit.unit.broken[target.unit.unit.direction];
     gsap.to(target.unit, { alpha: 1, duration: 1 });
-    await gsap.to(crash, { alpha: 0, duration: 1 });
-    target.removeChild(crash);
-  }, 1000);
+    gsap.to(crash.scale, { x: 0.1, y: 0.1, duration: 2 });
+    gsap.to(crash, { x: crash.x + 15, y: crash.y + 20, duration: 2 });
+    await gsap.to(crash, { alpha: 0, duration: 2 });
+    target.unit.removeChild(crash);
+  }, 2000);
 }
 window.addEventListener("resize", e => {
   app.renderer.resize(window.innerWidth, window.innerHeight);
