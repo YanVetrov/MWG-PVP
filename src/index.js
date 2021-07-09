@@ -188,7 +188,7 @@ function addSprite(target, i) {
     }
 
     if (store.unit.ground && !e.target.unit) {
-      // if (store.unit.locked) return false;
+      if (store.unit.locked) return false;
       if (!moveUnit(store.unit, e.target)) return 0;
       // moveCircle(circle, e.target);
     }
