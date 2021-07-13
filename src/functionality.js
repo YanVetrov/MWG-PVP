@@ -259,10 +259,6 @@ async function enableInteractiveMap(zone) {
   });
 }
 async function moveUnit(unit, ground) {
-  let multiX = Math.abs(unit.posX - ground.posX);
-  let multiY = Math.abs(unit.posY - ground.posY);
-  console.log(multiX, multiY);
-  if (multiX > 1 || multiY > 1) return false;
   unit.unit.direction = getDirection(unit.ground, ground);
   unit.ground.unit = null;
   unit.ground = ground;
@@ -271,9 +267,12 @@ async function moveUnit(unit, ground) {
   unit.posY = ground.posY;
   unit.alpha = 1;
   window.sound("go");
+  let x = unit.diffX || Math.abs(ground.width - unit.unit.width) / 2.5;
+  let y = unit.diffY || -Math.abs(ground.height - unit.unit.height) * 2.5;
+  console.log(x, y);
   gsap.to(unit, {
-    x: ground.x + 60,
-    y: ground.y - 10,
+    x: ground.x + x,
+    y: ground.y + y,
     duration: 0.5,
     ease: "back.out(1)",
   });

@@ -27,7 +27,7 @@ import top_bottom from "./assets/top_bottom.json";
 import right_left from "./assets/right_left.json";
 import { getBorder, getCircle } from "./graphics";
 import { initUal } from "./auth";
-import { store, getIngameTanks } from "./store";
+import { store, getIngameTanks, moveTransaction } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
@@ -112,7 +112,7 @@ function setup() {
     await getIngameTanks();
     store.units.forEach((el, i) => {
       store.gameScene.addChild(el);
-      setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 40]);
+      setUnit(el, store.map[el.posY - 1 || 0][el.posX - 1 || i]);
     });
     renderMap();
   });
@@ -173,27 +173,39 @@ function addSprite(target, i) {
   target.on("pointerout", e => {
     target.alpha = 1;
   });
-  target.on("pointerup", e => {
-    if (e.target.unclickable) return 0;
-    if (store.gameScene.blockedUI) return 0;
+  target.on("pointerup", async e => {
+    if (target.blocked) return 0;
+    target.blocked = true;
+    if (e.target.unclickable) return (target.blocked = false);
+    if (store.gameScene.blockedUI) return (target.blocked = false);
     circle.alpha = 1;
     if (e.target.unit) {
-      // store.unit = e.target.unit;
       moveCircle(circle, store.unit.ground, 0.2);
       if (store.unit !== e.target.unit) {
-        if (store.unit.locked) return false;
+        if (store.unit.locked) return (target.blocked = false);
         store.unit.unit.direction = getDirection(store.unit.ground, e.target);
         unitAction(store.unit, e.target);
       }
     }
 
     if (store.unit.ground && !e.target.unit) {
-      if (store.unit.locked) return false;
-      if (!moveUnit(store.unit, e.target)) return 0;
-      // moveCircle(circle, e.target);
+      if (store.unit.locked) return (target.blocked = false);
+      let multiX = Math.abs(store.unit.posX - e.target.posX);
+      let multiY = Math.abs(store.unit.posY - e.target.posY);
+      console.log(multiX, multiY);
+      if (multiX > 1 || multiY > 1) return (target.blocked = false);
+      let transact = await moveTransaction({
+        id: store.unit.unit.asset_id,
+        x: e.target.posX,
+        y: e.target.posY,
+      });
+      console.log(transact);
+      if (!transact) return (target.blocked = false);
+      moveUnit(store.unit, target);
+      moveCircle(circle, target);
     }
     updateText(app.stage, store, `X:${e.target.posX} Y:${e.target.posY}`);
-    // renderMiniMap();
+    target.blocked = false;
   });
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
 }

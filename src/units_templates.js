@@ -138,6 +138,8 @@ let base = [
     discountTypeEnabled: false,
     lvl: 7,
     repairing: false,
+    diffX: 25,
+    diffY: -60,
   },
 ];
 export default base;

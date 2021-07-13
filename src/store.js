@@ -2,8 +2,8 @@ import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 const objectsOnMap = [
-  { name: "garage mini", image: "garage1", posX: 1, posY: 1 },
-  { name: "garage big", image: "garage2", posX: 2, posY: 1 },
+  { name: "garage mini", image: "garage1", posX: 5, posY: 5 },
+  { name: "garage big", image: "garage2", posX: 6, posY: 6 },
   {
     name: "geyser1",
     image: "geyser1",
@@ -105,6 +105,10 @@ function createUnits(arr) {
     sprite.width = 120;
     sprite.height = 120;
     sprite.dir = "ul";
+    container.posX = el.x;
+    container.posY = el.y;
+    container.diffX = el.diffX;
+    container.diffY = el.diffY;
     Object.keys(el).forEach(key => (sprite[key] = el[key]));
     Object.defineProperty(sprite, "direction", {
       get() {
@@ -172,6 +176,7 @@ function createUnits(arr) {
       },
     });
     container.stakeValidator = function () {
+      if (this.locked) return 0;
       if (!this.unit.type === "validator")
         return console.log("not validator =" + this.unit.type);
       this.unit.direction = "stake_" + this.unit.direction;
@@ -181,6 +186,8 @@ function createUnits(arr) {
     if (el.type === "validator") {
       container.buttonMode = true;
       container.interactive = true;
+      container.scale.x = 1.7;
+      container.scale.y = 1.7;
       container.on("pointerup", e => {
         if (!container.active) return true;
         container.stakeValidator();
@@ -280,4 +287,71 @@ async function getIngameTanks() {
   store.units = createUnits([...arr, validator, wolf2]);
   store.unit = store.units[0];
 }
-export { store, getIngameTanks, setExampleUnits };
+
+async function moveTransaction({ id, x, y }) {
+  if (!id) return true;
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name: "unitmove",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          asset_id: id,
+          x,
+          y,
+        },
+      },
+    ],
+  };
+  console.log(options);
+  let response = {};
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+}
+export { store, getIngameTanks, setExampleUnits, moveTransaction };
