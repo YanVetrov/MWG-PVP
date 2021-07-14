@@ -132,13 +132,22 @@ function createUnits(arr) {
     container.timerText.x = 50;
     container.timerText.y = -20;
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
-      fill: 0x00ffaa,
+      fill: el.self ? 0x00ffaa : 0xff3377,
+      fontFamily: "metalwar",
+      fontSize: 15,
+    });
+    container.owner = new Text(`${el.owner || "Enemy"}`, {
+      fill: el.self ? 0x00ffaa : 0xff3377,
       fontFamily: "metalwar",
       fontSize: 15,
     });
     container.hpText.x = 50;
+    container.hpText.y = 10;
+    container.owner.x = 50;
+    container.self = el.self;
     container.unit = sprite;
     container.addChild(container.timerText);
+    container.addChild(container.owner);
     container.addChild(container.hpText);
     container.addChild(sprite);
     Object.defineProperty(container, "timer", {
@@ -184,8 +193,6 @@ function createUnits(arr) {
       this.locked = true;
     };
     if (el.type === "validator") {
-      container.buttonMode = true;
-      container.interactive = true;
       container.scale.x = 1.7;
       container.scale.y = 1.7;
       container.on("pointerup", e => {
@@ -223,6 +230,7 @@ let store = {
   y: 0,
   user: null,
   units: [],
+  unusedUnits: [],
   objectsOnMap,
 };
 Object.defineProperty(store, "unit", {
@@ -231,7 +239,11 @@ Object.defineProperty(store, "unit", {
   },
   set(unit) {
     this.u.active = false;
+    this.u.interactive = false;
+    this.u.buttonMode = false;
     unit.active = true;
+    unit.interactive = true;
+    unit.interactive = true;
     this.u = unit;
   },
 });
@@ -239,6 +251,8 @@ const setExampleUnits = () => (store.units = createUnits(base));
 async function getIngameTanks() {
   let account = await store.user.getAccountName();
   let started = Date.now();
+  let enemy =
+    store.user.accountName === "metalwartest" ? "on5tk.wam" : "metalwartest";
   let response = await store.user.rpc.get_table_rows({
     json: true,
     code: "metalwargame",
@@ -251,6 +265,19 @@ async function getIngameTanks() {
     index_position: 2,
     reverse: true,
   });
+  let response1 = await store.user.rpc.get_table_rows({
+    json: true,
+    code: "metalwargame",
+    scope: "metalwargame",
+    table: "units",
+    limit: 10000,
+    key_type: "i64",
+    lower_bound: enemy,
+    upper_bound: enemy,
+    index_position: 2,
+    reverse: true,
+  });
+
   let end = Date.now();
   let ping = end - started;
   store.ping = ping;
@@ -261,7 +288,8 @@ async function getIngameTanks() {
     let selfTanks = response.rows.filter(
       el => el.owner === store.user.accountName
     );
-    console.log(selfTanks);
+    let enemyTanks = response1.rows.filter(el => el.owner === enemy);
+    console.log(enemyTanks);
     selfTanks.forEach(el => {
       let tank = base.find(key => el.template_id === key.id);
       if (!tank) {
@@ -277,6 +305,27 @@ async function getIngameTanks() {
           repair: Math.ceil((el.strength - el.hp) / 2),
           locked,
           unlockedTime,
+          self: true,
+        };
+        arr.push(tank);
+      }
+    });
+    enemyTanks.forEach(el => {
+      let tank = base.find(key => el.template_id === key.id);
+      if (!tank) {
+      } else {
+        let locked = el.next_availability * 1000 > Date.now();
+        let unlockedTime = el.next_availability * 1000;
+
+        tank = {
+          ...el,
+          ...tank,
+          inGame: true,
+          id: el.asset_id,
+          repair: Math.ceil((el.strength - el.hp) / 2),
+          locked,
+          unlockedTime,
+          self: false,
         };
         arr.push(tank);
       }
@@ -284,6 +333,9 @@ async function getIngameTanks() {
   }
   let validator = base.find(el => el.type === "validator");
   let wolf2 = base.find(el => el.name === "wolf2");
+  [wolf2, validator].forEach(el => {
+    (el.self = true), (el.owner = store.user.accountName);
+  });
   store.units = createUnits([...arr, validator, wolf2]);
   store.unit = store.units[0];
 }
@@ -354,4 +406,75 @@ async function moveTransaction({ id, x, y }) {
     }
   }
 }
-export { store, getIngameTanks, setExampleUnits, moveTransaction };
+async function fireTransaction({ id, target_id }) {
+  if (!id) return true;
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name: "unitattack",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          asset_id: id,
+          target_id,
+        },
+      },
+    ],
+  };
+  console.log(options);
+  let response = {};
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+}
+export {
+  store,
+  getIngameTanks,
+  setExampleUnits,
+  moveTransaction,
+  fireTransaction,
+};

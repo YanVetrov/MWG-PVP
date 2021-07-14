@@ -27,7 +27,12 @@ import top_bottom from "./assets/top_bottom.json";
 import right_left from "./assets/right_left.json";
 import { getBorder, getCircle } from "./graphics";
 import { initUal } from "./auth";
-import { store, getIngameTanks, moveTransaction } from "./store";
+import {
+  store,
+  getIngameTanks,
+  moveTransaction,
+  fireTransaction,
+} from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
@@ -114,40 +119,25 @@ function setup() {
       store.gameScene.addChild(el);
       setUnit(el, store.map[el.posY - 1 || 0][el.posX - 1 || i]);
     });
+    store.unusedUnits.forEach((el, i) => {
+      el.interactive = true;
+      el.buttonMode = true;
+      el.on("pointerup", e => {
+        store.unit = el;
+      });
+      el.x = i * 100 + 200;
+      el.y = window.innerHeight - el.height;
+      app.stage.addChild(el);
+    });
     renderMap();
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
     e.target.style.visibility = "hidden";
   });
-  document.getElementById("prev").addEventListener("click", e => {
-    let i = store.units.indexOf(store.unit);
-    i--;
-    if (i < 0) i = 0;
-    store.unit = store.units[i];
-    moveCircle(circle, store.unit.ground, 0.2);
-  });
-  document.getElementById("next").addEventListener("click", e => {
-    let i = store.units.indexOf(store.unit);
-    i++;
-    if (i > store.units.length - 1) i = store.units.length - 1;
-    store.unit = store.units[i];
-    moveCircle(circle, store.unit.ground, 0.2);
-  });
   document.getElementById("signout").addEventListener("click", e => {
     localStorage.clear();
     location.reload();
-    // store.units.forEach(el => store.gameScene.removeChild(el));
-    // initUal(async e => {
-    //   if (e[0].wax) e[0].rpc = e[0].wax.rpc;
-    //   store.user = e[0];
-    //   await getIngameTanks();
-    //   store.units.forEach((el, i) => {
-    //     store.gameScene.addChild(el);
-    //     setUnit(el, store.visibleZone.filter(el => !isNaN(el.posX))[i + 5]);
-    //   });
-    //   renderMap();
-    // });
   });
 }
 
@@ -179,15 +169,32 @@ function addSprite(target, i) {
     if (e.target.unclickable) return (target.blocked = false);
     if (store.gameScene.blockedUI) return (target.blocked = false);
     circle.alpha = 1;
-    if (e.target.unit) {
-      moveCircle(circle, store.unit.ground, 0.2);
-      if (store.unit !== e.target.unit) {
-        if (store.unit.locked) return (target.blocked = false);
-        store.unit.unit.direction = getDirection(store.unit.ground, e.target);
-        unitAction(store.unit, e.target);
+    if (store.unit.unused) {
+      app.stage.removeChild(store.unit);
+      store.units.push(store.unit);
+      store.unit.ground = store.map[0][0];
+    }
+    if (target.unit) {
+      if (target.unit.self) {
+        if (target.unit.unit.type === "validator" && target.unit.locked) {
+          moveUnit(store.unit, target);
+          await gsap.to(store.unit, { alpha: 0, duration: 2 });
+        }
+        store.unit = target.unit;
+        moveCircle(circle, store.unit.ground, 0.2);
+      } else {
+        if (store.unit !== e.target.unit) {
+          if (store.unit.locked) return (target.blocked = false);
+          store.unit.unit.direction = getDirection(store.unit.ground, e.target);
+          let res = await fireTransaction({
+            id: store.unit.unit.id,
+            target_id: target.unit.unit.id,
+          });
+          if (res) unitAction(store.unit, target);
+          return (target.blocked = false);
+        }
       }
     }
-
     if (store.unit.ground && !e.target.unit) {
       if (store.unit.locked) return (target.blocked = false);
       let multiX = Math.abs(store.unit.posX - e.target.posX);
@@ -199,7 +206,6 @@ function addSprite(target, i) {
         x: e.target.posX,
         y: e.target.posY,
       });
-      console.log(transact);
       if (!transact) return (target.blocked = false);
       moveUnit(store.unit, target);
       moveCircle(circle, target);
