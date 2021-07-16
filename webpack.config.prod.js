@@ -9,28 +9,20 @@ module.exports = {
       crypto: false,
     },
   },
-  // module: {
-  //   rules: [
-  //     {
-  //       test: /\.(js)$/,
-  //       exclude: /node_modules/,
-  //       use: {
-  //         loader: "babel-loader",
-  //       },
-  //     },
-  //   ],
-  // },
-  // optimization: {
-  //   minimizer: [
-  //     new UglifyJSPlugin({
-  //       uglifyOptions: {
-  //         output: {
-  //           comments: false,
-  //         },
-  //       },
-  //     }),
-  //   ],
-  // },
+  module: {
+    rules: [
+      {
+        test: /\.(js)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+        },
+      },
+    ],
+  },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [

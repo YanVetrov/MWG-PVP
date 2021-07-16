@@ -366,16 +366,16 @@ async function moveTransaction({ id, x, y }) {
   console.log(options);
   let response = {};
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    // try {
-    response = await store.user.signTransaction(options, {
-      blocksBehind: 3,
-      expireSeconds: 30,
-    });
-    return true;
-    // } catch (e) {
-    //   console.log({ ...e });
-    //   return false;
-    // }
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
   }
   if (localStorage.getItem("ual-session-authenticator") === "Wax") {
     options.actions[0].authorization[0].permission = "active";
