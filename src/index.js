@@ -21,6 +21,7 @@ import {
   background,
   getDirection,
 } from "./functionality";
+import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 import { sound } from "@pixi/sound";
 import sheet from "./assets/sheet.json";
 import top_bottom from "./assets/top_bottom.json";
@@ -82,32 +83,19 @@ function setup() {
     store.id,
     store.allMapCount
   );
-  renderMap();
-  for (let i = 1; i < 100; i++) {
-    let sprite = Sprite.from("./assets/mountain.png");
-    sprite.zIndex = 1;
-    sprite.scale.x = 0.4;
-    sprite.scale.y = 0.4;
-    sprite.diffX = -20;
-    sprite.diffY = -55;
-    sprite.alpha = 0.75;
-    store.objectsOnMap.push(sprite);
-  }
-  store.objectsOnMap.forEach((el, i) => {
-    let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
-    let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
-    if (el.scaled) {
-      el.scale.x = el.scaled;
-      el.scale.y = el.scaled;
-    }
-    setUnit(
-      el,
-      store.map.filter(el => !el.unit)[el.posY || randomY][el.posX || randomX],
-      true
-    );
-    store.gameScene.addChild(el);
-  });
-  renderMap();
+  app.renderer.plugins.interaction.cursorStyles.hover =
+    "url('./assets/crash.png'),auto";
+  // for (let i = 1; i < 100; i++) {
+  //   let sprite = Sprite.from("./assets/mountain.png");
+  //   sprite.zIndex = 1;
+  //   sprite.scale.x = 0.4;
+  //   sprite.scale.y = 0.4;
+  //   sprite.diffX = -20;
+  //   sprite.diffY = -55;
+  //   sprite.alpha = 0.75;
+  //   store.objectsOnMap.push(sprite);
+  // }
+
   checkUnits();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
@@ -115,20 +103,8 @@ function setup() {
     if (e[0].wax) e[0].rpc = e[0].wax.rpc;
     store.user = e[0];
     await getIngameTanks();
-    store.units.forEach((el, i) => {
-      store.gameScene.addChild(el);
-      setUnit(el, store.map[el.posY - 1 || 0][el.posX - 1 || i]);
-    });
-    store.unusedUnits.forEach((el, i) => {
-      el.interactive = true;
-      el.buttonMode = true;
-      el.on("pointerup", e => {
-        store.unit = el;
-      });
-      el.x = i * 100 + 200;
-      el.y = window.innerHeight - el.height;
-      app.stage.addChild(el);
-    });
+    setObjectsOnMap(store.objectsOnMap);
+    setUnits(store.units);
     renderMap();
   });
   document.getElementById("dev").addEventListener("click", e => {
@@ -139,6 +115,9 @@ function setup() {
     localStorage.clear();
     location.reload();
   });
+  document
+    .getElementById("garage_button")
+    .addEventListener("click", () => showGarage(false));
 }
 
 function addSprite(target, i) {
@@ -163,57 +142,75 @@ function addSprite(target, i) {
   target.on("pointerout", e => {
     target.alpha = 1;
   });
-  target.on("pointerup", async e => {
-    if (target.blocked) return 0;
-    target.blocked = true;
-    if (e.target.unclickable) return (target.blocked = false);
-    if (store.gameScene.blockedUI) return (target.blocked = false);
-    circle.alpha = 1;
-    if (store.unit.unused) {
-      app.stage.removeChild(store.unit);
-      store.units.push(store.unit);
-      store.unit.ground = store.map[0][0];
-    }
-    if (target.unit) {
-      if (target.unit.self) {
-        if (target.unit.unit.type === "validator" && target.unit.locked) {
-          moveUnit(store.unit, target);
-          await gsap.to(store.unit, { alpha: 0, duration: 2 });
-        }
-        store.unit = target.unit;
-        moveCircle(circle, store.unit.ground, 0.2);
-      } else {
-        if (store.unit !== e.target.unit) {
-          if (store.unit.locked) return (target.blocked = false);
-          store.unit.unit.direction = getDirection(store.unit.ground, e.target);
-          let res = await fireTransaction({
-            id: store.unit.unit.id,
-            target_id: target.unit.unit.id,
-          });
-          if (res) unitAction(store.unit, target);
-          return (target.blocked = false);
-        }
+  target.on("pointerup", e => clickSprite(target, event));
+  target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
+}
+async function clickSprite(target, event) {
+  if (target.blocked) return 0;
+  target.blocked = true;
+  if (target.unclickable) return (target.blocked = false);
+  if (store.gameScene.blockedUI) return (target.blocked = false);
+  circle.alpha = 1;
+  if (store.unit) {
+    setColorAround(store.unit, false);
+  }
+  if (target.unit && target.type !== "garage") {
+    if (target.unit.self) {
+      if (target.unit.unit.type === "validator" && target.unit.locked) {
+        moveUnit(store.unit, target);
+        await gsap.to(store.unit, { alpha: 0, duration: 2 });
+      }
+      store.unit = target.unit;
+      moveCircle(circle, store.unit.ground, 0.2);
+    } else {
+      if (store.unit !== target.unit) {
+        if (store.unit.locked) return (target.blocked = false);
+
+        store.unit.unit.direction = getDirection(store.unit.ground, target);
+        let res = await fireTransaction({
+          id: store.unit.unit.id,
+          target_id: target.unit.unit.id,
+        });
+        if (res) unitAction(store.unit, target);
+        return (target.blocked = false);
       }
     }
-    if (store.unit.ground && !e.target.unit) {
-      if (store.unit.locked) return (target.blocked = false);
-      let multiX = Math.abs(store.unit.posX - e.target.posX);
-      let multiY = Math.abs(store.unit.posY - e.target.posY);
-      console.log(multiX, multiY);
-      if (multiX > 1 || multiY > 1) return (target.blocked = false);
-      let transact = await moveTransaction({
-        id: store.unit.unit.asset_id,
-        x: e.target.posX,
-        y: e.target.posY,
-      });
-      if (!transact) return (target.blocked = false);
-      moveUnit(store.unit, target);
+  }
+  if (target.type === "garage") {
+    if (event.button === 2) {
+      showGarage(store.getGaragesUnits({ x: target.posX, y: target.posY }));
       moveCircle(circle, target);
+      return (target.blocked = false);
     }
-    updateText(app.stage, store, `X:${e.target.posX} Y:${e.target.posY}`);
-    target.blocked = false;
-  });
-  target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
+  }
+  if (
+    store.unit &&
+    store.unit.ground &&
+    (!target.unit || target.type === "garage")
+  ) {
+    if (store.unit.locked) return (target.blocked = false);
+    let multiX = Math.abs(store.unit.posX - target.posX);
+    let multiY = Math.abs(store.unit.posY - target.posY);
+    let available = 1;
+    if (store.unit.ground.type === "garage") available += 3;
+    console.log(multiX, multiY);
+    if (multiX > available || multiY > available)
+      return (target.blocked = false);
+    let transact = await moveTransaction({
+      id: store.unit.unit.asset_id,
+      x: target.posX,
+      y: target.posY,
+    });
+    if (!transact) return (target.blocked = false);
+    moveUnit(store.unit, target);
+    moveCircle(circle, target);
+    if (target.type === "garage") {
+      gsap.to(store.unit, { alpha: 0, y: store.unit.y - 200, duration: 1 });
+      store.unit = null;
+    }
+  }
+  updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
+  target.blocked = false;
 }
 async function renderMap() {
   store.visibleZone.forEach(el => store.gameScene.removeChild(el));
@@ -350,7 +347,44 @@ function checkUnits() {
     });
   }, 1000);
 }
-
+async function showGarage(units) {
+  console.log(units);
+  let container = document.querySelector(".garage_main");
+  let main = document.querySelector(".tank_wrapper");
+  if (units) container.style.visibility = "visible";
+  else return (container.style.visibility = "hidden");
+  main.innerHTML = "";
+  units.forEach(el => {
+    let tank = document.createElement("div");
+    let coord = document.createElement("div");
+    let img = document.createElement("img");
+    let tank_name = document.createElement("div");
+    let hp_bar = document.createElement("div");
+    let repair_button = document.createElement("div");
+    let countText = document.querySelector("#count_in_garage");
+    tank.className = "tank";
+    tank.setAttribute("data-id", el.unit.id);
+    img.src = el.unit.dr.textureCacheIds[0];
+    tank_name.innerText = el.name;
+    tank_name.className = "tank_name";
+    hp_bar.innerText = el.hpText.text;
+    hp_bar.className = "hp_bar";
+    repair_button.textContent = "REPAIR(115)";
+    repair_button.className = "repair_button";
+    countText.textContent = units.length;
+    tank.append(img);
+    tank.append(tank_name);
+    tank.append(hp_bar);
+    tank.append(repair_button);
+    tank.addEventListener("click", e => {
+      setColorAround(store.unit, false);
+      store.unit = el;
+      container.style.visibility = "hidden";
+      setColorAround(store.unit, true);
+    });
+    main.append(tank);
+  });
+}
 async function unitAction(unit, target) {
   let crash = new AnimatedSprite(
     ["crash.png", "crash1.png", "crash2.png"].map(el =>
@@ -444,6 +478,68 @@ async function unitAction(unit, target) {
     target.unit.removeChild(crash);
   }, 2000);
 }
+function setObjectsOnMap(objects) {
+  objects.forEach((el, i) => {
+    let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
+    let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
+    if (el.scaled) {
+      el.scale.x = el.scaled;
+      el.scale.y = el.scaled;
+    }
+    if (el.posX === 1 && el.posY === 1)
+      el.on("pointerup", async e => {
+        await moveUnit(store.unit, el);
+        await gsap.to(store.unit, {
+          alpha: 0,
+          y: store.unit.y - 200,
+          duration: 1,
+        });
+        showGarage();
+        store.unit = {};
+        moveCircle(circle, el);
+      });
+    let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
+    let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
+    console.log(store.map.length, store.map[0].length);
+    setUnit(el, store.map[y][x], true, el.type);
+    store.gameScene.addChild(el);
+  });
+}
+function setUnits(units) {
+  units.forEach((el, i) => {
+    store.gameScene.addChild(el);
+    setUnit(
+      el,
+      store.map[!isNaN(el.posY) ? el.posY - 1 : i][
+        !isNaN(el.posY) ? el.posX - 1 : i
+      ],
+      false,
+      "unit"
+    );
+  });
+}
 window.addEventListener("resize", e => {
   app.renderer.resize(window.innerWidth, window.innerHeight);
 });
+document.querySelector("canvas").addEventListener("contextmenu", e => {
+  e.preventDefault();
+});
+
+function setColorAround(ground, enable) {
+  let x = ground.posX;
+  let y = ground.posY;
+  let available = 4;
+  let around = store.visibleZone
+    .filter(ground => !ground.unit)
+    .filter(ground => {
+      let gx = ground.posX;
+      let gy = ground.posY;
+      let diffX = Math.abs(x - gx);
+      let diffY = Math.abs(y - gy);
+      if (diffX < available && diffY < available) return true;
+      else return false;
+    });
+  let filters = [];
+  if (enable) filters = [new ColorOverlayFilter(0x33ef99, 0.2)];
+  around.forEach(ground => (ground.filters = filters));
+}

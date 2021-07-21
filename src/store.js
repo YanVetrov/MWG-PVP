@@ -2,8 +2,8 @@ import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 const objectsOnMap = [
-  { name: "garage mini", image: "garage1", posX: 5, posY: 5 },
-  { name: "garage big", image: "garage2", posX: 6, posY: 6 },
+  // { name: "garage mini", image: "garage1", posX: 0, posY: 0 },
+  // { name: "garage big", image: "garage2", posX: 6, posY: 6 },
   {
     name: "geyser1",
     image: "geyser1",
@@ -74,26 +74,26 @@ const objectsOnMap = [
     diffY: -80,
     alpha: 0.6,
   },
-].map(el => {
+].map(el => createObjectOnMap(el));
+function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
-  sprite.width = 120;
-  sprite.height = 120;
   sprite.zIndex = 1;
+  sprite.interactive = false;
+  sprite.buttonMode = false;
   Object.keys(el).forEach(key => (sprite[key] = el[key]));
-  sprite.interactive = true;
-  sprite.buttonMode = true;
-
   return sprite;
-});
+}
 function createUnits(arr) {
   return arr.map((el, i) => {
     let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
     ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(key => {
       sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`);
-      if (!sprite.broken) sprite.broken = {};
-      sprite.broken[key] = Texture.from(
-        `./assets/cards/${el.image}/broken/${key}.png`
-      );
+      if (el.type !== "validator") {
+        if (!sprite.broken) sprite.broken = {};
+        sprite.broken[key] = Texture.from(
+          `./assets/cards/${el.image}/broken/${key}.png`
+        );
+      }
       if (el.type === "validator") {
         sprite["stake_" + key] = Texture.from(
           `./assets/cards/${el.image}/stake_${key}.png`
@@ -105,8 +105,8 @@ function createUnits(arr) {
     sprite.width = 120;
     sprite.height = 120;
     sprite.dir = "ul";
-    container.posX = el.x;
-    container.posY = el.y;
+    container.posX = parseInt(el.location / 100000);
+    container.posY = parseInt(el.location % 100000);
     container.diffX = el.diffX;
     container.diffY = el.diffY;
     Object.keys(el).forEach(key => (sprite[key] = el[key]));
@@ -218,7 +218,7 @@ let store = {
   cellsInLine: 20,
   countLines: 20,
   map: [],
-  allMapCount: 40000,
+  allMapCount: 90000,
   miniMap: null,
   u: {},
   cash: [],
@@ -232,19 +232,36 @@ let store = {
   units: [],
   unusedUnits: [],
   objectsOnMap,
+  getGaragesUnits({ x, y }) {
+    return this.selfUnits.filter(el => el.posX === x && el.posY === y);
+  },
 };
 Object.defineProperty(store, "unit", {
   get() {
     return this.u;
   },
   set(unit) {
-    this.u.active = false;
-    this.u.interactive = false;
-    this.u.buttonMode = false;
-    unit.active = true;
-    unit.interactive = true;
-    unit.interactive = true;
+    if (this.u) {
+      this.u.active = false;
+      // this.u.interactive = false;
+      // this.u.buttonMode = false;
+    }
+    if (unit) {
+      unit.active = true;
+      // unit.interactive = true;
+      // unit.interactive = true;
+    }
     this.u = unit;
+  },
+});
+Object.defineProperty(store, "unusedUnits", {
+  get() {
+    return this.units.filter(el => el.posX === 1 && el.posY === 1);
+  },
+});
+Object.defineProperty(store, "selfUnits", {
+  get() {
+    return this.units.filter(el => el.self);
   },
 });
 const setExampleUnits = () => (store.units = createUnits(base));
@@ -277,7 +294,14 @@ async function getIngameTanks() {
     index_position: 2,
     reverse: true,
   });
-
+  let garages = await store.user.rpc.get_table_rows({
+    json: true,
+    code: "metalwargame",
+    scope: "metalwargame",
+    table: "teleports",
+    limit: 100,
+    reverse: true,
+  });
   let end = Date.now();
   let ping = end - started;
   store.ping = ping;
@@ -289,7 +313,6 @@ async function getIngameTanks() {
       el => el.owner === store.user.accountName
     );
     let enemyTanks = response1.rows.filter(el => el.owner === enemy);
-    console.log(enemyTanks);
     selfTanks.forEach(el => {
       let tank = base.find(key => el.template_id === key.id);
       if (!tank) {
@@ -333,6 +356,23 @@ async function getIngameTanks() {
   }
   let validator = base.find(el => el.type === "validator");
   let wolf2 = base.find(el => el.name === "wolf2");
+  garages.rows.forEach(el => {
+    let posX = parseInt(el.location / 100000);
+    let posY = parseInt(el.location % 100000);
+    objectsOnMap.push(
+      createObjectOnMap({
+        name: "garage mini",
+        image: "teleport",
+        posX,
+        posY,
+        scaled: 0.5,
+        diffX: -5,
+        diffY: -10,
+        type: "garage",
+      })
+    );
+  });
+
   [wolf2, validator].forEach(el => {
     (el.self = true), (el.owner = store.user.accountName);
   });

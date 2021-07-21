@@ -110,7 +110,7 @@ function getJoystics(store, renderMap) {
 
 function initMap(arr, store, count) {
   let map = [];
-  let multiplier = count * 0.005;
+  let multiplier = Math.sqrt(count);
   for (let i = 0; i < count; i++) {
     let y = Math.floor(i / multiplier) + 1;
     let x = (i % multiplier) + 1;
@@ -262,7 +262,7 @@ async function moveUnit(unit, ground) {
   unit.unit.direction = getDirection(unit.ground, ground);
   unit.ground.unit = null;
   unit.ground = ground;
-  ground.unit = unit;
+  if (ground.type !== "garage") ground.unit = unit;
   unit.posX = ground.posX;
   unit.posY = ground.posY;
   unit.alpha = 1;
@@ -270,13 +270,13 @@ async function moveUnit(unit, ground) {
   let x = unit.diffX || Math.abs(ground.width - unit.unit.width) / 2.5;
   let y = unit.diffY || -Math.abs(ground.height - unit.unit.height) * 2.5;
   console.log(x, y);
-  gsap.to(unit, {
+  await gsap.to(unit, {
     x: ground.x + x,
     y: ground.y + y,
     duration: 0.5,
     ease: "back.out(1)",
   });
-  unit.lockedTime = Date.now() + 10000;
+  // unit.lockedTime = Date.now() + 10000;
   return true;
 }
 async function moveCircle(circle, ground, duration = 0.5) {
@@ -306,9 +306,17 @@ function getDirection(fromPlace, toPlace) {
   if (fromPlace.x > toPlace.x && fromPlace.y < toPlace.y) return "dl";
   return "ul";
 }
-function setUnit(unit, ground, unclickable = false) {
-  // unit.x = ground.x + 60;
-  // unit.y = ground.y - 10;
+function setUnit(unit, ground, unclickable = false, type) {
+  if (type === "garage") {
+    unit.posX = ground.posX;
+    unit.posY = ground.posY;
+    unit.ground = ground;
+    ground.type = type;
+    return 0;
+  }
+  if (type === "unit" && ground.type === "garage") {
+    unit.alpha = 0;
+  }
   if (ground.unit) return console.log("ground is busy");
   unit.posX = ground.posX;
   unit.posY = ground.posY;
