@@ -88,10 +88,10 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
             display: flex;
-            justify-content: center;
+            justify-content: space-around;
             align-items: center;
             flex-direction: column;
-            flex-wrap: wrap;
+            padding-top: 50px;
             color: white;
             z-index: 5;
         }
@@ -101,6 +101,8 @@
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
+            height: 80%;
+            overflow-y: scroll;
         }
 
         .tank {
@@ -146,6 +148,29 @@
         .repair_button:hover {
             background: white;
             color: black;
+        }
+
+        @media screen and (max-width: 813px) {
+            .tank {
+                height: 150px;
+                width: 100px;
+            }
+
+            .tank img {
+                width: 65%;
+            }
+
+            .tank div {
+                font-size: 10px;
+            }
+
+            h1 {
+                font-size: 15px;
+            }
+
+            #garage_button {
+                font-size: 10px;
+            }
         }
     </style>
 </head>

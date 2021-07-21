@@ -177,6 +177,22 @@ async function clickSprite(target, event) {
     }
   }
   if (target.type === "garage") {
+    if (event.type === "touchend") {
+      console.log(target.touch);
+      isNaN(target.touch) ? (target.touch = 1) : target.touch++;
+      clearTimeout(target.timeout);
+      target.timeout = setTimeout(() => {
+        target.touch = 0;
+        clickUnitMove(store.unit, target);
+      }, 1000);
+      if (target.touch === 2) {
+        target.touch = 0;
+        clearTimeout(target.timeout);
+        showGarage(store.getGaragesUnits({ x: target.posX, y: target.posY }));
+        moveCircle(circle, target);
+      }
+      return (target.blocked = false);
+    }
     if (event.button === 2) {
       showGarage(store.getGaragesUnits({ x: target.posX, y: target.posY }));
       moveCircle(circle, target);
@@ -188,29 +204,30 @@ async function clickSprite(target, event) {
     store.unit.ground &&
     (!target.unit || target.type === "garage")
   ) {
-    if (store.unit.locked) return (target.blocked = false);
-    let multiX = Math.abs(store.unit.posX - target.posX);
-    let multiY = Math.abs(store.unit.posY - target.posY);
-    let available = 1;
-    if (store.unit.ground.type === "garage") available += 3;
-    console.log(multiX, multiY);
-    if (multiX > available || multiY > available)
-      return (target.blocked = false);
-    let transact = await moveTransaction({
-      id: store.unit.unit.asset_id,
-      x: target.posX,
-      y: target.posY,
-    });
-    if (!transact) return (target.blocked = false);
-    moveUnit(store.unit, target);
-    moveCircle(circle, target);
-    if (target.type === "garage") {
-      gsap.to(store.unit, { alpha: 0, y: store.unit.y - 200, duration: 1 });
-      store.unit = null;
-    }
+    clickUnitMove(store.unit, target);
   }
   updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
   target.blocked = false;
+}
+async function clickUnitMove(unit, ground) {
+  let multiX = Math.abs(unit.posX - ground.posX);
+  let multiY = Math.abs(unit.posY - ground.posY);
+  let available = 1;
+  if (unit.ground.type === "garage") available += 3;
+  console.log(multiX, multiY);
+  if (multiX > available || multiY > available) return (ground.blocked = false);
+  let transact = await moveTransaction({
+    id: unit.unit.asset_id,
+    x: ground.posX,
+    y: ground.posY,
+  });
+  if (!transact) return (ground.blocked = false);
+  moveUnit(store.unit, ground);
+  moveCircle(circle, ground);
+  if (ground.type === "garage") {
+    gsap.to(unit, { alpha: 0, y: unit.y - 200, duration: 1 });
+    store.unit = {};
+  }
 }
 async function renderMap() {
   store.visibleZone.forEach(el => store.gameScene.removeChild(el));
