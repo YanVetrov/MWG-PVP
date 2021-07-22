@@ -179,9 +179,15 @@ function createUnits(arr) {
       set(val) {
         let color = 0x00ffaa;
         if (val < 10) color = 0xff9999;
+        if (this.unit.hp === 0 && val > 0) {
+          this.unit.texture = this.unit[this.unit.direction];
+        }
         this.unit.hp = val;
         this.hpText.style.fill = color;
         this.hpText.text = `${val}/${this.unit.strength}`;
+        if (val === 0) {
+          this.unit.texture = this.unit.broken[this.unit.direction];
+        }
       },
     });
     container.stakeValidator = function () {
@@ -200,7 +206,7 @@ function createUnits(arr) {
         container.stakeValidator();
       });
     }
-
+    container.health = el.hp;
     return container;
   });
 }
@@ -264,36 +270,29 @@ Object.defineProperty(store, "selfUnits", {
     return this.units.filter(el => el.self);
   },
 });
+Object.defineProperty(store, "garages", {
+  get() {
+    return this.objectsOnMap.filter(el => el.type === "garage");
+  },
+});
+Object.defineProperty(store, "unitsInVisibleZone", {
+  get() {
+    return this.units.filter(
+      el =>
+        this.visibleZone.some(
+          ground => ground.posX === el.posX && ground.posY === el.posY
+        ) &&
+        (!this.garages.some(
+          ground => ground.posX === el.posX && ground.posY === el.posY
+        ) ||
+          el.self)
+    );
+  },
+});
 const setExampleUnits = () => (store.units = createUnits(base));
-async function getIngameTanks() {
+async function getIngameTanks(handler, handlerMove, handlerAttack) {
   let account = await store.user.getAccountName();
   let started = Date.now();
-  let enemy =
-    store.user.accountName === "metalwartest" ? "on5tk.wam" : "metalwartest";
-  let response = await store.user.rpc.get_table_rows({
-    json: true,
-    code: "metalwargame",
-    scope: "metalwargame",
-    table: "units",
-    limit: 10000,
-    key_type: "i64",
-    lower_bound: account,
-    upper_bound: account,
-    index_position: 2,
-    reverse: true,
-  });
-  let response1 = await store.user.rpc.get_table_rows({
-    json: true,
-    code: "metalwargame",
-    scope: "metalwargame",
-    table: "units",
-    limit: 10000,
-    key_type: "i64",
-    lower_bound: enemy,
-    upper_bound: enemy,
-    index_position: 2,
-    reverse: true,
-  });
   let garages = await store.user.rpc.get_table_rows({
     json: true,
     code: "metalwargame",
@@ -305,55 +304,6 @@ async function getIngameTanks() {
   let end = Date.now();
   let ping = end - started;
   store.ping = ping;
-  let arr = [];
-  if (!response) {
-    console.log();
-  } else {
-    let selfTanks = response.rows.filter(
-      el => el.owner === store.user.accountName
-    );
-    let enemyTanks = response1.rows.filter(el => el.owner === enemy);
-    selfTanks.forEach(el => {
-      let tank = base.find(key => el.template_id === key.id);
-      if (!tank) {
-      } else {
-        let locked = el.next_availability * 1000 > Date.now();
-        let unlockedTime = el.next_availability * 1000;
-
-        tank = {
-          ...el,
-          ...tank,
-          inGame: true,
-          id: el.asset_id,
-          repair: Math.ceil((el.strength - el.hp) / 2),
-          locked,
-          unlockedTime,
-          self: true,
-        };
-        arr.push(tank);
-      }
-    });
-    enemyTanks.forEach(el => {
-      let tank = base.find(key => el.template_id === key.id);
-      if (!tank) {
-      } else {
-        let locked = el.next_availability * 1000 > Date.now();
-        let unlockedTime = el.next_availability * 1000;
-
-        tank = {
-          ...el,
-          ...tank,
-          inGame: true,
-          id: el.asset_id,
-          repair: Math.ceil((el.strength - el.hp) / 2),
-          locked,
-          unlockedTime,
-          self: false,
-        };
-        arr.push(tank);
-      }
-    });
-  }
   let validator = base.find(el => el.type === "validator");
   let wolf2 = base.find(el => el.name === "wolf2");
   garages.rows.forEach(el => {
@@ -376,8 +326,51 @@ async function getIngameTanks() {
   [wolf2, validator].forEach(el => {
     (el.self = true), (el.owner = store.user.accountName);
   });
-  store.units = createUnits([...arr, validator, wolf2]);
-  store.unit = store.units[0];
+  // store.units = createUnits([...arr, validator, wolf2]);
+  // store.unit = store.units[0];
+  const ws = new WebSocket("ws://188.124.37.14:8080");
+  ws.onopen = () => console.log("websocket connected");
+  ws.onmessage = message => {
+    let data = JSON.parse(message.data);
+    if (Object.keys(data.data).length > 1000) {
+      console.log(true);
+      let allTanks = Object.values(data.data);
+      let arr = [];
+      allTanks.forEach(el => {
+        let tank = base.find(key => el.template_id === key.id);
+        if (!tank) {
+        } else {
+          let locked = el.next_availability * 1000 > Date.now();
+          let unlockedTime = el.next_availability * 1000;
+          tank = {
+            ...el,
+            ...tank,
+            inGame: true,
+            id: el.asset_id,
+            repair: Math.ceil((el.strength - el.hp) / 2),
+            locked,
+            unlockedTime,
+            self: el.owner === store.user.accountName,
+          };
+          arr.push(tank);
+        }
+      });
+      store.units = createUnits([...arr, validator, wolf2]);
+      store.unit = store.units[0];
+      handler();
+    } else {
+      if (data.type === "actions" && data.data[0].name === "unitmove") {
+        let ev = data.data[0].data;
+        if (ev.asset_owner === store.user.accountName) return 0;
+        handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y });
+      }
+      if (data.type === "actions" && data.data[0].name === "unitattack") {
+        let ev = data.data[0].data;
+        if (ev.asset_owner === store.user.accountName) return 0;
+        handlerAttack({ id: ev.asset_id, target_id: ev.target_id });
+      }
+    }
+  };
 }
 
 async function moveTransaction({ id, x, y }) {

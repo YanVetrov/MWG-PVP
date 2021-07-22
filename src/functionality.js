@@ -262,7 +262,7 @@ async function moveUnit(unit, ground) {
   unit.unit.direction = getDirection(unit.ground, ground);
   unit.ground.unit = null;
   unit.ground = ground;
-  if (ground.type !== "garage") ground.unit = unit;
+  ground.unit = unit;
   unit.posX = ground.posX;
   unit.posY = ground.posY;
   unit.alpha = 1;
@@ -314,15 +314,15 @@ function setUnit(unit, ground, unclickable = false, type) {
     ground.type = type;
     return 0;
   }
-  if (type === "unit" && ground.type === "garage") {
-    unit.alpha = 0;
+  if (type === "unit") {
+    unit.posX = ground.posX;
+    unit.posY = ground.posY;
+    unit.ground = ground;
+    console.log(ground.posX, ground.posY);
+    ground.unit = unit;
+    ground.unclickable = unclickable;
+    if (ground.type === "garage") unit.alpha = 0;
   }
-  if (ground.unit) return console.log("ground is busy");
-  unit.posX = ground.posX;
-  unit.posY = ground.posY;
-  unit.ground = ground;
-  ground.unit = unit;
-  ground.unclickable = unclickable;
 }
 export {
   initMap,

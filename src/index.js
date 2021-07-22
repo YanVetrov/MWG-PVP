@@ -99,13 +99,11 @@ function setup() {
   checkUnits();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
+  renderMap();
   initUal(async e => {
     if (e[0].wax) e[0].rpc = e[0].wax.rpc;
     store.user = e[0];
-    await getIngameTanks();
-    setObjectsOnMap(store.objectsOnMap);
-    setUnits(store.units);
-    renderMap();
+    await getIngameTanks(onLoadedSocket, onUnitMove, onUnitAttack);
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
@@ -119,7 +117,47 @@ function setup() {
     .getElementById("garage_button")
     .addEventListener("click", () => showGarage(false));
 }
-
+function onLoadedSocket() {
+  setObjectsOnMap(store.objectsOnMap);
+  console.log("objects setted");
+  setUnits(store.unitsInVisibleZone);
+  console.log(store.unitsInVisibleZone);
+  console.log("units setted");
+  renderMap();
+  console.log("map rendered");
+}
+async function onUnitMove({ id, x, y }) {
+  let tank = store.units.find(el => el.unit.asset_id === id);
+  console.log(tank);
+  tank.posX = x;
+  tank.posY = y;
+  let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
+  if (!ground) return 0;
+  if (!tank.ground) {
+    setUnit(tank, ground, false, "unit");
+    await sortUnit(
+      tank,
+      store.unit,
+      store.visibleZone,
+      store.gameScene,
+      circle
+    );
+    return 0;
+  }
+  moveUnit(tank, ground);
+}
+function onUnitAttack({ id, target_id }) {
+  let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
+  let targetTank = store.unitsInVisibleZone.find(
+    el => el.unit.asset_id === target_id
+  );
+  if (!tank || !targetTank) {
+    return 0;
+  } else {
+    let ground = targetTank.ground;
+    unitAction(tank, ground);
+  }
+}
 function addSprite(target, i) {
   let index = i;
   let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
@@ -165,7 +203,11 @@ async function clickSprite(target, event) {
     } else {
       if (store.unit !== target.unit) {
         if (store.unit.locked) return (target.blocked = false);
-
+        let available = store.unit.unit.fire_radius || 1;
+        let diffX = Math.abs(store.unit.posX - target.posX);
+        let diffY = Math.abs(store.unit.posY - target.posY);
+        if (diffX > available || diffY > available)
+          return (target.blocked = false);
         store.unit.unit.direction = getDirection(store.unit.ground, target);
         let res = await fireTransaction({
           id: store.unit.unit.id,
@@ -204,7 +246,7 @@ async function clickSprite(target, event) {
     store.unit.ground &&
     (!target.unit || target.type === "garage")
   ) {
-    clickUnitMove(store.unit, target);
+    await clickUnitMove(store.unit, target);
   }
   updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
   target.blocked = false;
@@ -273,14 +315,14 @@ async function renderMap() {
     line.forEach(cell => store.visibleZone.push(cell));
   });
   store.visibleZone.forEach((el, i) => addSprite(el, i));
-  store.units.forEach(el =>
+  store.unitsInVisibleZone.forEach(el =>
     sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
   );
   store.objectsOnMap.forEach(el =>
     sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
   );
-  initMiniMap();
-  renderMiniMap();
+  // initMiniMap();
+  // renderMiniMap();
 }
 
 function initMiniMap() {
@@ -321,7 +363,11 @@ async function renderMiniMap() {
       // color = 0xcc90fe;
       for (let x = (cell - 1) * oneCellInset; x < cell * oneCellInset; x++) {
         for (let y = (line - 1) * oneCellInset; y < line * oneCellInset; y++) {
-          if (store.units.some(el => el.posX === x + 1 && el.posY === y + 1))
+          if (
+            store.unitsInVisibleZone.some(
+              el => el.posX === x + 1 && el.posY === y + 1
+            )
+          )
             alpha = 1;
           // if (
           //   store.objectsOnMap.some(
@@ -352,7 +398,7 @@ async function renderMiniMap() {
 }
 function checkUnits() {
   setInterval(() => {
-    store.units.forEach(el => {
+    store.unitsInVisibleZone.forEach(el => {
       if (el.lockedTime === 0) return 0;
       if (Date.now() > el.lockedTime) {
         el.lockedTime = 0;
@@ -403,6 +449,7 @@ async function showGarage(units) {
   });
 }
 async function unitAction(unit, target) {
+  unit.unit.direction = getDirection(unit.ground, target);
   let crash = new AnimatedSprite(
     ["crash.png", "crash1.png", "crash2.png"].map(el =>
       Texture.from(`./assets/${el}`)
@@ -463,7 +510,9 @@ async function unitAction(unit, target) {
   crash.x = 35;
   crash.y = 30;
   // target.unit.alpha = 0;
-  target.unit.health -= 20;
+  let damage = unit.unit.attack - target.unit.unit.armor;
+  if (damage <= 0) damage = 1;
+  target.unit.health -= damage;
   if (target.unit.health < 0) {
     target.unit.health = 0;
     crash.scale.x = 1.5;
@@ -524,15 +573,9 @@ function setObjectsOnMap(objects) {
 }
 function setUnits(units) {
   units.forEach((el, i) => {
+    if (isNaN(el.posX) || isNaN(el.posY)) return 0;
     store.gameScene.addChild(el);
-    setUnit(
-      el,
-      store.map[!isNaN(el.posY) ? el.posY - 1 : i][
-        !isNaN(el.posY) ? el.posX - 1 : i
-      ],
-      false,
-      "unit"
-    );
+    setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
   });
 }
 window.addEventListener("resize", e => {
