@@ -328,7 +328,7 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
   });
   // store.units = createUnits([...arr, validator, wolf2]);
   // store.unit = store.units[0];
-  const ws = new WebSocket("ws://188.124.37.14:8080");
+  const ws = new WebSocket("wss://game.metal-war.com/ws/");
   ws.onopen = () => console.log("websocket connected");
   ws.onmessage = message => {
     let data = JSON.parse(message.data);
@@ -359,12 +359,20 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
       store.unit = store.units[0];
       handler();
     } else {
-      if (data.type === "actions" && data.data[0].name === "unitmove") {
+      if (
+        data.type === "actions" &&
+        data.data[0] &&
+        data.data[0].name === "unitmove"
+      ) {
         let ev = data.data[0].data;
         if (ev.asset_owner === store.user.accountName) return 0;
         handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y });
       }
-      if (data.type === "actions" && data.data[0].name === "unitattack") {
+      if (
+        data.type === "actions" &&
+        data.data[0] &&
+        data.data[0].name === "unitattack"
+      ) {
         let ev = data.data[0].data;
         if (ev.asset_owner === store.user.accountName) return 0;
         handlerAttack({ id: ev.asset_id, target_id: ev.target_id });

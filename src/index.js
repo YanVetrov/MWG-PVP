@@ -246,7 +246,10 @@ async function clickSprite(target, event) {
     store.unit.ground &&
     (!target.unit || target.type === "garage")
   ) {
+    if (store.unit.locked) return (target.blocked = false);
     await clickUnitMove(store.unit, target);
+    store.unit.lockedTime = Date.now() + 30000;
+    store.unit.unit.alpha = 0.5;
   }
   updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
   target.blocked = false;
@@ -510,8 +513,9 @@ async function unitAction(unit, target) {
   crash.x = 35;
   crash.y = 30;
   // target.unit.alpha = 0;
-  let damage = unit.unit.attack - target.unit.unit.armor;
-  if (damage <= 0) damage = 1;
+  let damage = unit.unit.attack;
+  if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
+  if (damage < 0) damage = 0;
   target.unit.health -= damage;
   if (target.unit.health < 0) {
     target.unit.health = 0;
