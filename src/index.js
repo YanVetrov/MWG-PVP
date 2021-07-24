@@ -203,7 +203,9 @@ async function clickSprite(target, event) {
     } else {
       if (store.unit !== target.unit) {
         if (store.unit.locked) return (target.blocked = false);
-        let available = store.unit.unit.fire_radius || 1;
+        let radius = store.unit.unit.fire_radius;
+        let available = isNaN(radius) ? 1 : radius;
+        available++;
         let diffX = Math.abs(store.unit.posX - target.posX);
         let diffY = Math.abs(store.unit.posY - target.posY);
         if (diffX > available || diffY > available)
