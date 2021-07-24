@@ -213,7 +213,11 @@ async function clickSprite(target, event) {
           id: store.unit.unit.id,
           target_id: target.unit.unit.id,
         });
-        if (res) unitAction(store.unit, target);
+        if (res) {
+          unitAction(store.unit, target);
+          store.unit.lockedTime = Date.now() + 30000;
+          store.unit.unit.alpha = 0.5;
+        }
         return (target.blocked = false);
       }
     }
