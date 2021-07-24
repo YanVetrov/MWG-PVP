@@ -251,9 +251,10 @@ async function clickSprite(target, event) {
     (!target.unit || target.type === "garage")
   ) {
     if (store.unit.locked) return (target.blocked = false);
+    let clone = store.unit;
     await clickUnitMove(store.unit, target);
-    store.unit.lockedTime = Date.now() + 30000;
-    store.unit.unit.alpha = 0.5;
+    clone.lockedTime = Date.now() + 30000;
+    clone.unit.alpha = 0.5;
   }
   updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
   target.blocked = false;
