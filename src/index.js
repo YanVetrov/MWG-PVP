@@ -33,6 +33,7 @@ import {
   getIngameTanks,
   moveTransaction,
   fireTransaction,
+  repair,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -459,117 +460,66 @@ async function showGarage(units) {
     tank_name.className = "tank_name";
     hp_bar.innerText = el.hpText.text;
     hp_bar.className = "hp_bar";
-    repair_button.textContent = "REPAIR(115)";
+    repair_button.textContent = `REPAIR(${Math.ceil(
+      (el.unit.strength - el.unit.hp) / 2
+    )})`;
     repair_button.className = "repair_button";
     countText.textContent = units.length;
     tank.append(img);
     tank.append(tank_name);
     tank.append(hp_bar);
     tank.append(repair_button);
-    tank.addEventListener("click", e => {
+    img.addEventListener("click", e => {
       setColorAround(store.unit, false);
       store.unit = el;
       container.style.visibility = "hidden";
       setColorAround(store.unit, true);
+    });
+    repair_button.addEventListener("click", async e => {
+      let count = Math.ceil((el.unit.strength - el.unit.hp) / 2);
+      let res = repair({ id: el.unit.asset_id, count });
+      if (res) {
+        el.health = el.unit.strength;
+        container.style.visibility = "hidden";
+      }
     });
     main.append(tank);
   });
 }
 async function unitAction(unit, target) {
   unit.unit.direction = getDirection(unit.ground, target);
+  let action = unit.unit.action;
   let crash = new AnimatedSprite(
-    ["crash.png", "crash1.png", "crash2.png"].map(el =>
-      Texture.from(`./assets/${el}`)
-    )
+    action.crash.map(el => Texture.from(`./assets/${el}`))
   );
-  let obj = {
-    ur: { x: 80, y: 25, angle: 50 },
-    r: { x: 90, y: 45, angle: 100 },
-    dr: { x: 90, y: 70, angle: 100 },
-    u: { x: 50, y: 15, angle: 0 },
-
-    ul: { x: 10, y: 25, angle: -50 },
-    l: { x: 0, y: 45, angle: -100 },
-    dl: { x: 0, y: 80, angle: -100 },
-    d: { x: 50, y: 90, angle: 180 },
-  };
-  let ant = {
-    ur: { x: 150, y: -120, angle: 50 },
-    r: { x: 250, y: 15, angle: 100 },
-    dr: { x: 250, y: 20, angle: 100 },
-    u: { x: 10, y: -150, angle: 0 },
-
-    ul: { x: -120, y: -75, angle: -50 },
-    l: { x: -100, y: 100, angle: -100 },
-    dl: { x: -120, y: 100, angle: -100 },
-    d: { x: 110, y: 250, angle: 180 },
-  };
   let fires = (() => {
     let arr = [];
     let fire;
-    if (unit.unit.name === "raccoon" || unit.unit.name === "elephantor") {
+    for (let i = 0; i < action.repeat; i++) {
       fire = new AnimatedSprite(
-        ["1.png", "2.png", "3.png"].map(el =>
-          Texture.from(`./assets/rocket/${el}`)
-        )
+        action.textures.map(el => Texture.from(`./assets/${el}`))
       );
-      fire.diffX = -105;
-      fire.diffY = -85;
-      fire.animationSpeed = 0.5;
-      fire.scale.x = 0.3;
-      fire.scale.y = 0.3;
-      arr.push(fire);
-    } else if (unit.unit.name === "ant") {
-      fire = new AnimatedSprite(
-        ["1.png", "2.png", "3.png"].map(el =>
-          Texture.from(`./assets/ant_fire/${el}`)
-        )
-      );
-      fire.diffX = -105;
-      fire.diffY = -85;
-      fire.animationSpeed = 0.1;
-      fire.scale.x = 0.6;
-      fire.scale.y = 0.6;
-      arr.push(fire);
-    } else {
-      for (let i = 0; i < 3; i++) {
-        fire = new AnimatedSprite(
-          ["fire1.png", "fire2.png", "fire.png"].map(el =>
-            Texture.from(`./assets/${el}`)
-          )
-        );
-        fire.diffX = -105;
-        fire.diffY = -35;
-        fire.animationSpeed = 0.5;
-
-        fire.scale.x = 0.3;
-        fire.scale.y = 0.3;
-        arr.push(fire);
-      }
-    }
-    arr.forEach(fire => {
-      fire.x = obj[getDirection(unit.ground, target)].x;
-      fire.y = obj[getDirection(unit.ground, target)].y;
-      if (unit.unit.name === "ant") {
-        fire.x = ant[getDirection(unit.ground, target)].x;
-        fire.y = ant[getDirection(unit.ground, target)].y;
-      }
-      fire.angle = obj[getDirection(unit.ground, target)].angle;
+      fire.animationSpeed = action.speed;
+      fire.scale.x = action.scale;
+      fire.scale.y = action.scale;
+      fire.x = action[getDirection(unit.ground, target)].x;
+      fire.y = action[getDirection(unit.ground, target)].y;
+      fire.angle = action[getDirection(unit.ground, target)].angle;
       fire.zIndex = 1;
       fire.play();
-    });
-
+      arr.push(fire);
+    }
     return arr;
   })();
   unit.zIndex = 10;
   fires.forEach(fire => unit.addChild(fire));
   let { x, y } = target;
-  x -= unit.x + fires[0].diffX;
-  y -= unit.y + fires[0].diffY;
+  x -= unit.x + action.diffX;
+  y -= unit.y + action.diffY;
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
   window.sound("fire");
-  if (unit.unit.name !== "ant")
+  if (action.throw)
     gsap.to(fires[0], { x, y, duration: 0.5, ease: "sign.out" });
   gsap.to(fires[1], { x, y, delay: 0.1, duration: 0.5, ease: "sign.out" });
   await gsap.to(fires[2], {
@@ -595,7 +545,7 @@ async function unitAction(unit, target) {
     target.unit.health = 0;
     crash.scale.x = 1.5;
     crash.scale.y = 1.5;
-    target.unit.unit.alpha = 0;
+    target.unit.unit.alpha = 0.5;
     crash.x = -20;
     crash.y = -90;
     crash.play();
@@ -611,8 +561,8 @@ async function unitAction(unit, target) {
     return 0;
   }
   crash.zIndex = 3;
-  crash.scale.x = 0.3;
-  crash.scale.y = 0.3;
+  crash.scale.x = 0.5;
+  crash.scale.y = 0.5;
   crash.play();
   setTimeout(async () => {
     gsap.to(target.unit, { alpha: 1, duration: 1 });

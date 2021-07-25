@@ -512,10 +512,96 @@ async function fireTransaction({ id, target_id }) {
     }
   }
 }
+async function repair({ count, id }) {
+  let tank = store.selfUnits.find(el => el.id === id);
+  if (!tank) tank = {};
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwarmint",
+        name: "transfer",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          from: account,
+          to: "metalwargame",
+          memo: `repair:${id}`,
+          quantity: `${count} MWM`,
+        },
+      },
+    ],
+  };
+
+  let response = {};
+  if (tank.discountEnabled || tank.discountTypeEnabled) {
+    let clone = JSON.parse(JSON.stringify(options.actions[0]));
+    let log = {
+      PDT: "discount1",
+      MDT: "discount2",
+      CDT: "discount3",
+    };
+    let discount = "PDT";
+    if (tank.discountTypeEnabled) {
+      if (tank.type === "battle") discount = "CDT";
+      else discount = "MDT";
+    }
+    clone.data.memo = `${log[discount]}:${id}`;
+    clone.data.quantity = `1 ${discount}`;
+    options.actions.unshift(clone);
+  }
+  tank.repairing = true;
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    if (options.actions[1])
+      options.actions[1].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+  console.log(response);
+}
 export {
   store,
   getIngameTanks,
   setExampleUnits,
   moveTransaction,
   fireTransaction,
+  repair,
 };
