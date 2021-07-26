@@ -172,6 +172,26 @@ function createUnits(arr) {
         this.locked = !!val;
       },
     });
+    let skunk = Sprite.from("./assets/skunk_fire/skunk_crash.png");
+    skunk.scale.x = 0.6;
+    skunk.scale.y = 0.6;
+    skunk.x += 20;
+    skunk.y += 10;
+    Object.defineProperty(container, "poised", {
+      get() {
+        return this.unit.poised_cnt;
+      },
+      set(val) {
+        if (val < 0 || isNaN(val)) val = 0;
+        this.unit.poised_cnt = val;
+        if (val === 0) {
+          this.removeChild(skunk);
+        } else {
+          this.addChild(skunk);
+        }
+      },
+    });
+    if (container.poised) container.addChild(skunk);
     Object.defineProperty(container, "health", {
       get() {
         return this.unit.hp;
@@ -219,6 +239,8 @@ let store = {
   bg: null,
   gameScene: null,
   target: null,
+  defaultFireTimeout: 30,
+  defualtMoveTimeout: 30,
   clicked: true,
   blockedUI: false,
   cellsInLine: 20,
@@ -249,13 +271,9 @@ Object.defineProperty(store, "unit", {
   set(unit) {
     if (this.u) {
       this.u.active = false;
-      // this.u.interactive = false;
-      // this.u.buttonMode = false;
     }
     if (unit) {
       unit.active = true;
-      // unit.interactive = true;
-      // unit.interactive = true;
     }
     this.u = unit;
   },
@@ -287,6 +305,14 @@ Object.defineProperty(store, "unitsInVisibleZone", {
         ) ||
           el.self)
     );
+  },
+});
+Object.defineProperty(store, "unitsFromKeys", {
+  get() {
+    return this.units.reduce((acc, el) => {
+      acc[el.unit.asset_id] = el;
+      return acc;
+    });
   },
 });
 const setExampleUnits = () => (store.units = createUnits(base));
@@ -333,7 +359,7 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
   ws.onmessage = message => {
     let data = JSON.parse(message.data);
     if (Object.keys(data.data).length > 1000) {
-      console.log(true);
+      console.log("units getted");
       let allTanks = Object.values(data.data);
       let arr = [];
       allTanks.forEach(el => {
@@ -364,18 +390,41 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
         data.data[0] &&
         data.data[0].name === "unitmove"
       ) {
-        let ev = data.data[0].data;
-        if (ev.asset_owner === store.user.accountName) return 0;
-        handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y });
+        let info = data.data[0];
+        let ev = info.data;
+        let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
+        let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
+        if (timeout < Date.now()) timeout = 0;
+        // if (ev.asset_owner === store.user.accountName) return 0;
+        handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
       }
       if (
         data.type === "actions" &&
         data.data[0] &&
         data.data[0].name === "unitattack"
       ) {
-        let ev = data.data[0].data;
-        if (ev.asset_owner === store.user.accountName) return 0;
-        handlerAttack({ id: ev.asset_id, target_id: ev.target_id });
+        let info = data.data[0];
+        let ev = info.data;
+        let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
+        let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
+        if (timeout < Date.now()) timeout = 0;
+        // if (ev.asset_owner === store.user.accountName) return 0;
+        handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
+      }
+      if (
+        data.type === "actions" &&
+        data.data[0] &&
+        data.data[0].name === "transfer" &&
+        data.data.some(el => el.data.memo)
+      ) {
+        data.data
+          .filter(el => el.data && el.data.memo && el.data.memo.match("repair"))
+          .forEach(el => {
+            let id = el.data.memo.split(":")[1];
+            let tank = store.unitsFromKeys[id];
+            if (!tank) return;
+            tank.health = tank.unit.strength;
+          });
       }
     }
   };

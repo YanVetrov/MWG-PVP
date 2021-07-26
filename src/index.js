@@ -84,19 +84,6 @@ function setup() {
     store.id,
     store.allMapCount
   );
-  app.renderer.plugins.interaction.cursorStyles.hover =
-    "url('./assets/crash.png'),auto";
-  // for (let i = 1; i < 100; i++) {
-  //   let sprite = Sprite.from("./assets/mountain.png");
-  //   sprite.zIndex = 1;
-  //   sprite.scale.x = 0.4;
-  //   sprite.scale.y = 0.4;
-  //   sprite.diffX = -20;
-  //   sprite.diffY = -55;
-  //   sprite.alpha = 0.75;
-  //   store.objectsOnMap.push(sprite);
-  // }
-
   checkUnits();
   let joystics = getJoystics(store, renderMap);
   joystics.forEach(joy => app.stage.addChild(joy));
@@ -127,8 +114,9 @@ function onLoadedSocket() {
   renderMap();
   console.log("map rendered");
 }
-async function onUnitMove({ id, x, y }) {
-  let tank = store.units.find(el => el.unit.asset_id === id);
+async function onUnitMove({ id, x, y, timeout }) {
+  console.log(timeout);
+  let tank = store.unitsFromKeys[id];
   console.log(tank);
   tank.posX = x;
   tank.posY = y;
@@ -146,8 +134,28 @@ async function onUnitMove({ id, x, y }) {
     return 0;
   }
   moveUnit(tank, ground);
+  if (tank.active) moveCircle(circle, tank.ground);
+  if (tank.poised) tank.poised--;
+  tank.lockedTime = timeout;
+  if (ground.type === "garage") {
+    let tp = new AnimatedSprite(
+      ["1.png", "2.png", "3.png"].map(el => Texture.from(`./assets/tp/${el}`))
+    );
+    tp.animationSpeed = 1;
+    tp.scale.x = 1.5;
+    tp.scale.y = 1.5;
+    tp.x -= 50;
+    tp.y -= 50;
+    tp.play();
+    tank.addChild(tp);
+    setTimeout(async () => {
+      await gsap.to(tank, { alpha: 0, y: unit.y - 200, duration: 1 });
+      tank.removeChild(tp);
+    }, 1000);
+  }
 }
-function onUnitAttack({ id, target_id }) {
+function onUnitAttack({ id, target_id, timeout }) {
+  console.log(timeout);
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   let targetTank = store.unitsInVisibleZone.find(
     el => el.unit.asset_id === target_id
@@ -156,6 +164,7 @@ function onUnitAttack({ id, target_id }) {
     return 0;
   } else {
     let ground = targetTank.ground;
+    tank.lockedTime = timeout;
     unitAction(tank, ground);
   }
 }
@@ -220,11 +229,7 @@ async function clickSprite(target, event) {
           target_id: target.unit.unit.id,
         });
         clone.proccess = false;
-        if (res) {
-          unitAction(clone, target);
-          clone.lockedTime = Date.now() + 30000;
-          clone.unit.alpha = 0.5;
-        }
+
         return (target.blocked = false);
       }
     }
@@ -260,8 +265,6 @@ async function clickSprite(target, event) {
     if (store.unit.locked) return (target.blocked = false);
     let clone = store.unit;
     await clickUnitMove(clone, target);
-    clone.lockedTime = Date.now() + 30000;
-    clone.unit.alpha = 0.5;
   }
   updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
   target.blocked = false;
@@ -279,8 +282,8 @@ async function clickUnitMove(unit, ground) {
     y: ground.posY,
   });
   if (!transact) return (ground.blocked = false);
-  moveUnit(unit, ground);
-  moveCircle(circle, ground);
+  // moveUnit(unit, ground);
+  // moveCircle(circle, ground);
   if (ground.type === "garage") {
     let tp = new AnimatedSprite(
       ["1.png", "2.png", "3.png"].map(el => Texture.from(`./assets/tp/${el}`))
@@ -479,7 +482,6 @@ async function showGarage(units) {
       let count = Math.ceil((el.unit.strength - el.unit.hp) / 2);
       let res = repair({ id: el.unit.asset_id, count });
       if (res) {
-        el.health = el.unit.strength;
         container.style.visibility = "hidden";
       }
     });
@@ -557,6 +559,7 @@ async function unitAction(unit, target) {
       gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
       await gsap.to(crash, { alpha: 0, duration: 2 });
       target.unit.removeChild(crash);
+      if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
     }, 2000);
     return 0;
   }
