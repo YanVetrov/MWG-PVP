@@ -22,7 +22,7 @@ import {
   getDirection,
 } from "./functionality";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
-import { sound } from "@pixi/sound";
+import { sound, Sound } from "@pixi/sound";
 import sheet from "./assets/sheet.json";
 import top_bottom from "./assets/top_bottom.json";
 import right_left from "./assets/right_left.json";
@@ -41,7 +41,7 @@ import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
 sound.add("crash", "./assets/sound/crash.mp3");
 sound.add("fire", "./assets/sound/fire.mp3");
 sound.add("go", "./assets/sound/go.mp3");
-sound.add("teleport", "./assets/sound/teleport.mp3");
+sound.add("teleport", "./assets/teleport.mp3");
 window.sound = name => sound.play(name || "go");
 initGsap();
 let border = getBorder();
@@ -135,7 +135,10 @@ async function onUnitMove({ id, x, y, timeout }) {
   }
   moveUnit(tank, ground);
   if (tank.active) moveCircle(circle, tank.ground);
-  if (tank.poised) tank.poised--;
+  if (tank.poised) {
+    tank.health -= 10;
+    tank.poised--;
+  }
   tank.lockedTime = timeout;
   if (ground.type === "garage") {
     let tp = new AnimatedSprite(
@@ -148,14 +151,14 @@ async function onUnitMove({ id, x, y, timeout }) {
     tp.y -= 50;
     tp.play();
     tank.addChild(tp);
+    window.sound("teleport");
     setTimeout(async () => {
-      await gsap.to(tank, { alpha: 0, y: unit.y - 200, duration: 1 });
+      await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
       tank.removeChild(tp);
     }, 1000);
   }
 }
 function onUnitAttack({ id, target_id, timeout }) {
-  console.log(timeout);
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   let targetTank = store.unitsInVisibleZone.find(
     el => el.unit.asset_id === target_id
@@ -165,6 +168,7 @@ function onUnitAttack({ id, target_id, timeout }) {
   } else {
     let ground = targetTank.ground;
     tank.lockedTime = timeout;
+    if (targetTank.self) tank.agressive = true;
     unitAction(tank, ground);
   }
 }
@@ -229,7 +233,6 @@ async function clickSprite(target, event) {
           target_id: target.unit.unit.id,
         });
         clone.proccess = false;
-
         return (target.blocked = false);
       }
     }
@@ -520,17 +523,27 @@ async function unitAction(unit, target) {
   y -= unit.y + action.diffY;
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
-  window.sound("fire");
-  if (action.throw)
-    gsap.to(fires[0], { x, y, duration: 0.5, ease: "sign.out" });
-  gsap.to(fires[1], { x, y, delay: 0.1, duration: 0.5, ease: "sign.out" });
-  await gsap.to(fires[2], {
-    x,
-    y,
-    delay: 0.3,
-    duration: 0.5,
-    ease: "sign.out",
-  });
+  Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
+  if (action.throw) {
+    for (let i = 0; i < fires.length; i++) {
+      await shuffleUnit(unit);
+      await gsap.to(fires[i], {
+        x,
+        y,
+        duration: 0.5,
+        ease: "Expo.easeIn",
+      });
+    }
+  } else {
+    await gsap.to(fires[0], {
+      alpha: 1,
+      duration: 0.5,
+      ease: "Expo.easeIn",
+    });
+  }
+  try {
+    Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
+  } catch (e) {}
   window.sound("crash");
   unit.zIndex = 1;
   fires.forEach(fire => unit.removeChild(fire));
@@ -615,7 +628,31 @@ window.addEventListener("resize", e => {
 document.querySelector("canvas").addEventListener("contextmenu", e => {
   e.preventDefault();
 });
+async function shuffleUnit(unit) {
+  let dir = {
+    ur: { x: -10, y: 10 },
+    r: { x: -10, y: 0 },
+    dr: { x: -10, y: -10 },
+    u: { x: 0, y: 10 },
 
+    ul: { x: 10, y: 10 },
+    l: { x: 10, y: 0 },
+    dl: { x: 10, y: -10 },
+    d: { x: 0, y: -10 },
+  };
+  await gsap.to(unit, {
+    x: unit.x + dir[unit.unit.direction].x,
+    y: unit.y + dir[unit.unit.direction].y,
+    duration: 0.1,
+    ease: "Power0.easeNone",
+  });
+  await gsap.to(unit, {
+    x: unit.x - dir[unit.unit.direction].x,
+    y: unit.y - dir[unit.unit.direction].y,
+    duration: 0.1,
+    ease: "Power0.easeNone",
+  });
+}
 function setColorAround(ground, enable) {
   let x = ground.posX;
   let y = ground.posY;

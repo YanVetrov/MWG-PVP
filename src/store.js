@@ -1,6 +1,7 @@
 import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
+import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 const objectsOnMap = [
   // { name: "garage mini", image: "garage1", posX: 0, posY: 0 },
   // { name: "garage big", image: "garage2", posX: 6, posY: 6 },
@@ -85,8 +86,12 @@ function createObjectOnMap(el) {
 }
 function createUnits(arr) {
   return arr.map((el, i) => {
-    let sprite = Sprite.from(`./assets/cards/${el.image}/ul.png`);
-    ["u", "d", "r", "l", "ur", "ul", "dl", "dr"].forEach(key => {
+    let directions = ["u", "d", "r", "l", "ur", "ul", "dl", "dr"];
+    let random = Math.ceil(Math.random() * (directions.length - 1));
+    let sprite = Sprite.from(
+      `./assets/cards/${el.image}/${directions[random]}.png`
+    );
+    directions.forEach(key => {
       sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`);
       if (el.type !== "validator") {
         if (!sprite.broken) sprite.broken = {};
@@ -129,7 +134,7 @@ function createUnits(arr) {
       fontFamily: "metalwar",
       fontSize: 15,
     });
-    container.timerText.x = 50;
+    container.timerText.x = 70;
     container.timerText.y = -20;
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
       fill: el.self ? 0x00ffaa : 0xff3377,
@@ -142,13 +147,14 @@ function createUnits(arr) {
       fontSize: 15,
     });
     container.hpText.x = 50;
-    container.hpText.y = 10;
-    container.owner.x = 50;
+    container.hpText.y = -10;
+    container.owner.x = 40;
     container.self = el.self;
     container.unit = sprite;
+    container.agr = { value: false, timeout: "" };
     container.addChild(container.timerText);
-    container.addChild(container.owner);
     container.addChild(container.hpText);
+    container.addChild(container.owner);
     container.addChild(sprite);
     Object.defineProperty(container, "timer", {
       get() {
@@ -196,7 +202,7 @@ function createUnits(arr) {
       get() {
         return this.unit.hp;
       },
-      set(val) {
+      async set(val) {
         let color = 0x00ffaa;
         if (val < 10) color = 0xff9999;
         if (this.unit.hp === 0 && val > 0) {
@@ -207,6 +213,23 @@ function createUnits(arr) {
         this.hpText.text = `${val}/${this.unit.strength}`;
         if (val === 0) {
           this.unit.texture = this.unit.broken[this.unit.direction];
+        }
+        await gsap.to(this.hpText.scale, { x: 1.1, y: 1.1, duration: 0.1 });
+        await gsap.to(this.hpText.scale, { x: 1, y: 1, duration: 0.1 });
+      },
+    });
+    Object.defineProperty(container, "agressive", {
+      get() {
+        return this.agr.value;
+      },
+      set(val) {
+        this.agr.value = !!val;
+        clearTimeout(this.agr.timeout);
+        if (!!val) {
+          this.unit.filters = [new ColorOverlayFilter(0xee4444, 0.35)];
+          this.agr.timeout = setTimeout(() => (this.agressive = false), 10000);
+        } else {
+          this.unit.filters = [];
         }
       },
     });
