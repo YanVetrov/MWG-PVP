@@ -2,80 +2,7 @@ import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
-const objectsOnMap = [
-  // { name: "garage mini", image: "garage1", posX: 0, posY: 0 },
-  // { name: "garage big", image: "garage2", posX: 6, posY: 6 },
-  {
-    name: "geyser1",
-    image: "geyser1",
-    posX: 15,
-    posY: 2,
-    scaled: 0.5,
-    diffX: 25,
-    diffY: -70,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser2",
-    image: "geyser2",
-    posX: 18,
-    posY: 3,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser3",
-    image: "geyser3",
-    posX: 16,
-    posY: 4,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser4",
-    image: "geyser4",
-    posX: 1,
-    posY: 15,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser5",
-    image: "geyser5",
-    posX: 8,
-    posY: 12,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser6",
-    image: "geyser6",
-    posX: 4,
-    posY: 11,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-  {
-    name: "geyser7",
-    image: "geyser7",
-    posX: 10,
-    posY: 15,
-    scaled: 0.5,
-    diffX: 1,
-    diffY: -80,
-    alpha: 0.6,
-  },
-].map(el => createObjectOnMap(el));
+const objectsOnMap = [];
 function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
   sprite.zIndex = 1;
@@ -350,6 +277,14 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
     limit: 100,
     reverse: true,
   });
+  let anuses = await store.user.rpc.get_table_rows({
+    json: true,
+    code: "metalwargame",
+    scope: "metalwargame",
+    table: "oredeposits",
+    limit: 100,
+    reverse: true,
+  });
   let end = Date.now();
   let ping = end - started;
   store.ping = ping;
@@ -368,6 +303,22 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
         diffX: -5,
         diffY: -10,
         type: "garage",
+      })
+    );
+  });
+  anuses.rows.forEach(el => {
+    let posX = parseInt(el.location / 100000);
+    let posY = parseInt(el.location % 100000);
+    objectsOnMap.push(
+      createObjectOnMap({
+        name: "geyser5",
+        image: "geyser5",
+        posX,
+        posY,
+        scaled: 0.5,
+        diffX: 10,
+        diffY: -60,
+        type: "geyser",
       })
     );
   });
