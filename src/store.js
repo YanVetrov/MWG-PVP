@@ -316,7 +316,7 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
         posX,
         posY,
         scaled: 0.5,
-        diffX: 10,
+        diffX: 25,
         diffY: -60,
         type: "geyser",
       })
