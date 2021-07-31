@@ -245,7 +245,6 @@ function addSprite(target, i) {
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
 }
 async function clickSprite(target, event) {
-  console.log(target);
   if (target.blocked) return 0;
   target.blocked = true;
   if (target.unclickable) return (target.blocked = false);
@@ -263,7 +262,10 @@ async function clickSprite(target, event) {
     } else {
       if (store.unit !== target.unit) {
         if (store.unit.locked) return (target.blocked = false);
-        if (!isAvailableAttack(store.unit, target))
+        if (
+          !isAvailableAttack(store.unit, target) ||
+          store.unit.unit.type !== "battle"
+        )
           return (target.blocked = false);
         store.unit.unit.direction = getDirection(store.unit.ground, target);
         let clone = store.unit;
@@ -491,7 +493,6 @@ function checkUnits() {
   }, 1000);
 }
 async function showGarage(units) {
-  console.log(units);
   let container = document.querySelector(".garage_main");
   let main = document.querySelector(".tank_wrapper");
   if (units) container.style.visibility = "visible";
@@ -674,7 +675,6 @@ function setObjectsOnMap(objects) {
       });
     let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
     let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
-    console.log(store.map.length, store.map[0].length);
     setUnit(el, store.map[y][x], true, el.type);
     store.gameScene.addChild(el);
   });
