@@ -116,8 +116,7 @@ function onLoadedSocket() {
   renderMap();
   console.log("map rendered");
 }
-async function onUnitMove({ id, x, y, timeout }) {
-  console.log(timeout);
+async function onUnitMove({ id, x, y }) {
   let tank = store.unitsFromKeys[id];
   console.log(tank);
   tank.posX = x;
@@ -134,6 +133,7 @@ async function onUnitMove({ id, x, y, timeout }) {
     tank.health -= 10;
     tank.poised--;
   }
+  let timeout = tank.getMoveCooldown();
   tank.lockedTime = timeout;
   if (ground.type === "garage") {
     let tp = new AnimatedSprite(

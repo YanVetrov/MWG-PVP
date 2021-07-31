@@ -5,6 +5,105 @@ import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 const objectsOnMap = [];
+let store = {
+  state: null,
+  stuffGetted: false,
+  unitsGetted: false,
+  id: null,
+  mountains: null,
+  bg: null,
+  gameScene: null,
+  target: null,
+  defaultFireTimeout: 30,
+  defaultMoveTimeout: 30,
+  defaultMineTimeout: 120,
+  defualtCellCost: 900,
+  clicked: true,
+  blockedUI: false,
+  cellsInLine: 20,
+  countLines: 20,
+  map: [],
+  allMapCount: 90000,
+  miniMap: null,
+  u: {},
+  cash: [],
+  text: {},
+  visibleZone: [],
+  defaultPosX: 1200,
+  defaultPosY: -400,
+  x: 0,
+  y: 0,
+  user: null,
+  units: [],
+  unusedUnits: [],
+  objectsOnMap,
+  getGaragesUnits({ x, y }) {
+    return this.selfUnits.filter(el => el.posX === x && el.posY === y);
+  },
+};
+Object.defineProperty(store, "unit", {
+  get() {
+    return this.u;
+  },
+  set(unit) {
+    if (this.u) {
+      this.u.active = false;
+      if (this.u.ground) this.u.ground.filters = [];
+    }
+    if (unit) {
+      unit.active = true;
+      if (unit.ground)
+        unit.ground.filters = [
+          new BevelFilter({
+            lightColor: 0xff69,
+            thickness: 15,
+            rotation: 0,
+            shadowColor: 0xff69,
+            lightAlpha: 1,
+            shadowAlpha: 1,
+          }),
+        ];
+    }
+    this.u = unit;
+  },
+});
+Object.defineProperty(store, "unusedUnits", {
+  get() {
+    return this.units.filter(el => el.posX === 1 && el.posY === 1);
+  },
+});
+Object.defineProperty(store, "selfUnits", {
+  get() {
+    return this.units.filter(el => el.self);
+  },
+});
+Object.defineProperty(store, "garages", {
+  get() {
+    return this.objectsOnMap.filter(el => el.type === "garage");
+  },
+});
+Object.defineProperty(store, "unitsInVisibleZone", {
+  get() {
+    return this.units.filter(
+      el =>
+        this.visibleZone.some(
+          ground => ground.posX === el.posX && ground.posY === el.posY
+        ) &&
+        (!this.garages.some(
+          ground => ground.posX === el.posX && ground.posY === el.posY
+        ) ||
+          el.self)
+    );
+  },
+});
+Object.defineProperty(store, "unitsFromKeys", {
+  get() {
+    return this.units.reduce((acc, el) => {
+      acc[el.unit.asset_id] = el;
+      return acc;
+    });
+  },
+});
 function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
   sprite.zIndex = 1;
@@ -86,6 +185,11 @@ function createUnits(arr) {
       node.y = 40;
       await gsap.to(node, { y: 0, alpha: 0, duration: 2 });
       this.removeChild(node);
+    };
+    container.getMoveCooldown = function () {
+      return (
+        Date.now() + Math.floor(store.defualtCellCost / this.unit.speed) * 1000
+      );
     };
     container.hpText.x = 50;
     container.hpText.y = -10;
@@ -196,105 +300,6 @@ function createUnits(arr) {
   });
 }
 const units = createUnits(base);
-
-let store = {
-  state: null,
-  stuffGetted: false,
-  unitsGetted: false,
-  id: null,
-  mountains: null,
-  bg: null,
-  gameScene: null,
-  target: null,
-  defaultFireTimeout: 30,
-  defaultMoveTimeout: 30,
-  defaultMineTimeout: 120,
-  clicked: true,
-  blockedUI: false,
-  cellsInLine: 20,
-  countLines: 20,
-  map: [],
-  allMapCount: 90000,
-  miniMap: null,
-  u: {},
-  cash: [],
-  text: {},
-  visibleZone: [],
-  defaultPosX: 1200,
-  defaultPosY: -400,
-  x: 0,
-  y: 0,
-  user: null,
-  units: [],
-  unusedUnits: [],
-  objectsOnMap,
-  getGaragesUnits({ x, y }) {
-    return this.selfUnits.filter(el => el.posX === x && el.posY === y);
-  },
-};
-Object.defineProperty(store, "unit", {
-  get() {
-    return this.u;
-  },
-  set(unit) {
-    if (this.u) {
-      this.u.active = false;
-      if (this.u.ground) this.u.ground.filters = [];
-    }
-    if (unit) {
-      unit.active = true;
-      if (unit.ground)
-        unit.ground.filters = [
-          new BevelFilter({
-            lightColor: 0xff69,
-            thickness: 15,
-            rotation: 0,
-            shadowColor: 0xff69,
-            lightAlpha: 1,
-            shadowAlpha: 1,
-          }),
-        ];
-    }
-    this.u = unit;
-  },
-});
-Object.defineProperty(store, "unusedUnits", {
-  get() {
-    return this.units.filter(el => el.posX === 1 && el.posY === 1);
-  },
-});
-Object.defineProperty(store, "selfUnits", {
-  get() {
-    return this.units.filter(el => el.self);
-  },
-});
-Object.defineProperty(store, "garages", {
-  get() {
-    return this.objectsOnMap.filter(el => el.type === "garage");
-  },
-});
-Object.defineProperty(store, "unitsInVisibleZone", {
-  get() {
-    return this.units.filter(
-      el =>
-        this.visibleZone.some(
-          ground => ground.posX === el.posX && ground.posY === el.posY
-        ) &&
-        (!this.garages.some(
-          ground => ground.posX === el.posX && ground.posY === el.posY
-        ) ||
-          el.self)
-    );
-  },
-});
-Object.defineProperty(store, "unitsFromKeys", {
-  get() {
-    return this.units.reduce((acc, el) => {
-      acc[el.unit.asset_id] = el;
-      return acc;
-    });
-  },
-});
 const setExampleUnits = () => (store.units = createUnits(base));
 async function getIngameTanks(
   handler,
