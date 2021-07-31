@@ -259,16 +259,18 @@ async function moveUnit(unit, ground) {
   unit.unit.direction = getDirection(unit.ground, ground);
   unit.ground.filters = [];
   unit.ground.unit = null;
-  ground.filters = [
-    new BevelFilter({
-      lightColor: 0xff69,
-      thickness: 15,
-      rotation: 0,
-      shadowColor: 0xff69,
-      lightAlpha: 1,
-      shadowAlpha: 1,
-    }),
-  ];
+  if (unit.active) {
+    ground.filters = [
+      new BevelFilter({
+        lightColor: 0xff69,
+        thickness: 15,
+        rotation: 0,
+        shadowColor: 0xff69,
+        lightAlpha: 1,
+        shadowAlpha: 1,
+      }),
+    ];
+  }
   unit.ground = ground;
   ground.unit = unit;
   unit.posX = ground.posX;
