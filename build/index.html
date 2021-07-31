@@ -45,7 +45,8 @@
             visibility: hidden;
         }
 
-        #garage_button {
+        #garage_button,
+        #drop_stuff {
             position: fixed;
             z-index: 5;
             top: 15px;
@@ -55,6 +56,11 @@
             border-radius: 5px;
             color: #eee;
             background: rgba(0, 0, 0, 0.5);
+        }
+
+        #drop_stuff {
+            right: 500px;
+
         }
 
         #prev,
@@ -182,10 +188,14 @@
         sign out
     </button>
     <button id="dev">не нажимать</button>
+    <button id="drop_stuff">
+        drop stuff
+    </button>
     <div class="garage_main" style="visibility: hidden;">
         <button id="garage_button">
             EXIT GARAGE
         </button>
+
         <h1>YOUR UNITS (<span id="count_in_garage">0</span>)</h1>
         <div class="tank_wrapper">
             <div class="tank">

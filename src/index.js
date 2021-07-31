@@ -36,6 +36,7 @@ import {
   fireTransaction,
   repair,
   mineTransaction,
+  dropStuffTransaction,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -98,6 +99,9 @@ function setup() {
   document.getElementById("signout").addEventListener("click", e => {
     localStorage.clear();
     location.reload();
+  });
+  document.getElementById("drop_stuff").addEventListener("click", e => {
+    dropStuffTransaction({ id: store.unit.unit.asset_id });
   });
   document
     .getElementById("garage_button")

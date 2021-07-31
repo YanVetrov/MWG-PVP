@@ -2,6 +2,7 @@ import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
+import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 const objectsOnMap = [];
 function createObjectOnMap(el) {
@@ -205,7 +206,7 @@ let store = {
   target: null,
   defaultFireTimeout: 30,
   defaultMoveTimeout: 30,
-  defaultMineTimeout: 300,
+  defaultMineTimeout: 360,
   clicked: true,
   blockedUI: false,
   cellsInLine: 20,
@@ -365,35 +366,39 @@ async function getIngameTanks(
   // store.unit = store.units[0];
   const ws = new WebSocket("wss://game.metal-war.com/ws/");
   ws.onopen = () => console.log("websocket connected");
-  ws.onmessage = message => {
-    let data = JSON.parse(message.data);
-    if (Object.keys(data.data).length > 1000) {
-      console.log("units getted");
-      let allTanks = Object.values(data.data);
-      let arr = [];
-      allTanks.forEach(el => {
-        let tank = base.find(key => el.template_id === key.id);
-        if (!tank) {
-        } else {
-          let locked = el.next_availability * 1000 > Date.now();
-          let lockedTime = el.next_availability * 1000;
-          tank = {
-            ...el,
-            ...tank,
-            inGame: true,
-            id: el.asset_id,
-            repair: Math.ceil((el.strength - el.hp) / 2),
-            locked,
-            lockedTime,
-            self: el.owner === store.user.accountName,
-          };
-          arr.push(tank);
-        }
-      });
-      store.units = createUnits([...arr, validator, wolf2]);
-      store.unit = store.units[0];
-      handler();
+  ws.onmessage = async message => {
+    if (typeof message.data === "object") {
+      const array = new Uint8Array(await message.data.arrayBuffer());
+      let units = unpack_units(array);
+      if (Object.keys(units).length > 1000) {
+        console.log("units getted");
+        let allTanks = Object.values(units);
+        let arr = [];
+        allTanks.forEach(el => {
+          let tank = base.find(key => el.template_id === key.id);
+          if (!tank) {
+          } else {
+            let locked = el.next_availability * 1000 > Date.now();
+            let lockedTime = el.next_availability * 1000;
+            tank = {
+              ...el,
+              ...tank,
+              inGame: true,
+              id: el.asset_id,
+              repair: Math.ceil((el.strength - el.hp) / 2),
+              locked,
+              lockedTime,
+              self: el.owner === store.user.accountName,
+            };
+            arr.push(tank);
+          }
+        });
+        store.units = createUnits([...arr, validator, wolf2]);
+        store.unit = store.units[0];
+        handler();
+      }
     } else {
+      let data = JSON.parse(message.data);
       if (data.type === "actions" && data.data[0]) {
         let info = data.data[0];
         let ev = info.data;
@@ -409,7 +414,7 @@ async function getIngameTanks(
             el => el.posX === ev.x && el.posY === ev.y
           );
           if (geyser) geyser = geyser.amount;
-          handlerMine({ id: ev.asset_id, timeout, amount });
+          handlerMine({ id: ev.asset_id, timeout, amount: geyser });
         }
         if (data.data[0].name === "unitattack") {
           handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
@@ -429,6 +434,10 @@ async function getIngameTanks(
               tank.health = tank.unit.strength;
             });
         }
+      }
+      if (data.type === "stuff" && data.data[0]) {
+        let info = data.data[0];
+        let ev = info.data;
       }
     }
   };
@@ -453,6 +462,70 @@ async function moveTransaction({ id, x, y }) {
           asset_id: id,
           x,
           y,
+        },
+      },
+    ],
+  };
+  console.log(options);
+  let response = {};
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+}
+async function dropStuffTransaction({ id }) {
+  if (!id) return true;
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name: "dropstuff",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          asset_id: id,
         },
       },
     ],
@@ -724,4 +797,5 @@ export {
   fireTransaction,
   repair,
   mineTransaction,
+  dropStuffTransaction,
 };
