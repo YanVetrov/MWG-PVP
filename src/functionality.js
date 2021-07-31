@@ -1,5 +1,6 @@
 import { Sprite, Text, Container, Point, Graphics } from "pixi.js";
 import { DropShadowFilter } from "@pixi/filter-drop-shadow";
+import { BevelFilter } from "@pixi/filter-bevel";
 import { gsap } from "gsap";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   let joystick = Sprite.from("./assets/joystic.png");
@@ -126,7 +127,7 @@ function initMap(arr, store, count) {
   }
   return map;
 }
-async function sortUnit(unit, activeUnit, zone, container, circle) {
+async function sortUnit(unit, activeUnit, zone, container) {
   let ground = zone.find(gr => gr.posX === unit.posX && gr.posY === unit.posY);
   if (ground) {
     let x = unit.diffX || 60;
@@ -135,14 +136,10 @@ async function sortUnit(unit, activeUnit, zone, container, circle) {
     unit.y = ground.y + y;
     container.addChild(unit);
     unit.visible = true;
-    if (unit === activeUnit) {
-      circle.x = ground.x + 20;
-      circle.y = ground.y + 35;
-    }
+    if (!unit.ground) setUnit(unit, ground, false, "unit");
   } else {
     unit.visible = false;
     container.removeChild(unit);
-    if (unit === activeUnit) circle.alpha = 0;
   }
 }
 async function enableInteractiveMap(zone) {
@@ -260,7 +257,18 @@ async function enableInteractiveMap(zone) {
 }
 async function moveUnit(unit, ground) {
   unit.unit.direction = getDirection(unit.ground, ground);
+  unit.ground.filters = [];
   unit.ground.unit = null;
+  ground.filters = [
+    new BevelFilter({
+      lightColor: 0xff69,
+      thickness: 15,
+      rotation: 0,
+      shadowColor: 0xff69,
+      lightAlpha: 1,
+      shadowAlpha: 1,
+    }),
+  ];
   unit.ground = ground;
   ground.unit = unit;
   unit.posX = ground.posX;
@@ -269,7 +277,6 @@ async function moveUnit(unit, ground) {
   window.sound("go");
   let x = unit.diffX || Math.abs(ground.width - unit.unit.width) / 2.5;
   let y = unit.diffY || -Math.abs(ground.height - unit.unit.height) * 2.5;
-  console.log(x, y);
   await gsap.to(unit, {
     x: ground.x + x,
     y: ground.y + y,
@@ -294,7 +301,6 @@ async function updateText(container, textNode, text) {
   container.addChild(textNode.text);
 }
 function getDirection(fromPlace, toPlace) {
-  console.log(fromPlace.x, fromPlace.y, toPlace.x, toPlace.y);
   if (fromPlace.x > toPlace.x && fromPlace.y == toPlace.y) return "l";
   if (fromPlace.x < toPlace.x && fromPlace.y == toPlace.y) return "r";
   if (fromPlace.y > toPlace.y && fromPlace.x == toPlace.x) return "u";
@@ -314,11 +320,17 @@ function setUnit(unit, ground, unclickable = false, type) {
     ground.type = type;
     return 0;
   }
+  if (type === "geyser") {
+    unit.posX = ground.posX;
+    unit.posY = ground.posY;
+    unit.ground = ground;
+    ground.type = type;
+    return 0;
+  }
   if (type === "unit") {
     unit.posX = ground.posX;
     unit.posY = ground.posY;
     unit.ground = ground;
-    console.log(ground.posX, ground.posY);
     ground.unit = unit;
     ground.unclickable = unclickable;
     if (ground.type === "garage") unit.alpha = 0;

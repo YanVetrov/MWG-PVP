@@ -22,6 +22,7 @@ import {
   getDirection,
 } from "./functionality";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
+import { BevelFilter } from "@pixi/filter-bevel";
 import { sound, Sound } from "@pixi/sound";
 import sheet from "./assets/sheet.json";
 import top_bottom from "./assets/top_bottom.json";
@@ -34,6 +35,7 @@ import {
   moveTransaction,
   fireTransaction,
   repair,
+  mineTransaction,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -44,8 +46,6 @@ sound.add("go", "./assets/sound/go.mp3");
 sound.add("teleport", "./assets/teleport.mp3");
 window.sound = name => sound.play(name || "go");
 initGsap();
-let border = getBorder();
-let circle = getCircle();
 const app = new Application({
   width: window.innerWidth,
   height: window.innerHeight,
@@ -77,8 +77,6 @@ function setup() {
     app.loader.resources["./assets/top_bottom.json"].textures;
   store.mountains_rl =
     app.loader.resources["./assets/right_left.json"].textures;
-  // store.gameScene.addChild(border);
-  store.gameScene.addChild(circle);
   store.map = initMap(
     Object.keys(sheet.frames).filter(el => !el.match("r.png")),
     store.id,
@@ -91,7 +89,7 @@ function setup() {
   initUal(async e => {
     if (e[0].wax) e[0].rpc = e[0].wax.rpc;
     store.user = e[0];
-    await getIngameTanks(onLoadedSocket, onUnitMove, onUnitAttack);
+    await getIngameTanks(onLoadedSocket, onUnitMove, onUnitAttack, onUnitMine);
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
@@ -124,17 +122,10 @@ async function onUnitMove({ id, x, y, timeout }) {
   if (!ground) return 0;
   if (!tank.ground) {
     setUnit(tank, ground, false, "unit");
-    await sortUnit(
-      tank,
-      store.unit,
-      store.visibleZone,
-      store.gameScene,
-      circle
-    );
+    await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
     return 0;
   }
   moveUnit(tank, ground);
-  if (tank.active) moveCircle(circle, tank.ground);
   if (tank.poised) {
     tank.health -= 10;
     tank.poised--;
@@ -172,6 +163,14 @@ function onUnitAttack({ id, target_id, timeout }) {
     unitAction(tank, ground);
   }
 }
+async function onUnitMine({ id, timeout, amount }) {
+  let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
+  if (!tank) return 0;
+  else {
+    await tank.alphaCounter(`+${amount}`, 0xffee00);
+    tank.lockedTime = timeout;
+  }
+}
 function addSprite(target, i) {
   let index = i;
   let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
@@ -189,10 +188,52 @@ function addSprite(target, i) {
   store.gameScene.addChild(target);
   if (target.unclickable) return 0;
   target.on("pointerover", e => {
-    target.alpha = 0.8;
+    let unit = target.unit;
+    let color = 0xff69;
+    if (unit && unit.unit) {
+      if (!unit.self) color = 0xee4444;
+      unit = unit.unit;
+    }
+    if (unit)
+      unit.filters = [
+        new BevelFilter({
+          lightColor: color,
+          thickness: 5,
+          rotation: 0,
+          shadowColor: color,
+          lightAlpha: 0.5,
+          shadowAlpha: 0.5,
+        }),
+      ];
+    color = 0xeeeeee;
+    if (
+      target.unit &&
+      target.unit.unit &&
+      !target.unit.self &&
+      isAvailableAttack(store.unit, target)
+    )
+      color = 0xee4444;
+    else if (target.unit && target.unit.self) color = 0xff69;
+    else if (!target.unit && isAvailableMove(store.unit, target))
+      color = 0xff69;
+    target.filters = [
+      new BevelFilter({
+        lightColor: color,
+        thickness: 15,
+        rotation: 0,
+        shadowColor: color,
+        lightAlpha: 0.5,
+        shadowAlpha: 0.5,
+      }),
+    ];
   });
   target.on("pointerout", e => {
     target.alpha = 1;
+    if (store.unit !== target.unit) target.filters = [];
+    if (target.unit) {
+      target.unit.filters = [];
+      if (target.unit.unit) target.unit.unit.filters = [];
+    }
   });
   target.on("pointerup", e => clickSprite(target, event));
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
@@ -202,7 +243,6 @@ async function clickSprite(target, event) {
   target.blocked = true;
   if (target.unclickable) return (target.blocked = false);
   if (store.gameScene.blockedUI) return (target.blocked = false);
-  circle.alpha = 1;
   if (store.unit) {
     setColorAround(store.unit, false);
   }
@@ -213,16 +253,10 @@ async function clickSprite(target, event) {
         await gsap.to(store.unit, { alpha: 0, duration: 2 });
       }
       store.unit = target.unit;
-      moveCircle(circle, store.unit.ground, 0.2);
     } else {
       if (store.unit !== target.unit) {
         if (store.unit.locked) return (target.blocked = false);
-        let radius = store.unit.unit.fire_radius;
-        let available = isNaN(radius) ? 1 : radius;
-        available++;
-        let diffX = Math.abs(store.unit.posX - target.posX);
-        let diffY = Math.abs(store.unit.posY - target.posY);
-        if (diffX > available || diffY > available)
+        if (!isAvailableAttack(store.unit, target))
           return (target.blocked = false);
         store.unit.unit.direction = getDirection(store.unit.ground, target);
         let clone = store.unit;
@@ -250,13 +284,11 @@ async function clickSprite(target, event) {
         target.touch = 0;
         clearTimeout(target.timeout);
         showGarage(store.getGaragesUnits({ x: target.posX, y: target.posY }));
-        moveCircle(circle, target);
       }
       return (target.blocked = false);
     }
     if (event.button === 2) {
       showGarage(store.getGaragesUnits({ x: target.posX, y: target.posY }));
-      moveCircle(circle, target);
       return (target.blocked = false);
     }
   }
@@ -273,20 +305,25 @@ async function clickSprite(target, event) {
   target.blocked = false;
 }
 async function clickUnitMove(unit, ground) {
-  let multiX = Math.abs(unit.posX - ground.posX);
-  let multiY = Math.abs(unit.posY - ground.posY);
-  let available = 1;
-  if (unit.ground.type === "garage") available += 3;
-  console.log(multiX, multiY);
-  if (multiX > available || multiY > available) return (ground.blocked = false);
-  let transact = await moveTransaction({
-    id: unit.unit.asset_id,
-    x: ground.posX,
-    y: ground.posY,
-  });
-  if (!transact) return (ground.blocked = false);
+  if (!isAvailableMove(unit, ground)) return (ground.blocked = false);
+  if (ground.type === "geyser") {
+    if (unit.unit.type === "miner") {
+      let transact = await mineTransaction({
+        id: unit.unit.asset_id,
+        x: ground.posX,
+        y: ground.posY,
+      });
+      if (!transact) return (ground.blocked = false);
+    } else return (ground.blocked = false);
+  } else {
+    let transact = await moveTransaction({
+      id: unit.unit.asset_id,
+      x: ground.posX,
+      y: ground.posY,
+    });
+    if (!transact) return (ground.blocked = false);
+  }
   // moveUnit(unit, ground);
-  // moveCircle(circle, ground);
   if (ground.type === "garage") {
     let tp = new AnimatedSprite(
       ["1.png", "2.png", "3.png"].map(el => Texture.from(`./assets/tp/${el}`))
@@ -303,6 +340,8 @@ async function clickUnitMove(unit, ground) {
       unit.removeChild(tp);
     }, 1000);
     store.unit = {};
+  }
+  if (ground.type === "geyser") {
   }
 }
 async function renderMap() {
@@ -350,10 +389,10 @@ async function renderMap() {
   });
   store.visibleZone.forEach((el, i) => addSprite(el, i));
   store.unitsInVisibleZone.forEach(el =>
-    sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
+    sortUnit(el, store.unit, store.visibleZone, store.gameScene)
   );
   store.objectsOnMap.forEach(el =>
-    sortUnit(el, store.unit, store.visibleZone, store.gameScene, circle)
+    sortUnit(el, store.unit, store.visibleZone, store.gameScene)
   );
   // initMiniMap();
   // renderMiniMap();
@@ -556,6 +595,7 @@ async function unitAction(unit, target) {
   if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
   if (damage < 0) damage = 0;
   target.unit.health -= damage;
+  target.unit.alphaCounter(`-${damage}`, 0xff1111);
   if (target.unit.health < 0) {
     target.unit.health = 0;
     crash.scale.x = 1.5;
@@ -606,7 +646,6 @@ function setObjectsOnMap(objects) {
         });
         showGarage();
         store.unit = {};
-        moveCircle(circle, el);
       });
     let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
     let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
@@ -652,6 +691,25 @@ async function shuffleUnit(unit) {
     duration: 0.1,
     ease: "Power0.easeNone",
   });
+}
+function isAvailableAttack(unit, target) {
+  if (!unit || !target) return false;
+  let radius = unit.unit.fire_radius;
+  let available = isNaN(radius) ? 1 : radius;
+  available++;
+  let diffX = Math.abs(unit.posX - target.posX);
+  let diffY = Math.abs(unit.posY - target.posY);
+  if (diffX > available || diffY > available) return false;
+  else return true;
+}
+function isAvailableMove(unit, target) {
+  if (!unit || !target) return false;
+  let multiX = Math.abs(unit.posX - target.posX);
+  let multiY = Math.abs(unit.posY - target.posY);
+  let available = 1;
+  if (unit.ground && unit.ground.type === "garage") available += 3;
+  if (multiX > available || multiY > available) return false;
+  else return true;
 }
 function setColorAround(ground, enable) {
   let x = ground.posX;

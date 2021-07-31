@@ -2,6 +2,7 @@ import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
 import { gsap } from "gsap";
 import base from "./units_templates.js";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
+import { BevelFilter } from "@pixi/filter-bevel";
 const objectsOnMap = [];
 function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
@@ -73,6 +74,18 @@ function createUnits(arr) {
       fontFamily: "metalwar",
       fontSize: 15,
     });
+    container.alphaCounter = async function (text = "+1", color = 0xeeeeee) {
+      let node = new Text(text, {
+        fill: color,
+        fontFamily: "metalwar",
+        fontSize: 25,
+      });
+      this.addChild(node);
+      node.x = 40;
+      node.y = 40;
+      await gsap.to(node, { y: 0, alpha: 0, duration: 2 });
+      this.removeChild(node);
+    };
     container.hpText.x = 50;
     container.hpText.y = -10;
     container.owner.x = 40;
@@ -105,6 +118,7 @@ function createUnits(arr) {
         this.locked = !!val;
       },
     });
+    container.lockedTime = el.lockedTime;
     let skunk = Sprite.from("./assets/skunk_fire/skunk_crash.png");
     skunk.scale.x = 0.6;
     skunk.scale.y = 0.6;
@@ -190,7 +204,8 @@ let store = {
   gameScene: null,
   target: null,
   defaultFireTimeout: 30,
-  defualtMoveTimeout: 30,
+  defaultMoveTimeout: 30,
+  defaultMineTimeout: 300,
   clicked: true,
   blockedUI: false,
   cellsInLine: 20,
@@ -221,9 +236,21 @@ Object.defineProperty(store, "unit", {
   set(unit) {
     if (this.u) {
       this.u.active = false;
+      if (this.u.ground) this.u.ground.filters = [];
     }
     if (unit) {
       unit.active = true;
+      if (unit.ground)
+        unit.ground.filters = [
+          new BevelFilter({
+            lightColor: 0xff69,
+            thickness: 15,
+            rotation: 0,
+            shadowColor: 0xff69,
+            lightAlpha: 1,
+            shadowAlpha: 1,
+          }),
+        ];
     }
     this.u = unit;
   },
@@ -266,7 +293,12 @@ Object.defineProperty(store, "unitsFromKeys", {
   },
 });
 const setExampleUnits = () => (store.units = createUnits(base));
-async function getIngameTanks(handler, handlerMove, handlerAttack) {
+async function getIngameTanks(
+  handler,
+  handlerMove,
+  handlerAttack,
+  handlerMine
+) {
   let account = await store.user.getAccountName();
   let started = Date.now();
   let garages = await store.user.rpc.get_table_rows({
@@ -319,6 +351,9 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
         diffX: 25,
         diffY: -60,
         type: "geyser",
+        lvl: el.lvl,
+        amount: el.amount,
+        type_id: el.type_id,
       })
     );
   });
@@ -341,7 +376,7 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
         if (!tank) {
         } else {
           let locked = el.next_availability * 1000 > Date.now();
-          let unlockedTime = el.next_availability * 1000;
+          let lockedTime = el.next_availability * 1000;
           tank = {
             ...el,
             ...tank,
@@ -349,7 +384,7 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
             id: el.asset_id,
             repair: Math.ceil((el.strength - el.hp) / 2),
             locked,
-            unlockedTime,
+            lockedTime,
             self: el.owner === store.user.accountName,
           };
           arr.push(tank);
@@ -359,46 +394,41 @@ async function getIngameTanks(handler, handlerMove, handlerAttack) {
       store.unit = store.units[0];
       handler();
     } else {
-      if (
-        data.type === "actions" &&
-        data.data[0] &&
-        data.data[0].name === "unitmove"
-      ) {
+      if (data.type === "actions" && data.data[0]) {
         let info = data.data[0];
         let ev = info.data;
         let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
         let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
-        if (timeout < Date.now()) timeout = 0;
-        // if (ev.asset_owner === store.user.accountName) return 0;
-        handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
-      }
-      if (
-        data.type === "actions" &&
-        data.data[0] &&
-        data.data[0].name === "unitattack"
-      ) {
-        let info = data.data[0];
-        let ev = info.data;
-        let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
-        let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
-        if (timeout < Date.now()) timeout = 0;
-        // if (ev.asset_owner === store.user.accountName) return 0;
-        handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
-      }
-      if (
-        data.type === "actions" &&
-        data.data[0] &&
-        data.data[0].name === "transfer" &&
-        data.data.some(el => el.data.memo)
-      ) {
-        data.data
-          .filter(el => el.data && el.data.memo && el.data.memo.match("repair"))
-          .forEach(el => {
-            let id = el.data.memo.split(":")[1];
-            let tank = store.unitsFromKeys[id];
-            if (!tank) return;
-            tank.health = tank.unit.strength;
-          });
+        if (data.data[0].name === "unitmove") {
+          timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
+          handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
+        }
+        if (data.data[0].name === "unitmine") {
+          timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
+          let geyser = store.objectsOnMap.find(
+            el => el.posX === ev.x && el.posY === ev.y
+          );
+          if (geyser) geyser = geyser.amount;
+          handlerMine({ id: ev.asset_id, timeout, amount });
+        }
+        if (data.data[0].name === "unitattack") {
+          handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
+        }
+        if (
+          data.data[0].name === "transfer" &&
+          data.data.some(el => el.data.memo)
+        ) {
+          data.data
+            .filter(
+              el => el.data && el.data.memo && el.data.memo.match("repair")
+            )
+            .forEach(el => {
+              let id = el.data.memo.split(":")[1];
+              let tank = store.unitsFromKeys[id];
+              if (!tank) return;
+              tank.health = tank.unit.strength;
+            });
+        }
       }
     }
   };
@@ -488,6 +518,72 @@ async function fireTransaction({ id, target_id }) {
           asset_owner: account,
           asset_id: id,
           target_id,
+        },
+      },
+    ],
+  };
+  console.log(options);
+  let response = {};
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+}
+async function mineTransaction({ id, x, y }) {
+  if (!id) return true;
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name: "unitmine",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          asset_id: id,
+          x,
+          y,
         },
       },
     ],
@@ -627,4 +723,5 @@ export {
   moveTransaction,
   fireTransaction,
   repair,
+  mineTransaction,
 };
