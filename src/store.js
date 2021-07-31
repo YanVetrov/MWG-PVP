@@ -199,6 +199,8 @@ const units = createUnits(base);
 
 let store = {
   state: null,
+  stuffGetted: false,
+  unitsGetted: false,
   id: null,
   mountains: null,
   bg: null,
@@ -206,7 +208,7 @@ let store = {
   target: null,
   defaultFireTimeout: 30,
   defaultMoveTimeout: 30,
-  defaultMineTimeout: 360,
+  defaultMineTimeout: 120,
   clicked: true,
   blockedUI: false,
   cellsInLine: 20,
@@ -395,7 +397,8 @@ async function getIngameTanks(
         });
         store.units = createUnits([...arr, validator, wolf2]);
         store.unit = store.units[0];
-        handler();
+        store.unitsGetted = true;
+        if (store.stuffGetted) handler();
       }
     } else {
       let data = JSON.parse(message.data);
@@ -410,11 +413,11 @@ async function getIngameTanks(
         }
         if (data.data[0].name === "unitmine") {
           timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
-          let geyser = store.objectsOnMap.find(
-            el => el.posX === ev.x && el.posY === ev.y
-          );
-          if (geyser) geyser = geyser.amount;
-          handlerMine({ id: ev.asset_id, timeout, amount: geyser });
+          handlerMine({
+            id: ev.asset_id,
+            timeout,
+            amount: store.defaultMineTimeout / 10,
+          });
         }
         if (data.data[0].name === "unitattack") {
           handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
@@ -435,9 +438,33 @@ async function getIngameTanks(
             });
         }
       }
-      if (data.type === "stuff" && data.data[0]) {
-        let info = data.data[0];
-        let ev = info.data;
+      if (data.type === "stuff") {
+        let stuffs = Object.values(data.data);
+        stuffs.forEach(el => {
+          let posX = parseInt(el.location / 100000);
+          let posY = parseInt(el.location % 100000);
+          el.stuff.forEach((type, i) => {
+            objectsOnMap.push(
+              createObjectOnMap({
+                name: "stuff",
+                image: "metal",
+                posX,
+                posY,
+                scaled: 0.35,
+                diffX: 35 + i * 5,
+                diffY: -10 + i * 5,
+                type: "stuff",
+                type_id: type.type,
+                amount: type.amount,
+                weight: type.weight,
+                zIndex: 1,
+                unground: true,
+              })
+            );
+          });
+        });
+        store.stuffGetted = true;
+        if (store.unitsGetted) handler();
       }
     }
   };

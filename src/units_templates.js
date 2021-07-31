@@ -39,7 +39,6 @@ let base = [
       r: { x: 320, y: 25, angle: 100 },
       dr: { x: 300, y: 120, angle: 120 },
       u: { x: 10, y: -200, angle: 0 },
-
       ul: { x: -160, y: -55, angle: -50 },
       l: { x: -180, y: 140, angle: -100 },
       dl: { x: -110, y: 210, angle: -120 },

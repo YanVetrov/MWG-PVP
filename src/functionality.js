@@ -327,6 +327,12 @@ function setUnit(unit, ground, unclickable = false, type) {
     ground.type = type;
     return 0;
   }
+  if (type === "stuff") {
+    unit.posX = ground.posX;
+    unit.posY = ground.posY;
+    unit.ground = ground;
+    return 0;
+  }
   if (type === "unit") {
     unit.posX = ground.posX;
     unit.posY = ground.posY;

@@ -171,6 +171,8 @@ async function onUnitMine({ id, timeout, amount }) {
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   if (!tank) return 0;
   else {
+    await shuffleUnit(tank);
+    await shuffleUnit(tank);
     await tank.alphaCounter(`+${amount}`, 0xffee00);
     tank.lockedTime = timeout;
   }
@@ -243,6 +245,7 @@ function addSprite(target, i) {
   target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
 }
 async function clickSprite(target, event) {
+  console.log(target);
   if (target.blocked) return 0;
   target.blocked = true;
   if (target.unclickable) return (target.blocked = false);
@@ -639,6 +642,24 @@ function setObjectsOnMap(objects) {
     if (el.scaled) {
       el.scale.x = el.scaled;
       el.scale.y = el.scaled;
+    }
+    if (el.type === "stuff") {
+      el.interactive = true;
+      el.buttonMode = true;
+      el.on("pointerover", e => {
+        el.filters = [
+          new BevelFilter({
+            lightColor: 0xff69,
+            thickness: 5,
+            rotation: 0,
+            shadowColor: 0xff69,
+            lightAlpha: 0.5,
+            shadowAlpha: 0.5,
+          }),
+        ];
+      });
+      el.on("pointerout", e => (el.filters = []));
+      el.on("pointerup", e => store.unit.alphaCounter("+36"));
     }
     if (el.posX === 1 && el.posY === 1)
       el.on("pointerup", async e => {
