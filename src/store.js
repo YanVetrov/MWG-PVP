@@ -133,6 +133,11 @@ function createUnits(arr) {
           `./assets/cards/${el.image}/stake_${key}.png`
         );
       }
+      if (el.type === "miner") {
+        sprite["mine_" + key] = Texture.from(
+          `./assets/cards/${el.image}/mining/${key}.png`
+        );
+      }
     });
     let container = new Container();
     container.zIndex = 6;
@@ -185,6 +190,32 @@ function createUnits(arr) {
       node.y = 40;
       await gsap.to(node, { y: 0, alpha: 0, duration: 2 });
       this.removeChild(node);
+    };
+    container.miningAnimation = function () {
+      setTimeout(
+        () => (this.unit.texture = this.unit["mine_" + this.unit.direction]),
+        100
+      );
+      setTimeout(
+        () => (this.unit.texture = this.unit[this.unit.direction]),
+        300
+      );
+      setTimeout(
+        () => (this.unit.texture = this.unit["mine_" + this.unit.direction]),
+        500
+      );
+      setTimeout(
+        () => (this.unit.texture = this.unit[this.unit.direction]),
+        700
+      );
+      setTimeout(
+        () => (this.unit.texture = this.unit["mine_" + this.unit.direction]),
+        900
+      );
+      setTimeout(
+        () => (this.unit.texture = this.unit[this.unit.direction]),
+        1100
+      );
     };
     container.getMoveCooldown = function () {
       return (

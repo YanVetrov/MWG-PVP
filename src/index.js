@@ -173,6 +173,7 @@ async function onUnitMine({ id, timeout, amount }) {
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   if (!tank) return 0;
   else {
+    tank.miningAnimation();
     await shuffleUnit(tank);
     await shuffleUnit(tank);
     await tank.alphaCounter(`+${amount}`, 0xffee00);
