@@ -103,9 +103,9 @@ function setup() {
   document.getElementById("drop_stuff").addEventListener("click", e => {
     dropStuffTransaction({ id: store.unit.unit.asset_id });
   });
-  document.getElementById("log").addEventListener("click", e => {
-    console.log(store.logs);
-  });
+  // document.getElementById("log").addEventListener("click", e => {
+  //   console.log(store.logs);
+  // });
   document
     .getElementById("garage_button")
     .addEventListener("click", () => showGarage(false));

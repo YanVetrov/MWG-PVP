@@ -407,44 +407,49 @@ async function getIngameTanks(
       }
     } else {
       let data = JSON.parse(message.data);
-      if (data.type === "actions" && data.data[0]) {
-        let info = data.data[0];
-        let ev = info.data;
-        let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
-        let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
-        if (data.data[0].name === "unitmove") {
-          inlog(data);
-          timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
-          handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
-        }
-        if (data.data[0].name === "unitmine") {
-          inlog(data);
-          timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
-          handlerMine({
-            id: ev.asset_id,
-            timeout,
-            amount: store.defaultMineTimeout / 10,
-          });
-        }
-        if (data.data[0].name === "unitattack") {
-          inlog(data);
-          handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
-        }
-        if (
-          data.data[0].name === "transfer" &&
-          data.data.some(el => el.data.memo)
-        ) {
-          data.data
-            .filter(
-              el => el.data && el.data.memo && el.data.memo.match("repair")
-            )
-            .forEach(el => {
-              let id = el.data.memo.split(":")[1];
-              let tank = store.unitsFromKeys[id];
-              if (!tank) return;
-              tank.health = tank.unit.strength;
+      console.log(data);
+      if (
+        data.type === "actions" &&
+        data.data &&
+        typeof data.data.forEach === "function"
+      ) {
+        data.data.forEach(el => {
+          let info = el;
+          let ev = info.data;
+          let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
+          let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
+          if (el.name === "unitmove") {
+            timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
+            handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
+          }
+          if (el.name === "unitmine") {
+            timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
+            handlerMine({
+              id: ev.asset_id,
+              timeout,
+              amount: store.defaultMineTimeout / 10,
             });
-        }
+          }
+          if (el.name === "unitattack") {
+            handlerAttack({
+              id: ev.asset_id,
+              target_id: ev.target_id,
+              timeout,
+            });
+          }
+          if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
+            data.data
+              .filter(
+                el => el.data && el.data.memo && el.data.memo.match("repair")
+              )
+              .forEach(el => {
+                let id = el.data.memo.split(":")[1];
+                let tank = store.unitsFromKeys[id];
+                if (!tank) return;
+                tank.health = tank.unit.strength;
+              });
+          }
+        });
       }
       if (data.type === "stuff") {
         console.log(data);
@@ -460,8 +465,8 @@ async function getIngameTanks(
                 posX,
                 posY,
                 scaled: 0.35,
-                diffX: 35 + i * 5,
-                diffY: -10 + i * 5,
+                diffX: 35 + i * 10,
+                diffY: -10 + i * 10,
                 type: "stuff",
                 type_id: type.type,
                 amount: type.amount,
