@@ -103,6 +103,9 @@ function setup() {
   document.getElementById("drop_stuff").addEventListener("click", e => {
     dropStuffTransaction({ id: store.unit.unit.asset_id });
   });
+  document.getElementById("log").addEventListener("click", e => {
+    console.log(store.logs);
+  });
   document
     .getElementById("garage_button")
     .addEventListener("click", () => showGarage(false));
@@ -118,7 +121,6 @@ function onLoadedSocket() {
 }
 async function onUnitMove({ id, x, y }) {
   let tank = store.unitsFromKeys[id];
-  console.log(tank);
   tank.posX = x;
   tank.posY = y;
   let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);

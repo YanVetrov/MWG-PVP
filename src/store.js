@@ -11,6 +11,7 @@ let store = {
   unitsGetted: false,
   id: null,
   mountains: null,
+  logs: [],
   bg: null,
   gameScene: null,
   target: null,
@@ -148,7 +149,6 @@ function createUnits(arr) {
         return this.dir;
       },
       set(val) {
-        console.log(val, this[val]);
         if (!val) return "invalid";
         this.dir = val;
         this.texture = this[val];
@@ -413,10 +413,12 @@ async function getIngameTanks(
         let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
         let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
         if (data.data[0].name === "unitmove") {
+          inlog(data);
           timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
           handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
         }
         if (data.data[0].name === "unitmine") {
+          inlog(data);
           timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
           handlerMine({
             id: ev.asset_id,
@@ -425,6 +427,7 @@ async function getIngameTanks(
           });
         }
         if (data.data[0].name === "unitattack") {
+          inlog(data);
           handlerAttack({ id: ev.asset_id, target_id: ev.target_id, timeout });
         }
         if (
@@ -444,6 +447,7 @@ async function getIngameTanks(
         }
       }
       if (data.type === "stuff") {
+        console.log(data);
         let stuffs = Object.values(data.data);
         stuffs.forEach(el => {
           let posX = parseInt(el.location / 100000);
@@ -474,7 +478,10 @@ async function getIngameTanks(
     }
   };
 }
-
+function inlog(obj) {
+  console.log(obj);
+  store.logs.push(obj);
+}
 async function moveTransaction({ id, x, y }) {
   if (!id) return true;
   let account = await store.user.getAccountName();
@@ -498,7 +505,6 @@ async function moveTransaction({ id, x, y }) {
       },
     ],
   };
-  console.log(options);
   let response = {};
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
     try {
@@ -562,7 +568,6 @@ async function dropStuffTransaction({ id }) {
       },
     ],
   };
-  console.log(options);
   let response = {};
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
     try {
@@ -627,7 +632,6 @@ async function fireTransaction({ id, target_id }) {
       },
     ],
   };
-  console.log(options);
   let response = {};
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
     try {
@@ -693,7 +697,6 @@ async function mineTransaction({ id, x, y }) {
       },
     ],
   };
-  console.log(options);
   let response = {};
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
     try {
@@ -819,7 +822,6 @@ async function repair({ count, id }) {
       return false;
     }
   }
-  console.log(response);
 }
 export {
   store,

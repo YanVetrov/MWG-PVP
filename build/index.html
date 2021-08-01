@@ -46,7 +46,8 @@
         }
 
         #garage_button,
-        #drop_stuff {
+        #drop_stuff,
+        #log {
             position: fixed;
             z-index: 5;
             top: 15px;
@@ -60,6 +61,12 @@
 
         #drop_stuff {
             right: 500px;
+
+        }
+
+        #log {
+            right: 0px;
+            top: 200px;
 
         }
 
@@ -190,6 +197,9 @@
     <button id="dev">не нажимать</button>
     <button id="drop_stuff">
         drop stuff
+    </button>
+    <button id="log">
+        log actions
     </button>
     <div class="garage_main" style="visibility: hidden;">
         <button id="garage_button">
