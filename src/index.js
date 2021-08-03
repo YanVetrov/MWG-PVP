@@ -176,6 +176,15 @@ async function onUnitCollect({ id, x, y }) {
   );
   if (!stuff) return 0;
   console.log("stuff");
+  let { amount, weight } = stuff;
+  let freeSpace = tank.unit.capacity - tank.stuffCount;
+  if (amount > freeSpace) {
+    amount = freeSpace;
+    tank.unit.stuff.push({ amount, weight });
+    tank.stuffCount = tank.stuffCount;
+    stuff.amount -= amount;
+    return tank.alphaCounter(`+${amount}`);
+  }
   gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
   await gsap.to(stuff, {
     x: tank.x + 50,
@@ -183,7 +192,6 @@ async function onUnitCollect({ id, x, y }) {
     alpha: 0,
     duration: 1.5,
   });
-  let { amount, weight } = stuff;
   tank.unit.stuff.push({ amount, weight });
   tank.stuffCount = tank.stuffCount;
   store.gameScene.removeChild(stuff);
