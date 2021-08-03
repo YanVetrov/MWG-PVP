@@ -32,11 +32,13 @@ import { initUal } from "./auth";
 import {
   store,
   getIngameTanks,
+  createObjectOnMap,
   moveTransaction,
   fireTransaction,
   repair,
   mineTransaction,
   dropStuffTransaction,
+  collectStuffTransaction,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -90,7 +92,14 @@ function setup() {
   initUal(async e => {
     if (e[0].wax) e[0].rpc = e[0].wax.rpc;
     store.user = e[0];
-    await getIngameTanks(onLoadedSocket, onUnitMove, onUnitAttack, onUnitMine);
+    await getIngameTanks(
+      onLoadedSocket,
+      onUnitMove,
+      onUnitAttack,
+      onUnitMine,
+      onUnitCollect,
+      onUnitDrop
+    );
   });
   document.getElementById("dev").addEventListener("click", e => {
     enableInteractiveMap(store.gameScene);
@@ -134,6 +143,7 @@ async function onUnitMove({ id, x, y }) {
   if (tank.poised) {
     tank.health -= 10;
     tank.poised--;
+    checkDestroy(tank);
   }
   let timeout = tank.getMoveCooldown();
   tank.lockedTime = timeout;
@@ -155,7 +165,65 @@ async function onUnitMove({ id, x, y }) {
     }, 1000);
   }
 }
-function onUnitAttack({ id, target_id, timeout }) {
+async function onUnitCollect({ id, x, y }) {
+  console.log("ok");
+  let tank = store.unitsFromKeys[id];
+  if (!tank) return 0;
+  console.log("tank");
+  let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
+  let index = store.objectsOnMap.findIndex(
+    el => el.posX === x && el.posY === y
+  );
+  if (!stuff) return 0;
+  console.log("stuff");
+  gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
+  await gsap.to(stuff, {
+    x: tank.x + 50,
+    y: tank.y + 50,
+    alpha: 0,
+    duration: 1.5,
+  });
+  let { amount, weight } = stuff;
+  tank.unit.stuff.push({ amount, weight });
+  tank.stuffCount = tank.stuffCount;
+  store.gameScene.removeChild(stuff);
+  store.objectsOnMap.splice(index, 1);
+}
+function checkDestroy(unit) {
+  if (unit.health <= 0) {
+    onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
+    onUnitDrop({ id: unit.unit.asset_id });
+  }
+}
+async function onUnitDrop({ id }) {
+  let tank = store.unitsFromKeys[id];
+  if (!tank) return 0;
+  tank.unit.stuff.forEach((el, i) => {
+    if (el.amount <= 0) return 0;
+    let random = Math.ceil(Math.random() * 7);
+    let stuff = createObjectOnMap({
+      name: "stuff",
+      image: `metal/${random}`,
+      posX: tank.posX,
+      posY: tank.posY,
+      scaled: 0.35,
+      diffX: 35,
+      diffY: -10,
+      type: "stuff",
+      type_id: el.type,
+      amount: el.amount,
+      weight: el.weight,
+      zIndex: 1,
+      unground: true,
+    });
+    store.objectsOnMap.push(stuff);
+    setObjectOnMap(stuff);
+    sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
+    tank.unit.stuff = [];
+    tank.stuffCount = 0;
+  });
+}
+async function onUnitAttack({ id, target_id, timeout }) {
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   let targetTank = store.unitsInVisibleZone.find(
     el => el.unit.asset_id === target_id
@@ -166,7 +234,8 @@ function onUnitAttack({ id, target_id, timeout }) {
     let ground = targetTank.ground;
     tank.lockedTime = timeout;
     if (targetTank.self) tank.agressive = true;
-    unitAction(tank, ground);
+    await unitAction(tank, ground);
+    checkDestroy(tank);
   }
 }
 async function onUnitMine({ id, timeout, amount }) {
@@ -574,6 +643,7 @@ async function unitAction(unit, target) {
   // unit.lockedTime = Date.now() + 5000;
   // unit.unit.alpha = 0.5;
   Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
+  if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
   if (action.throw) {
     for (let i = 0; i < fires.length; i++) {
       await shuffleUnit(unit);
@@ -623,7 +693,6 @@ async function unitAction(unit, target) {
       gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
       await gsap.to(crash, { alpha: 0, duration: 2 });
       target.unit.removeChild(crash);
-      if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
     }, 2000);
     return 0;
   }
@@ -641,46 +710,55 @@ async function unitAction(unit, target) {
 }
 function setObjectsOnMap(objects) {
   objects.forEach((el, i) => {
-    let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
-    let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
-    if (el.scaled) {
-      el.scale.x = el.scaled;
-      el.scale.y = el.scaled;
-    }
-    if (el.type === "stuff") {
-      el.interactive = true;
-      el.buttonMode = true;
-      el.on("pointerover", e => {
-        el.filters = [
-          new BevelFilter({
-            lightColor: 0xff69,
-            thickness: 5,
-            rotation: 0,
-            shadowColor: 0xff69,
-            lightAlpha: 0.5,
-            shadowAlpha: 0.5,
-          }),
-        ];
-      });
-      el.on("pointerout", e => (el.filters = []));
-      el.on("pointerup", e => store.unit.alphaCounter("+36"));
-    }
-    if (el.posX === 1 && el.posY === 1)
-      el.on("pointerup", async e => {
-        await moveUnit(store.unit, el);
-        await gsap.to(store.unit, {
-          alpha: 0,
-          y: store.unit.y - 200,
-          duration: 1,
-        });
-        showGarage();
-        store.unit = {};
-      });
-    let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
-    let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
-    setUnit(el, store.map[y][x], true, el.type);
-    store.gameScene.addChild(el);
+    setObjectOnMap(el);
   });
+}
+function setObjectOnMap(el) {
+  let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
+  let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
+  if (el.scaled) {
+    el.scale.x = el.scaled;
+    el.scale.y = el.scaled;
+  }
+  if (el.type === "stuff") {
+    el.interactive = true;
+    el.buttonMode = true;
+    el.on("pointerover", e => {
+      el.filters = [
+        new BevelFilter({
+          lightColor: 0xff69,
+          thickness: 5,
+          rotation: 0,
+          shadowColor: 0xff69,
+          lightAlpha: 0.5,
+          shadowAlpha: 0.5,
+        }),
+      ];
+    });
+    el.on("pointerout", e => (el.filters = []));
+    el.on("pointerup", async e => {
+      await collectStuffTransaction({
+        id: store.unit.unit.asset_id,
+        x: el.posX,
+        y: el.posY,
+      });
+    });
+  }
+  if (el.posX === 1 && el.posY === 1)
+    el.on("pointerup", async e => {
+      await moveUnit(store.unit, el);
+      await gsap.to(store.unit, {
+        alpha: 0,
+        y: store.unit.y - 200,
+        duration: 1,
+      });
+      showGarage();
+      store.unit = {};
+    });
+  let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
+  let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
+  setUnit(el, store.map[y][x], true, el.type);
+  store.gameScene.addChild(el);
 }
 function setUnits(units) {
   units.forEach((el, i) => {

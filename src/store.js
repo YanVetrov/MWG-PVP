@@ -167,8 +167,19 @@ function createUnits(arr) {
       fontFamily: "metalwar",
       fontSize: 15,
     });
+
     container.timerText.x = 70;
     container.timerText.y = -20;
+    let amount = el.stuff
+      ? el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0)
+      : 0;
+    container.stuffCountText = new Text(`${amount}/${el.capacity}`, {
+      fill: 0xefefef,
+      fontFamily: "metalwar",
+      fontSize: 15,
+    });
+    container.stuffCountText.x = 70;
+    container.stuffCountText.y = 10;
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
       fill: el.self ? 0x00ffaa : 0xff3377,
       fontFamily: "metalwar",
@@ -231,6 +242,7 @@ function createUnits(arr) {
     container.addChild(container.timerText);
     container.addChild(container.hpText);
     container.addChild(container.owner);
+    container.addChild(container.stuffCountText);
     container.addChild(sprite);
     Object.defineProperty(container, "timer", {
       get() {
@@ -239,6 +251,16 @@ function createUnits(arr) {
       set(val) {
         if (!val) val = "";
         this.timerText.text = val;
+      },
+    });
+    Object.defineProperty(container, "stuffCount", {
+      get() {
+        return this.unit.stuff
+          ? this.unit.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0)
+          : 0;
+      },
+      set(val) {
+        this.stuffCountText.text = `${val}/${this.unit.capacity}`;
       },
     });
     Object.defineProperty(container, "lockedTime", {
@@ -262,7 +284,8 @@ function createUnits(arr) {
     skunk.y += 10;
     Object.defineProperty(container, "poised", {
       get() {
-        return this.unit.poised_cnt;
+        if (this.unit.poised_cnt > 0) return this.unit.poised_cnt;
+        else return 0;
       },
       set(val) {
         if (val < 0 || isNaN(val)) val = 0;
@@ -336,7 +359,9 @@ async function getIngameTanks(
   handler,
   handlerMove,
   handlerAttack,
-  handlerMine
+  handlerMine,
+  handlerCollect,
+  handlerDropStuff
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -468,6 +493,18 @@ async function getIngameTanks(
               timeout,
             });
           }
+          if (el.name === "collectstuff") {
+            handlerCollect({
+              id: ev.asset_id,
+              x: ev.x,
+              y: ev.y,
+            });
+          }
+          if (el.name === "dropstuff") {
+            handlerDropStuff({
+              id: ev.asset_id,
+            });
+          }
           if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
             data.data
               .filter(
@@ -484,15 +521,19 @@ async function getIngameTanks(
       }
       if (data.type === "stuff") {
         console.log(data);
+        if (store.stuffGetted) return 0;
         let stuffs = Object.values(data.data);
+
         stuffs.forEach(el => {
+          if (!el) return 0;
           let posX = parseInt(el.location / 100000);
           let posY = parseInt(el.location % 100000);
           el.stuff.forEach((type, i) => {
+            let random = Math.ceil(Math.random() * 7);
             objectsOnMap.push(
               createObjectOnMap({
                 name: "stuff",
-                image: "metal",
+                image: `metal/${random}`,
                 posX,
                 posY,
                 scaled: 0.35,
@@ -600,6 +641,71 @@ async function dropStuffTransaction({ id }) {
         data: {
           asset_owner: account,
           asset_id: id,
+        },
+      },
+    ],
+  };
+  let response = {};
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await store.user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return false;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await store.user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return false;
+    }
+  }
+}
+async function collectStuffTransaction({ id, x, y }) {
+  if (!id) return true;
+  let account = await store.user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name: "collectstuff",
+        authorization: [
+          {
+            actor: account,
+            permission: store.user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          asset_id: id,
+          x,
+          y,
         },
       },
     ],
@@ -863,9 +969,12 @@ export {
   store,
   getIngameTanks,
   setExampleUnits,
+  createObjectOnMap,
+  createUnits,
   moveTransaction,
   fireTransaction,
   repair,
   mineTransaction,
   dropStuffTransaction,
+  collectStuffTransaction,
 };
