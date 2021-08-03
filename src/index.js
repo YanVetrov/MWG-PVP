@@ -255,9 +255,13 @@ async function onUnitMine({ id, timeout, amount }) {
   let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
   if (!tank) return 0;
   else {
+    let freeSpace = tank.unit.capacity - tank.stuffCount;
+    if (amount > freeSpace) amount = freeSpace;
+    tank.unit.stuff.push({ amount, weight: 1 });
     tank.miningAnimation();
     await shuffleUnit(tank);
     await shuffleUnit(tank);
+    tank.stuffCount = tank.stuffCount;
     await tank.alphaCounter(`+${amount}`, 0xffee00);
     tank.lockedTime = timeout;
   }
