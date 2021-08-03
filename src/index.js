@@ -236,6 +236,11 @@ async function onUnitAttack({ id, target_id, timeout }) {
     if (targetTank.self) tank.agressive = true;
     await unitAction(tank, ground);
     checkDestroy(tank);
+    if (tank.poised) {
+      tank.health -= 10;
+      tank.poised--;
+      checkDestroy(tank);
+    }
   }
 }
 async function onUnitMine({ id, timeout, amount }) {
@@ -677,7 +682,7 @@ async function unitAction(unit, target) {
   if (damage < 0) damage = 0;
   target.unit.health -= damage;
   target.unit.alphaCounter(`-${damage}`, 0xff1111);
-  if (target.unit.health < 0) {
+  if (target.unit.health <= 0) {
     target.unit.health = 0;
     crash.scale.x = 1.5;
     crash.scale.y = 1.5;
@@ -685,6 +690,7 @@ async function unitAction(unit, target) {
     crash.x = -20;
     crash.y = -90;
     crash.play();
+    checkDestroy(target.unit);
     setTimeout(async () => {
       target.unit.unit.texture =
         target.unit.unit.broken[target.unit.unit.direction];
