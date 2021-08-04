@@ -689,7 +689,7 @@ async function unitAction(unit, target) {
   crash.x = 35;
   crash.y = 30;
   // target.unit.alpha = 0;
-  let damage = unit.unit.attack;
+  let damage = unit.unit.attack * 3;
   if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
   if (damage < 0) damage = 0;
   target.unit.health -= damage;
