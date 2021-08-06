@@ -9,6 +9,9 @@ module.exports = {
     fallback: {
       crypto: false,
     },
+    alias: {
+      "~": [path.resolve(__dirname, "src/")],
+    },
   },
   module: {
     rules: [
