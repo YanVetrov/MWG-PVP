@@ -1,0 +1,921 @@
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+* {
+  font-family: 'metalwar';
+
+}
+
+#ual-button {
+  position: fixed;
+  z-index: 5;
+  top: 15px;
+  right: 115px;
+}
+
+#signout {
+  position: fixed;
+  z-index: 5;
+  top: 15px;
+  right: 115px;
+  font-size: 25px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: #eee;
+  background: rgba(0, 0, 0, 0.5);
+  visibility: hidden;
+}
+
+#garage_button,
+#drop_stuff,
+#log {
+  position: fixed;
+  z-index: 7;
+  top: 15px;
+  right: 315px;
+  font-size: 25px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: #eee;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#drop_stuff {
+  right: 500px;
+
+}
+
+#log {
+  right: 0px;
+  top: 200px;
+
+}
+
+#prev,
+#next {
+  position: fixed;
+  z-index: 9;
+  top: 15px;
+  right: 455px;
+  font-size: 15px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  color: #eee;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#next {
+  right: 305px;
+}
+
+#dev {
+  position: fixed;
+  z-index: 5;
+  top: 15px;
+  left: 115px;
+  font-size: 20px;
+}
+
+.garage_main {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 50px;
+  color: white;
+  z-index: 5;
+}
+
+.tank_wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  height: 80%;
+  overflow-y: scroll;
+}
+
+.tank {
+  height: 230px;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+  border: 1px solid white;
+  border-radius: 5px;
+  color: white;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 10px;
+  transition: all .1s ease;
+  cursor: pointer;
+}
+
+.tank:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 2px 2px 15px white;
+
+}
+
+.tank img {
+  width: 100%;
+}
+
+.hp_bar {
+  font-size: 12px;
+  color: aquamarine
+}
+
+.repair_button {
+  padding: 2px;
+  width: 100%;
+  transition: all .1s ease;
+  text-align: center;
+}
+
+.repair_button:hover {
+  background: white;
+  color: black;
+}
+
+@media screen and (max-width: 813px) {
+  .tank {
+    height: 150px;
+    width: 100px;
+  }
+
+  .tank img {
+    width: 65%;
+  }
+
+  .tank div {
+    font-size: 10px;
+  }
+
+  h1 {
+    font-size: 15px;
+  }
+
+  #garage_button {
+    font-size: 10px;
+  }
+}
+
+* {
+  transition: all 0.3s ease;
+}
+
+.vue-typer .custom.char.typed {
+  color: rgba(100, 250, 100, 0.6);
+}
+
+.vue-typer .custom.caret {
+  background-color: rgba(100, 250, 100, 0.9);
+  width: 4px;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.error {
+  border-left: 2px solid #aa0000;
+}
+
+.regular {
+  border-left: 2px solid #eeffee;
+}
+
+.success {
+  border-left: 2px solid #00aaff;
+}
+
+.crash+img {
+  border-radius: 20px;
+  filter: grayscale(60%);
+  opacity: 0.5;
+}
+
+.crash {
+  content: "NEED REPAIR";
+  position: absolute;
+  color: red;
+  font-size: 20px;
+  width: 100%;
+  z-index: 2;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.8);
+  transform: translate(0px, 50px) rotate(40deg);
+  border-radius: 0 5px 0 10px;
+  cursor: pointer;
+}
+
+select {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px;
+  border: 1px solid #a173cd;
+}
+
+.__bar-button-is-vertical-start {
+  transform: translate(-1.5px, -15px);
+}
+
+.__bar-button-is-vertical-end {
+  transform: translate(-1.5px, 15px);
+}
+
+.__rail-is-vertical {
+  border-width: 0px 2px !important;
+}
+
+.__vuescroll {
+  overflow: visible !important;
+}
+
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  font-family: "metalwar", sans-serif;
+  font-weight: bold;
+}
+
+button {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #a173cd;
+  color: #a173cd;
+  padding: 5px 15px;
+  border-radius: 2px;
+  font-weight: bold;
+  font-family: "metalwar", sans-serif;
+  cursor: pointer;
+}
+
+img {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.gear {
+  position: absolute;
+  top: 50px;
+  left: 40px;
+}
+
+.gear img {
+  animation: rotate 20s infinite linear;
+}
+
+.hp_bar {
+  width: 100%;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+}
+
+.hp_line {
+  height: 100%;
+  width: 33%;
+  background: #a173cd;
+  border-radius: 5px;
+}
+
+.hp_text {
+  position: relative;
+  text-align: center;
+  width: 100%;
+  top: -16px;
+  color: #333;
+}
+
+.portrait_block {
+  display: none;
+  text-align: center;
+  color: black;
+}
+
+.portrait_block img {
+  width: 50px;
+  margin: 20px;
+  animation: turn 2s ease infinite alternate-reverse;
+}
+
+.wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  background: sandybrown;
+}
+
+.settings {
+  padding: 20px 0;
+  color: white;
+}
+
+.settings div,
+.settings button {
+  margin-top: 15px;
+  font-size: 16px;
+}
+
+button:active {
+  transform: scale(0.9);
+}
+
+.username {
+  color: #aaa;
+}
+
+.login #ual-button {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #a173cd;
+  color: #a173cd;
+  font-family: "metalwar";
+}
+
+.login .ual-auth-text {
+  font-size: 1rem;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  /* background-image: url("~/assets/background.jpg"); */
+  background-size: cover;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.container_content {
+  width: 900px;
+  height: 80%;
+  position: relative;
+  /* background:rgba(255,255,255,0.2); */
+  /* border:1px solid #a173cd; */
+  /* background-image: url("~/assets/tanks.png"); */
+  background-size: 100% 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  /* overflow: hidden; */
+  transition: all 0.3s ease;
+}
+
+.info {
+  height: 65%;
+  /* background-image: url("~/assets/menu2.gif"); */
+  background-size: 100% 100%;
+  width: 25%;
+  color: silver;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: translate(40px, -7px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.info img {
+  width: 50px;
+}
+
+.tank {
+  width: 125px;
+}
+
+.buttons {
+  height: 45%;
+  display: flex;
+  /* width: 23%; */
+  flex-direction: column;
+  width: 230px;
+  justify-content: space-around;
+  align-items: center;
+  transform: translate(-50px, 0px);
+}
+
+.button {
+  background: rgba(0, 0, 0, 0.3);
+  border: 3px solid;
+  font-size: 35px;
+  text-align: center;
+  width: 100%;
+  padding: 25px 0;
+  color: grey;
+  text-shadow: 2px 2px 2px black;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.timer {
+  color: grey;
+  text-shadow: 1px 1px 2px black;
+  -webkit-text-stroke-width: 0.01px;
+  -webkit-text-stroke-color: red;
+  font-size: 30px;
+}
+
+.raid {
+  border-color: #a173cd;
+  text-shadow: 1px 1px 2px black;
+  -webkit-text-stroke-width: 0.01px;
+  -webkit-text-stroke-color: red;
+}
+
+.mine {
+  border-color: yellow;
+  text-shadow: 1px 1px 2px black;
+  -webkit-text-stroke-width: 0.01px;
+  -webkit-text-stroke-color: green;
+}
+
+.button:hover {
+  transform: scale(1.05);
+}
+
+.info_line {
+  padding: 5px 15px;
+  display: flex;
+  font-size: 13px;
+  justify-content: space-between;
+  text-transform: uppercase;
+}
+
+.repair {
+  width: 100%;
+  height: 70px;
+  /* background-image: url('~/assets/repair.png'); */
+  /* background-size: 100% 100%; */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  text-shadow: 1px 1px 2px black;
+  -webkit-text-stroke-width: 0.005px;
+  -webkit-text-stroke-color: red;
+  font-size: 25px;
+  border: 1px solid red;
+  transition: all 0.3s ease;
+}
+
+.repair:hover {
+  font-size: 20px;
+}
+
+.repair_price {
+  font-size: 15px;
+  color: red;
+}
+
+.tanks_container {
+  /* background-image:url('~/assets/tanks.png') ; */
+  width: 30%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  left: -7px;
+  top: -5px;
+}
+
+.no_data {
+  text-align: center;
+  margin-top: 50px;
+  color: whitesmoke;
+}
+
+.no_data a {
+  color: orange;
+}
+
+.no_data img {
+  width: 100px;
+  margin: 20px;
+}
+
+.mini {
+  width: 63px;
+  margin: 18px;
+}
+
+.micro {
+  width: 35px;
+}
+
+.money {
+  color: rgba(100, 250, 100, 0.8);
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  position: absolute;
+  top: 12.5%;
+  right: 15%;
+}
+
+.shards_info_button {
+  width: 80px;
+  color: #a173cd;
+  font-size: 35px;
+  cursor: pointer;
+  text-shadow: 1px 3px 2px black;
+}
+
+.menu_container {
+  height: 87%;
+}
+
+.tabs {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 9px;
+}
+
+.tab {
+  margin-right: 20px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.active_tab {
+  border-bottom: 2px solid #a173cd;
+}
+
+.shards_info {
+  position: absolute;
+  top: 20px;
+  right: 250px;
+  z-index: 5;
+}
+
+.shards_wrapper {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shards_container {
+  /* background-image: url("./assets/podlojka_menu.png"); */
+  width: 800px;
+  height: 400px;
+  background-size: 100% 100%;
+  padding: 20px 55px;
+}
+
+.shards_count {
+  color: #a173cd;
+  line-height: 1.7;
+  font-weight: bold;
+}
+
+.shards_cards {
+  width: 100%;
+  height: 100%;
+  /* margin-top: 40px; */
+  /* background-image: url('~/assets/shardr_menu.png'); */
+  padding: 20px 0px;
+  background-size: 100% 100%;
+}
+
+.shards_line {
+  display: flex;
+  height: 100%;
+  align-items: flex-end;
+  padding-bottom: 6px;
+}
+
+.shards_point {
+  width: 17%;
+  margin: 3px;
+  text-align: center;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.shards_name {
+  color: #a173cd;
+  font-weight: 300;
+  font-size: 12px;
+}
+
+.shards_point img {
+  width: 80%;
+  filter: grayscale(100%);
+  transition: all 0.3s ease;
+}
+
+.shards_point:hover img {
+  transform: scale(1.05);
+}
+
+.shards_info_line {
+  width: 83px;
+  position: absolute;
+  margin-top: -73px;
+  margin-left: -15px;
+}
+
+.units_container {
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.units_line {
+  display: flex;
+  align-items: center;
+}
+
+.units_image {
+  width: 20%;
+  padding: 20px;
+}
+
+.units_image img {
+  width: 100%;
+}
+
+.units_ingame {
+  color: #a173cd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.units_action {
+  width: 33%;
+  padding: 20px;
+}
+
+.units_action .button {
+  font-size: 20px;
+}
+
+.animate_bubble {
+  animation: bubble 1.3s infinite ease alternate-reverse;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s;
+}
+
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.45s;
+  position: absolute;
+}
+
+.slide-enter,
+.slide-leave-to {
+  opacity: 0;
+  transform: translate(500px, 0) !important;
+}
+
+.accord-enter-active,
+.accord-leave-active {
+  transition: all 0.7s 0.5s ease-in-out;
+  position: absolute;
+  overflow: hidden !important;
+}
+
+.accord-enter,
+.accord-leave-to {
+  width: 0 !important;
+}
+
+.reverse-enter-active {
+  transition: all 0.2s 0.05s;
+}
+
+.reverse-leave-active {
+  transition: all 0.2s;
+}
+
+.reverse-enter,
+.reverse-leave-to {
+  opacity: 0;
+  transform: scale(0, 1.2);
+}
+
+@keyframes bubble {
+  0% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(2000deg);
+  }
+}
+
+@keyframes turn {
+  0% {
+    transform: rotate(-20deg);
+  }
+
+  100% {
+    transform: rotate(80deg);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media screen and (max-width: 813px) {
+  .container_content {
+    width: 650px;
+    height: 357px;
+  }
+
+  .money {
+    font-size: 12px;
+  }
+
+  .info {
+    width: 29%;
+    transform: translate(20px, -7px);
+  }
+
+  .repair {
+    height: 55px;
+  }
+
+  .hp_text {
+    font-size: 11px;
+    top: -10px;
+  }
+
+  .hp_bar {
+    height: 10px;
+  }
+
+  .login #ual-modal-selection-content {
+    transform: scale(0.7);
+    margin: 0% auto;
+  }
+
+  .repair {
+    font-size: 20px;
+  }
+
+  .repair_price {
+    left: 72%;
+    top: 31%;
+    font-size: 10px;
+  }
+
+  .info_line {
+    font-size: 10px;
+  }
+
+  .tanks_container {
+    left: -29px;
+  }
+
+  .button {
+    padding: 10px 0px;
+  }
+
+  .buttons {
+    width: 145px;
+  }
+
+  .settings {
+    transform: scale(0.8);
+    bottom: 0;
+  }
+
+  .tank {
+    width: 82px;
+  }
+
+  .shards_info {
+    position: absolute;
+    top: 20px;
+    right: auto;
+    left: 100px;
+    /* z-index: 99; */
+  }
+
+  .shards_info_button {
+    font-size: 30px;
+  }
+
+  .shards_info img {
+    /* width: 500px; */
+  }
+}
+
+@media screen and (min-width: 1500px) {
+  .container_content {
+    transform: scale(1.2);
+    height: 70%;
+  }
+
+  .info_line {
+    font-size: 13px;
+  }
+}
+
+@media screen and (min-width: 1800px) {
+  .container_content {
+    transform: scale(1.4);
+    height: 57%;
+  }
+}
+
+@media screen and (min-width: 2000px) {
+  .container_content {
+    transform: scale(1.6);
+    height: 57%;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .portrait_block {
+    display: block;
+  }
+
+  .container {
+    display: none;
+    opacity: 0;
+  }
+}
+
+@media not all and (min-resolution: 0.001dpcm) {
+  @supports (-webkit-appearance: none) {
+
+    .raid,
+    .mine,
+    .repair {
+      -webkit-text-stroke-width: 0.5px;
+    }
+  }
+}

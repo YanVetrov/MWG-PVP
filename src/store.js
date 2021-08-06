@@ -34,7 +34,7 @@ let store = {
   defaultPosY: -400,
   x: 0,
   y: 0,
-  user: null,
+  user: {},
   units: [],
   unusedUnits: [],
   objectsOnMap,
@@ -190,7 +190,7 @@ function createUnits(arr) {
       fontFamily: "metalwar",
       fontSize: 15,
     });
-    container.alphaCounter = async function (text = "+1", color = 0xeeeeee) {
+    container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
       let node = new Text(text, {
         fill: color,
         fontFamily: "metalwar",
@@ -202,7 +202,7 @@ function createUnits(arr) {
       await gsap.to(node, { y: 0, alpha: 0, duration: 2 });
       this.removeChild(node);
     };
-    container.miningAnimation = function () {
+    container.miningAnimation = function() {
       setTimeout(
         () => (this.unit.texture = this.unit["mine_" + this.unit.direction]),
         100
@@ -228,7 +228,7 @@ function createUnits(arr) {
         1100
       );
     };
-    container.getMoveCooldown = function () {
+    container.getMoveCooldown = function() {
       return (
         Date.now() + Math.floor(store.defualtCellCost / this.unit.speed) * 1000
       );
@@ -333,7 +333,7 @@ function createUnits(arr) {
         }
       },
     });
-    container.stakeValidator = function () {
+    container.stakeValidator = function() {
       if (this.locked) return 0;
       if (!this.unit.type === "validator")
         return console.log("not validator =" + this.unit.type);

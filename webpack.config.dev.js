@@ -1,5 +1,6 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
+const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
 const webpack = require("webpack");
 module.exports = {
@@ -8,7 +9,6 @@ module.exports = {
     contentBase: "dist",
     port: 3000,
   },
-  devtool: "inline-source-map",
   resolve: {
     alias: {
       "~": [path.resolve(__dirname, "src/")],
@@ -16,6 +16,53 @@ module.exports = {
     fallback: {
       crypto: false,
     },
+  },
+  module: {
+    rules: [
+      {
+        test: /\.vue$/,
+        loader: "vue-loader",
+      },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: "vue-style-loader",
+            options: { sourceMap: false },
+          },
+          {
+            loader: "css-loader",
+            options: { sourceMap: false },
+          },
+        ],
+      },
+      {
+        test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              name: "[path][name].[ext]",
+              sourceMap: false,
+              esModule: false,
+              publicPath: "/",
+            },
+          },
+        ],
+      },
+      // {
+      //   test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+      //   use: [
+      //     {
+      //       loader: "file-loader",
+      //       options: {
+      //         name: "[path][name].[ext]",
+      //         sourceMap: false,
+      //       },
+      //     },
+      //   ],
+      // },
+    ],
   },
   plugins: [
     new CopyWebpackPlugin({
@@ -30,8 +77,9 @@ module.exports = {
       PIXI: "pixi.js",
     }),
     new HTMLWebpackPlugin({
-      template: "build/index.html",
+      template: "src/index.html",
       filename: "index.html",
     }),
+    new VueLoaderPlugin(),
   ],
 };

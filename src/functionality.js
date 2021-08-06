@@ -142,6 +142,25 @@ async function sortUnit(unit, activeUnit, zone, container) {
     container.removeChild(unit);
   }
 }
+function isAvailableMove(unit, target) {
+  if (!unit || !target) return false;
+  let multiX = Math.abs(unit.posX - target.posX);
+  let multiY = Math.abs(unit.posY - target.posY);
+  let available = 1;
+  if (unit.ground && unit.ground.type === "garage") available += 3;
+  if (multiX > available || multiY > available) return false;
+  else return true;
+}
+function isAvailableAttack(unit, target) {
+  if (!unit || !target) return false;
+  let radius = unit.unit.fire_radius;
+  let available = isNaN(radius) ? 1 : radius;
+  available++;
+  let diffX = Math.abs(unit.posX - target.posX);
+  let diffY = Math.abs(unit.posY - target.posY);
+  if (diffX > available || diffY > available) return false;
+  else return true;
+}
 async function enableInteractiveMap(zone) {
   window.addEventListener("mousewheel", e => {
     let { x, y } = zone.scale;
@@ -344,6 +363,31 @@ function setUnit(unit, ground, unclickable = false, type) {
     if (ground.type === "garage") unit.alpha = 0;
   }
 }
+async function shuffleUnit(unit) {
+  let dir = {
+    ur: { x: -10, y: 10 },
+    r: { x: -10, y: 0 },
+    dr: { x: -10, y: -10 },
+    u: { x: 0, y: 10 },
+
+    ul: { x: 10, y: 10 },
+    l: { x: 10, y: 0 },
+    dl: { x: 10, y: -10 },
+    d: { x: 0, y: -10 },
+  };
+  await gsap.to(unit, {
+    x: unit.x + dir[unit.unit.direction].x,
+    y: unit.y + dir[unit.unit.direction].y,
+    duration: 0.1,
+    ease: "Power0.easeNone",
+  });
+  await gsap.to(unit, {
+    x: unit.x - dir[unit.unit.direction].x,
+    y: unit.y - dir[unit.unit.direction].y,
+    duration: 0.1,
+    ease: "Power0.easeNone",
+  });
+}
 export {
   initMap,
   createJoystic,
@@ -356,4 +400,7 @@ export {
   getDirection,
   getMontain,
   getJoystics,
+  isAvailableMove,
+  isAvailableAttack,
+  shuffleUnit,
 };
