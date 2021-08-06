@@ -1,7 +1,8 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HTMLWebpackPlugin = require("html-webpack-plugin");
-const UglifyJSPlugin = require("uglifyjs-webpack-plugin");
-
+const { VueLoaderPlugin } = require("vue-loader");
+const path = require("path");
+const webpack = require("webpack");
 module.exports = {
   mode: "production",
   resolve: {
@@ -18,6 +19,49 @@ module.exports = {
           loader: "babel-loader",
         },
       },
+      {
+        test: /\.vue$/,
+        loader: "vue-loader",
+      },
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: "vue-style-loader",
+            options: { sourceMap: false },
+          },
+          {
+            loader: "css-loader",
+            options: { sourceMap: false },
+          },
+        ],
+      },
+      {
+        test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              name: "[path][name].[ext]",
+              sourceMap: false,
+              esModule: false,
+              publicPath: "/",
+            },
+          },
+        ],
+      },
+      // {
+      //   test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+      //   use: [
+      //     {
+      //       loader: "file-loader",
+      //       options: {
+      //         name: "[path][name].[ext]",
+      //         sourceMap: false,
+      //       },
+      //     },
+      //   ],
+      // },
     ],
   },
   optimization: {
@@ -33,10 +77,11 @@ module.exports = {
       ],
     }),
     new HTMLWebpackPlugin({
-      template: "build/index.html",
+      template: "src/index.html",
       filename: "index.html",
       hash: true,
       minify: false,
     }),
+    new VueLoaderPlugin(),
   ],
 };
