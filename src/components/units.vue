@@ -148,13 +148,18 @@
               </div>
               <div class="garage_count">YOUR UNITS: {{ garage.count }}</div>
               <div
-                v-if="garage.posX != garageX && garage.posY != garageY"
+                class="here"
+                v-if="garage.posX == garageX && garage.posY == garageY"
+              >
+                YOU HERE
+              </div>
+              <div
+                v-else
                 @click="$emit('enterGarage', garage)"
                 class="button raid"
               >
                 ENTER GARAGE
               </div>
-              <div class="here" v-else>YOU HERE</div>
             </div>
           </div>
         </div>
@@ -296,7 +301,7 @@ export default {
   margin-top: 10px;
 }
 .here {
-  color: silver;
+  color: rgb(131, 213, 165);
   font-size: 15px;
 }
 .garage_coordinates,
