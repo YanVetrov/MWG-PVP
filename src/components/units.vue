@@ -95,7 +95,7 @@
               ]
             </div>
             <div class="button raid" @click="$emit('deploy', tank)" key="2">
-              <span v-if="!tank.locked">DEPLOY</span>
+              <span v-if="tank.unlockedTime < Date.now()">DEPLOY</span>
               <timer v-else :time="tank.unlockedTime" />
             </div>
           </div>

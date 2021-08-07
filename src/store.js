@@ -102,7 +102,7 @@ Object.defineProperty(store, "unitsFromKeys", {
     return this.units.reduce((acc, el) => {
       acc[el.unit.asset_id] = el;
       return acc;
-    });
+    }, {});
   },
 });
 function createObjectOnMap(el) {
@@ -362,7 +362,8 @@ async function getIngameTanks(
   handlerMine,
   handlerCollect,
   handlerDropStuff,
-  handlerRepair
+  handlerRepair,
+  unitChanges
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -461,6 +462,10 @@ async function getIngameTanks(
         store.unit = store.units[0];
         store.unitsGetted = true;
         if (store.stuffGetted) handler();
+      } else {
+        console.log("check unit...");
+        let allTanks = Object.values(units);
+        allTanks.forEach(el => unitChanges(el));
       }
     } else {
       let data = JSON.parse(message.data);

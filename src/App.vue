@@ -192,6 +192,42 @@ export default {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
     },
+    checkUnitChange(unit) {
+      console.log("process...");
+      let localTank = store.unitsFromKeys[unit.asset_id];
+      if (!localTank) return 0;
+      console.log("tank finded...");
+      if (unit.hp != localTank.health) {
+        console.log(`hp moved. ${localTank.health} -> ${unit.hp}`);
+        localTank.health = unit.hp;
+        if (this.show && unit.owner === store.user.accountName) {
+          let vueTank = this.store.units.find(
+            el => el.asset_id === unit.asset_id
+          );
+          if (vueTank) vueTank.hp = unit.hp;
+        }
+      }
+      if (unit.x != localTank.posX || unit.y != localTank.posY) {
+        console.log(
+          `location moved. ${localTank.posX} ${localTank.posY} -> ${unit.x} ${unit.y}`
+        );
+        this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
+      }
+      if (localTank.lockedTime !== unit.next_availability * 1000) {
+        console.log(
+          `next availability moved. ${
+            localTank.lockedTime
+          } -> ${unit.next_availability * 1000}`
+        );
+        localTank.lockedTime = unit.next_availability * 1000;
+        if (this.show && unit.owner === store.user.accountName) {
+          let vueTank = this.store.units.find(
+            el => el.asset_id === unit.asset_id
+          );
+          if (vueTank) vueTank.unlockedTime = unit.next_availability * 1000;
+        }
+      }
+    },
     async onUnitRepair({ id }) {
       let tank = store.unitsFromKeys[id];
       if (tank) {
@@ -326,12 +362,19 @@ export default {
         }
       });
     },
+    checkDestroy(unit) {
+      if (unit.health <= 0) {
+        this.onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
+        this.onUnitDrop({ id: unit.unit.asset_id });
+      }
+    },
     async showGarage({ posX, posY }, teleport) {
       this.store.garageX = posX;
       this.store.garageY = posY;
 
       let units = store.getGaragesUnits({ x: posX, y: posY }).map(el => {
         let main = el.unit;
+        let unlockedTime = el.lockedTime;
         let {
           posX,
           name,
@@ -359,6 +402,7 @@ export default {
           load,
           repairing,
           stuff,
+          unlockedTime,
         };
       });
       this.$set(this.store, "units", units);
@@ -368,7 +412,6 @@ export default {
         let y = posY - 5;
         store.x = x;
         store.y = y;
-
         this.renderMap();
       }
     },
@@ -386,6 +429,45 @@ export default {
       store.unit = tank;
       setColorAround(tank.ground, true);
       this.show = false;
+    },
+    async onUnitMove({ id, x, y }) {
+      let tank = store.unitsFromKeys[id];
+      tank.posX = x;
+      tank.posY = y;
+      let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
+      if (!ground) return 0;
+      if (!tank.ground) {
+        setUnit(tank, ground, false, "unit");
+        await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
+        return 0;
+      }
+      moveUnit(tank, ground);
+      if (tank.poised) {
+        tank.health -= 10;
+        tank.poised--;
+        checkDestroy(tank);
+      }
+      let timeout = tank.getMoveCooldown();
+      tank.lockedTime = timeout;
+      if (ground.type === "garage") {
+        let tp = new AnimatedSprite(
+          ["1.png", "2.png", "3.png"].map(el =>
+            Texture.from(`./assets/tp/${el}`)
+          )
+        );
+        tp.animationSpeed = 1;
+        tp.scale.x = 1.5;
+        tp.scale.y = 1.5;
+        tp.x -= 50;
+        tp.y -= 50;
+        tp.play();
+        tank.addChild(tp);
+        window.sound("teleport");
+        setTimeout(async () => {
+          await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
+          tank.removeChild(tp);
+        }, 1000);
+      }
     },
     addSprite(target, i) {
       let index = i;
@@ -624,12 +706,13 @@ export default {
           vm.store.user = store.user;
           await getIngameTanks(
             onLoadedSocket,
-            onUnitMove,
+            vm.onUnitMove,
             onUnitAttack,
             onUnitMine,
             onUnitCollect,
             vm.onUnitDrop,
-            vm.onUnitRepair
+            vm.onUnitRepair,
+            vm.checkUnitChange
           );
         });
         document.getElementById("dev").addEventListener("click", e => {
@@ -677,47 +760,7 @@ export default {
         vm.renderMap();
         console.log("map rendered");
       }
-      async function onUnitMove({ id, x, y }) {
-        let tank = store.unitsFromKeys[id];
-        tank.posX = x;
-        tank.posY = y;
-        let ground = store.visibleZone.find(
-          el => el.posX === x && el.posY === y
-        );
-        if (!ground) return 0;
-        if (!tank.ground) {
-          setUnit(tank, ground, false, "unit");
-          await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
-          return 0;
-        }
-        moveUnit(tank, ground);
-        if (tank.poised) {
-          tank.health -= 10;
-          tank.poised--;
-          checkDestroy(tank);
-        }
-        let timeout = tank.getMoveCooldown();
-        tank.lockedTime = timeout;
-        if (ground.type === "garage") {
-          let tp = new AnimatedSprite(
-            ["1.png", "2.png", "3.png"].map(el =>
-              Texture.from(`./assets/tp/${el}`)
-            )
-          );
-          tp.animationSpeed = 1;
-          tp.scale.x = 1.5;
-          tp.scale.y = 1.5;
-          tp.x -= 50;
-          tp.y -= 50;
-          tp.play();
-          tank.addChild(tp);
-          window.sound("teleport");
-          setTimeout(async () => {
-            await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
-            tank.removeChild(tp);
-          }, 1000);
-        }
-      }
+
       async function onUnitCollect({ id, x, y }) {
         let tank = store.unitsFromKeys[id];
         if (!tank) return 0;
@@ -748,12 +791,6 @@ export default {
         tank.stuffCount = tank.stuffCount;
         store.gameScene.removeChild(stuff);
         store.objectsOnMap.splice(index, 1);
-      }
-      function checkDestroy(unit) {
-        if (unit.health <= 0) {
-          onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
-          vm.onUnitDrop({ id: unit.unit.asset_id });
-        }
       }
 
       async function onUnitAttack({ id, target_id, timeout }) {
