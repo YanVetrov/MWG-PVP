@@ -61,9 +61,11 @@ const unpack_units = array => {
   let offset = 0;
 
   const read_uint64 = () => {
-    const data = Number(dataView.getBigUint64(offset));
-    offset += 8;
-    return data;
+    // const data = Number(dataView.getBigUint64(offset));
+    // offset += 8;
+    // return data;
+    let q = read_uint32();
+    return q * ((1 << 30) * 4) + read_uint32();
   };
   const read_uint32 = () => {
     const data = dataView.getUint32(offset);
@@ -130,6 +132,7 @@ const unpack_units = array => {
     }
     group_length = read_uint16();
   }
+  console.log(Object.values(units).slice(0, 100));
   return units;
 };
 
