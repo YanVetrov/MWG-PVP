@@ -42,9 +42,9 @@
   </div>
 </template>
 <script>
-import shard from "./shard";
+import shard from "./shard.vue";
 export default {
   components: { shard },
-  props: ["shards", "balance"]
+  props: ["shards", "balance"],
 };
 </script>

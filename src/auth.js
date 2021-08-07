@@ -15,10 +15,6 @@ const myChain = {
 const anchor = new Anchor([myChain], { appName: myAppName });
 const wax = new Wax([myChain], { appName: myAppName });
 
-const myAppRoot = {
-  containerElement: document.getElementById("login"),
-};
-
 async function initUal(handler) {
   let auth = localStorage.getItem("ual-session-authenticator");
   let expire = localStorage.getItem("ual-session-expiration");
@@ -32,8 +28,6 @@ async function initUal(handler) {
       initUal(handler);
     } else {
       handler(anchor.users);
-      myAppRoot.containerElement.style.visibility = "hidden";
-      document.getElementById("signout").style.visibility = "visible";
     }
   } else {
     let ual = new UALJs(
@@ -44,13 +38,9 @@ async function initUal(handler) {
       [myChain],
       myAppName,
       [anchor, wax],
-      myAppRoot
+      { containerElement: document.getElementById("login") }
     );
-    myAppRoot.containerElement.style.visibility = "visible";
-    document.getElementById("signout").style.visibility = "hidden";
     ual.userCallbackHandler = e => {
-      myAppRoot.containerElement.style.visibility = "hidden";
-      document.getElementById("signout").style.visibility = "visible";
       handler(e);
       console.log(e);
     };

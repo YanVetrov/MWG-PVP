@@ -361,7 +361,8 @@ async function getIngameTanks(
   handlerAttack,
   handlerMine,
   handlerCollect,
-  handlerDropStuff
+  handlerDropStuff,
+  handlerRepair
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -512,9 +513,7 @@ async function getIngameTanks(
               )
               .forEach(el => {
                 let id = el.data.memo.split(":")[1];
-                let tank = store.unitsFromKeys[id];
-                if (!tank) return;
-                tank.health = tank.unit.strength;
+                handlerRepair({ id });
               });
           }
         });

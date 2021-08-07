@@ -67,7 +67,7 @@
             :style="{
               opacity: tank.locked ? 0.5 : 1,
               textAlign: 'center',
-              fontSize: '14px'
+              fontSize: '14px',
             }"
             v-if="tank.type === 'discount'"
             class=" mini"
@@ -99,15 +99,15 @@
           >this link.</a
         >
         <br />
-        <img src="~/assets/CDT.png" />
-        <img src="~/assets/PDT.png" />
-        <img src="~/assets/MDT.png" />
+        <img src="../assets/CDT.png" />
+        <img src="../assets/PDT.png" />
+        <img src="../assets/MDT.png" />
       </div>
     </div>
   </scroll>
 </template>
 <script>
-import switchbox from "~/components/switch";
+import switchbox from "~/components/switch.vue";
 export default {
   props: ["tanks", "unique", "PDT"],
   components: { switchbox },
@@ -121,14 +121,14 @@ export default {
           specifyBorderRadius: "0",
           gutterOfEnds: "35px",
           keepShow: false,
-          gutterOfSide: "-15px"
+          gutterOfSide: "-15px",
         },
         scrollButton: {
           enable: true,
           background: "#a173cd",
           opacity: 1,
           step: 180,
-          mousedownStep: 30
+          mousedownStep: 30,
         },
         bar: {
           showDelay: 500,
@@ -139,9 +139,9 @@ export default {
           hoverStyle: false,
           minSize: 0,
           size: "6px",
-          disable: false
-        }
-      }
+          disable: false,
+        },
+      },
     };
   },
   computed: {
@@ -150,7 +150,7 @@ export default {
     },
     PDTCount() {
       return this.count * 12;
-    }
+    },
   },
   methods: {
     multiCount(val) {
@@ -177,8 +177,8 @@ export default {
       if (minutes < 10) minutes = "0" + minutes;
       if (seconds < 10) seconds = "0" + seconds;
       return `${minutes}:${seconds}`;
-    }
-  }
+    },
+  },
 };
 </script>
 <style scoped>

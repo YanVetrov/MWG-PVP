@@ -22,8 +22,8 @@
           >this link.</a
         >
         <br />
-        <img src="~/assets/pack50.png" />
-        <img src="~/assets/pack500.png" />
+        <img src="../assets/pack50.png" />
+        <img src="../assets/pack500.png" />
       </div>
     </div>
   </scroll>
@@ -40,14 +40,14 @@ export default {
           specifyBorderRadius: "0",
           gutterOfEnds: "35px",
           keepShow: false,
-          gutterOfSide: "-15px"
+          gutterOfSide: "-15px",
         },
         scrollButton: {
           enable: true,
           background: "#a173cd",
           opacity: 1,
           step: 180,
-          mousedownStep: 30
+          mousedownStep: 30,
         },
         bar: {
           showDelay: 500,
@@ -58,11 +58,11 @@ export default {
           hoverStyle: false,
           minSize: 0,
           size: "6px",
-          disable: false
-        }
-      }
+          disable: false,
+        },
+      },
     };
-  }
+  },
 };
 </script>
 <style scoped>

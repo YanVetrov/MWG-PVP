@@ -1,7 +1,7 @@
 <template>
   <div class="main_view">
-    <div id="login"></div>
-    <button id="signout">
+    <div id="login" v-show="!store.user"></div>
+    <button id="signout" v-show="store.user">
       sign out
     </button>
     <button id="dev">не нажимать</button>
@@ -45,6 +45,9 @@
         <component
           :is="tab.component"
           :tanks="store.units"
+          :garages="store.garages"
+          :garageX="garageX"
+          :garageY="garageY"
           :soundEnabled="true"
           :musicEnabled="true"
           :fullscreen="true"
@@ -61,6 +64,8 @@
           :MDT="0"
           @repair="repair"
           @deploy="deploy"
+          @enterGarage="showGarage"
+          @dropStuff="dropStuffTransaction"
         />
       </transition>
     </mainMenu>
@@ -73,17 +78,17 @@
 // import buttons from "./components/buttons.vue";
 // import tanks from "./components/tanks.vue";
 import mainMenu from "./components/menu.vue";
-// import shards from "./components/shards.vue";
+import shards from "./components/shards.vue";
 import units from "./components/units.vue";
-// import unique from "./components/unique.vue";
-// import packs from "./components/packs.vue";
+import unique from "./components/unique.vue";
+import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
 // import game from "./components/game.vue";
 let tabs = [
-  // { name: "Shards", component: shards },
-  { name: "Units", component: units },
-  // { name: "Unique units", component: unique },
-  // { name: "Packs", component: packs },
+  { name: "Garage", component: units },
+  { name: "Shards", component: shards },
+  { name: "Unique units", component: unique },
+  { name: "Packs", component: packs },
   { name: "Settings", component: settings },
   // { name: "Game", component: game },
 ];
@@ -153,6 +158,7 @@ function setColorAround(ground, enable) {
   if (enable) filters = [new ColorOverlayFilter(0x33ef99, 0.2)];
   around.forEach(ground => (ground.filters = filters));
 }
+
 export default {
   components: {
     // info,
@@ -161,10 +167,11 @@ export default {
 
     mainMenu,
     // login,
-    // shards,
+    shards,
+    unique,
     settings,
     // loader,
-    // packs,
+    packs,
     // notify,
     // game,
     units,
@@ -173,192 +180,121 @@ export default {
     return {
       tabs,
       tab: tabs[0],
-      store: {},
+      store: {
+        garageX: 0,
+        garageY: 0,
+        user: false,
+      },
       show: false,
     };
   },
   methods: {
-    async showGarage(units) {
-      this.store.units = units;
-      this.show = true;
+    dropStuffTransaction(ev) {
+      return dropStuffTransaction(ev);
     },
-    async repair({ count, id }) {
-      await repair({ count, id });
-      let un = this.store.units.find(unit => unit.asset_id === id);
-      un.hp = un.strength;
+    async onUnitRepair({ id }) {
+      let tank = store.unitsFromKeys[id];
+      if (tank) {
+        tank.health = tank.unit.strength;
+      }
+      if (this.show) {
+        let unit = this.store.units.find(el => el.asset_id === id);
+        if (unit) unit.hp = unit.strength;
+      }
     },
-    deploy(unit) {
-      let tank = store.unitsFromKeys[unit.asset_id];
-      store.unit = tank;
-      setColorAround(tank.ground, true);
-      this.show = false;
+    setObjectOnMap(el) {
+      let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
+      let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
+      if (el.scaled) {
+        el.scale.x = el.scaled;
+        el.scale.y = el.scaled;
+      }
+      if (el.type === "stuff") {
+        el.interactive = true;
+        el.buttonMode = true;
+        el.on("pointerover", e => {
+          el.filters = [
+            new BevelFilter({
+              lightColor: 0xff69,
+              thickness: 5,
+              rotation: 0,
+              shadowColor: 0xff69,
+              lightAlpha: 0.5,
+              shadowAlpha: 0.5,
+            }),
+          ];
+        });
+        el.on("pointerout", e => (el.filters = []));
+        el.on("pointerup", async e => {
+          await collectStuffTransaction({
+            id: store.unit.unit.asset_id,
+            x: el.posX,
+            y: el.posY,
+          });
+        });
+      }
+      let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
+      let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
+      setUnit(el, store.map[y][x], true, el.type);
+      store.gameScene.addChild(el);
     },
-  },
-  mounted() {
-    const vm = this;
-    sound.add("crash", "./assets/sound/crash.mp3");
-    sound.add("fire", "./assets/sound/fire.mp3");
-    sound.add("go", "./assets/sound/go.mp3");
-    sound.add("teleport", "./assets/teleport.mp3");
-    window.sound = name => sound.play(name || "go");
-    initGsap();
-    const app = new Application({
-      width: window.innerWidth,
-      height: window.innerHeight,
-      antialias: true,
-      resolution: 1,
-      view: document.getElementById("canvas1"),
-    });
+    async renderMap() {
+      store.unitsInVisibleZone.forEach(el => store.gameScene.removeChild(el));
+      store.visibleZone.forEach(el => store.gameScene.removeChild(el));
+      store.visibleZone = [];
+      let y = store.y;
+      let x = store.x;
+      let endLines = store.y + store.countLines;
+      if (y < 0) y = 0;
+      if (x < 0) x = 0;
+      let lines = store.map.slice(y, endLines);
+      if (store.y < y || endLines > store.map.length - 1) {
+        let count = Math.abs(y - store.y);
+        if (count === 0) count = Math.abs(endLines - store.map.length - 1);
+        if (count < -5) count = -5;
+        for (let i = 0; i < count; i++) {
+          let newLine = [];
+          for (let k = 0; k < store.cellsInLine; k++) {
+            newLine.push(
+              getMontain(top_bottom.frames, store.mountains_tb, store.id)
+            );
+          }
+          if (store.y < 0) lines.unshift(newLine);
+          else lines.push(newLine);
+        }
+      }
+      lines.forEach((el, i) => {
+        let count = 0;
+        let line = [...el];
+        let endLine = store.x + store.cellsInLine;
+        if (store.x < x) count = Math.abs(x - store.x);
+        line = line.slice(x, endLine);
+        if (line.length < store.cellsInLine)
+          count = Math.abs(store.cellsInLine - line.length);
 
-    store.gameScene = new Container();
-    store.gameScene.sortableChildren = true;
-    store.gameScene.zIndex = 2;
-    store.gameScene.x = store.defaultPosX;
-    store.gameScene.y = store.defaultPosY;
-    store.gameScene.scale.y = 2 / window.devicePixelRatio;
-    store.gameScene.scale.x = 2 / window.devicePixelRatio;
-    app.stage.addChild(store.gameScene);
-    app.stage.sortableChildren = true;
-    app.renderer.backgroundColor = "0x202020";
-    app.renderer.autoResize = true;
-    app.loader
-      .add("./assets/sheet.json")
-      .add("./assets/top_bottom.json")
-      .add("./assets/right_left.json")
-      .add("metalfont", "./assets/font1.ttf")
-      .load(setup);
-    function setup() {
-      store.id = app.loader.resources["./assets/sheet.json"].textures;
-      store.mountains_tb =
-        app.loader.resources["./assets/top_bottom.json"].textures;
-      store.mountains_rl =
-        app.loader.resources["./assets/right_left.json"].textures;
-      store.map = initMap(
-        Object.keys(sheet.frames).filter(el => !el.match("r.png")),
-        store.id,
-        store.allMapCount
+        for (let i = 0; i < count; i++) {
+          if (store.x < x)
+            line.unshift(
+              getMontain(right_left.frames, store.mountains_rl, store.id)
+            );
+          else
+            line.push(
+              getMontain(right_left.frames, store.mountains_rl, store.id)
+            );
+        }
+        line.forEach(cell => store.visibleZone.push(cell));
+      });
+      store.visibleZone.forEach((el, i) => this.addSprite(el, i));
+      store.unitsInVisibleZone.forEach(el =>
+        sortUnit(el, store.unit, store.visibleZone, store.gameScene)
       );
-      checkUnits();
-      let joystics = getJoystics(store, renderMap);
-      joystics.forEach(joy => app.stage.addChild(joy));
-      renderMap();
-      initUal(async e => {
-        if (e[0].wax) e[0].rpc = e[0].wax.rpc;
-        store.user = e[0];
-        vm.store.user = store.user;
-        await getIngameTanks(
-          onLoadedSocket,
-          onUnitMove,
-          onUnitAttack,
-          onUnitMine,
-          onUnitCollect,
-          onUnitDrop
-        );
-      });
-      document.getElementById("dev").addEventListener("click", e => {
-        enableInteractiveMap(store.gameScene);
-        e.target.style.visibility = "hidden";
-      });
-      document.getElementById("signout").addEventListener("click", e => {
-        localStorage.clear();
-        location.reload();
-      });
-      document.getElementById("drop_stuff").addEventListener("click", e => {
-        dropStuffTransaction({ id: store.unit.unit.asset_id });
-      });
-      // document.getElementById("log").addEventListener("click", e => {
-      //   console.log(store.logs);
-      // });
-      // document
-      //   .getElementById("garage_button")
-      //   .addEventListener("click", () => showGarage(false));
-    }
-    function onLoadedSocket() {
-      setObjectsOnMap(store.objectsOnMap);
-      console.log("objects setted");
-      setUnits(store.unitsInVisibleZone);
-      console.log("units setted");
-      renderMap();
-      console.log("map rendered");
-    }
-    async function onUnitMove({ id, x, y }) {
-      let tank = store.unitsFromKeys[id];
-      tank.posX = x;
-      tank.posY = y;
-      let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
-      if (!ground) return 0;
-      if (!tank.ground) {
-        setUnit(tank, ground, false, "unit");
-        await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
-        return 0;
-      }
-      moveUnit(tank, ground);
-      if (tank.poised) {
-        tank.health -= 10;
-        tank.poised--;
-        checkDestroy(tank);
-      }
-      let timeout = tank.getMoveCooldown();
-      tank.lockedTime = timeout;
-      if (ground.type === "garage") {
-        let tp = new AnimatedSprite(
-          ["1.png", "2.png", "3.png"].map(el =>
-            Texture.from(`./assets/tp/${el}`)
-          )
-        );
-        tp.animationSpeed = 1;
-        tp.scale.x = 1.5;
-        tp.scale.y = 1.5;
-        tp.x -= 50;
-        tp.y -= 50;
-        tp.play();
-        tank.addChild(tp);
-        window.sound("teleport");
-        setTimeout(async () => {
-          await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
-          tank.removeChild(tp);
-        }, 1000);
-      }
-    }
-    async function onUnitCollect({ id, x, y }) {
-      console.log("ok");
-      let tank = store.unitsFromKeys[id];
-      if (!tank) return 0;
-      console.log("tank");
-      let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
-      let index = store.objectsOnMap.findIndex(
-        el => el.posX === x && el.posY === y
+      store.objectsOnMap.forEach(el =>
+        sortUnit(el, store.unit, store.visibleZone, store.gameScene)
       );
-      if (!stuff) return 0;
-      console.log("stuff");
-      let { amount, weight } = stuff;
-      let freeSpace = tank.unit.capacity - tank.stuffCount;
-      if (amount > freeSpace) {
-        amount = freeSpace;
-        tank.unit.stuff.push({ amount, weight });
-        tank.stuffCount = tank.stuffCount;
-        stuff.amount -= amount;
-        return tank.alphaCounter(`+${amount}`);
-      }
-      gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
-      await gsap.to(stuff, {
-        x: tank.x + 50,
-        y: tank.y + 50,
-        alpha: 0,
-        duration: 1.5,
-      });
-      tank.unit.stuff.push({ amount, weight });
-      tank.stuffCount = tank.stuffCount;
-      store.gameScene.removeChild(stuff);
-      store.objectsOnMap.splice(index, 1);
-    }
-    function checkDestroy(unit) {
-      if (unit.health <= 0) {
-        onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
-        onUnitDrop({ id: unit.unit.asset_id });
-      }
-    }
-    async function onUnitDrop({ id }) {
+      // initMiniMap();
+      // renderMiniMap();
+    },
+    async onUnitDrop({ id }) {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
       tank.unit.stuff.forEach((el, i) => {
@@ -380,48 +316,74 @@ export default {
           unground: true,
         });
         store.objectsOnMap.push(stuff);
-        setObjectOnMap(stuff);
+        this.setObjectOnMap(stuff);
         sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
         tank.unit.stuff = [];
         tank.stuffCount = 0;
-      });
-    }
-    async function onUnitAttack({ id, target_id, timeout }) {
-      let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
-      let targetTank = store.unitsInVisibleZone.find(
-        el => el.unit.asset_id === target_id
-      );
-      if (!tank || !targetTank) {
-        return 0;
-      } else {
-        let ground = targetTank.ground;
-        tank.lockedTime = timeout;
-        if (targetTank.self) tank.agressive = true;
-        await unitAction(tank, ground);
-        checkDestroy(tank);
-        if (tank.poised) {
-          tank.health -= 10;
-          tank.poised--;
-          checkDestroy(tank);
+        if (this.show) {
+          let unit = this.store.units.find(el => el.asset_id === id);
+          if (unit) unit.stuff = [];
         }
-      }
-    }
-    async function onUnitMine({ id, timeout, amount }) {
-      let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
-      if (!tank) return 0;
-      else {
-        let freeSpace = tank.unit.capacity - tank.stuffCount;
-        if (amount > freeSpace) amount = freeSpace;
-        tank.unit.stuff.push({ amount, weight: 1 });
-        tank.miningAnimation();
-        await shuffleUnit(tank);
-        await shuffleUnit(tank);
-        tank.stuffCount = tank.stuffCount;
-        await tank.alphaCounter(`+${amount}`, 0xffee00);
-        tank.lockedTime = timeout;
-      }
-    }
-    function addSprite(target, i) {
+      });
+    },
+    async showGarage({ posX, posY }) {
+      this.garageX = posX;
+      this.garageY = posY;
+      let units = store.getGaragesUnits({ x: posX, y: posY }).map(el => {
+        let main = el.unit;
+        let {
+          posX,
+          name,
+          image,
+          posY,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+        } = main;
+        return {
+          posX,
+          name,
+          image,
+          posY,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+        };
+      });
+      let x = posX - 3;
+      let y = posY - 5;
+      store.x = x;
+      store.y = y;
+      this.$set(this.store, "units", units);
+      this.show = true;
+      this.renderMap();
+    },
+    changeEndpoint(link) {
+      store.user.rpc.endpoint = link;
+      if (store.user.client && store.user.client.provider)
+        store.user.client.provider.url = link;
+      localStorage.setItem("endpoint", link);
+    },
+    async repair({ count, id }) {
+      await repair({ count, id });
+    },
+    deploy(unit) {
+      let tank = store.unitsFromKeys[unit.asset_id];
+      store.unit = tank;
+      setColorAround(tank.ground, true);
+      this.show = false;
+    },
+    addSprite(target, i) {
       let index = i;
       let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
       let multiplerX = -(256 * Math.floor(i / store.cellsInLine));
@@ -485,10 +447,10 @@ export default {
           if (target.unit.unit) target.unit.unit.filters = [];
         }
       });
-      target.on("pointerup", e => clickSprite(target, event));
+      target.on("pointerup", e => this.clickSprite(target, event));
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
-    }
-    async function clickSprite(target, event) {
+    },
+    async clickSprite(target, event) {
       if (target.blocked) return 0;
       target.blocked = true;
       if (target.unclickable) return (target.blocked = false);
@@ -531,27 +493,20 @@ export default {
           clearTimeout(target.timeout);
           target.timeout = setTimeout(() => {
             target.touch = 0;
-            clickUnitMove(store.unit, target);
+            this.clickUnitMove(store.unit, target);
           }, 1000);
           if (target.touch === 2) {
             target.touch = 0;
             clearTimeout(target.timeout);
 
-            showGarage(
+            this.showGarage(
               store.getGaragesUnits({ x: target.posX, y: target.posY })
             );
           }
           return (target.blocked = false);
         }
         if (event.button === 2) {
-          console.log(
-            store.getGaragesUnits({ x: target.posX, y: target.posY })
-          );
-          vm.showGarage(
-            store
-              .getGaragesUnits({ x: target.posX, y: target.posY })
-              .map(unit => unit.unit)
-          );
+          this.showGarage({ posX: target.posX, posY: target.posY });
           return (target.blocked = false);
         }
       }
@@ -562,12 +517,12 @@ export default {
       ) {
         if (store.unit.locked) return (target.blocked = false);
         let clone = store.unit;
-        await clickUnitMove(clone, target);
+        await this.clickUnitMove(clone, target);
       }
-      updateText(app.stage, store, `X:${target.posX} Y:${target.posY}`);
+      store.coordinates.text = `X:${target.posX} Y:${target.posY}`;
       target.blocked = false;
-    }
-    async function clickUnitMove(unit, ground) {
+    },
+    async clickUnitMove(unit, ground) {
       if (!isAvailableMove(unit, ground)) return (ground.blocked = false);
       if (ground.type === "geyser") {
         if (unit.unit.type === "miner") {
@@ -608,319 +563,440 @@ export default {
       }
       if (ground.type === "geyser") {
       }
-    }
-    async function renderMap() {
-      store.visibleZone.forEach(el => store.gameScene.removeChild(el));
-      store.visibleZone = [];
-      let y = store.y;
-      let x = store.x;
-      let endLines = store.y + store.countLines;
-      if (y < 0) y = 0;
-      if (x < 0) x = 0;
-      let lines = store.map.slice(y, endLines);
-      if (store.y < y || endLines > store.map.length - 1) {
-        let count = Math.abs(y - store.y);
-        if (count === 0) count = Math.abs(endLines - store.map.length - 1);
-        if (count < -5) count = -5;
-        for (let i = 0; i < count; i++) {
-          let newLine = [];
-          for (let k = 0; k < store.cellsInLine; k++) {
-            newLine.push(
-              getMontain(top_bottom.frames, store.mountains_tb, store.id)
-            );
-          }
-          if (store.y < 0) lines.unshift(newLine);
-          else lines.push(newLine);
-        }
-      }
-      lines.forEach((el, i) => {
-        let count = 0;
-        let line = [...el];
-        let endLine = store.x + store.cellsInLine;
-        if (store.x < x) count = Math.abs(x - store.x);
-        line = line.slice(x, endLine);
-        if (line.length < store.cellsInLine)
-          count = Math.abs(store.cellsInLine - line.length);
-
-        for (let i = 0; i < count; i++) {
-          if (store.x < x)
-            line.unshift(
-              getMontain(right_left.frames, store.mountains_rl, store.id)
-            );
-          else
-            line.push(
-              getMontain(right_left.frames, store.mountains_rl, store.id)
-            );
-        }
-        line.forEach(cell => store.visibleZone.push(cell));
+    },
+    initPixi() {
+      const vm = this;
+      sound.add("crash", "./assets/sound/crash.mp3");
+      sound.add("fire", "./assets/sound/fire.mp3");
+      sound.add("go", "./assets/sound/go.mp3");
+      sound.add("teleport", "./assets/teleport.mp3");
+      window.sound = name => sound.play(name || "go");
+      initGsap();
+      const app = new Application({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        antialias: true,
+        resolution: 1,
+        view: document.getElementById("canvas1"),
       });
-      store.visibleZone.forEach((el, i) => addSprite(el, i));
-      store.unitsInVisibleZone.forEach(el =>
-        sortUnit(el, store.unit, store.visibleZone, store.gameScene)
-      );
-      store.objectsOnMap.forEach(el =>
-        sortUnit(el, store.unit, store.visibleZone, store.gameScene)
-      );
-      // initMiniMap();
-      // renderMiniMap();
-    }
 
-    function initMiniMap() {
-      let bg = Sprite.from("./assets/minimap.png");
-      if (store.miniMap) return 0;
-      store.miniMap = new Container();
-      store.miniMap.addChild(bg);
-      let filter = new ColorMatrixFilter();
-      filter.brightness(0.7);
-      bg.filters = [filter];
-      bg.zIndex = 1;
-      store.miniMap.width = 200;
-      store.miniMap.height = 200;
-      store.miniMap.x = window.innerWidth - store.miniMap.width - 50;
-      store.miniMap.y = window.innerHeight - store.miniMap.height - 50;
-      bg.width = 1;
-      bg.height = 1;
-      store.miniMap.zIndex = 5;
-      store.miniMap.sortableChildren = true;
-      app.stage.addChild(store.miniMap);
-      renderMiniMap();
-    }
-    async function renderMiniMap() {
-      if (store.cashMinimap) store.miniMap.removeChild(store.cashMinimap);
-      store.cashMinimap = new Graphics();
-      let size = 1;
-      let scale = 0.1;
-      let realSquareSize = store.miniMap.width * size * scale;
-      let oneLine = Math.floor(store.miniMap.width / realSquareSize);
-      let countLines = Math.floor(store.miniMap.height / realSquareSize);
-      let mapWidth = store.allMapCount * 0.005;
-      let oneCellInset = Math.ceil(mapWidth / oneLine);
-      for (let line = 1; line <= countLines; line++) {
-        for (let cell = 1; cell <= oneLine; cell++) {
-          let color = 0x00aa00;
-          let alpha = 0;
-          let lineColor = 0xffffff;
-          // color = 0xcc90fe;
-          for (
-            let x = (cell - 1) * oneCellInset;
-            x < cell * oneCellInset;
-            x++
-          ) {
-            for (
-              let y = (line - 1) * oneCellInset;
-              y < line * oneCellInset;
-              y++
-            ) {
-              if (
-                store.unitsInVisibleZone.some(
-                  el => el.posX === x + 1 && el.posY === y + 1
-                )
-              )
-                alpha = 1;
-              // if (
-              //   store.objectsOnMap.some(
-              //     el => el.posX === x + 1 && el.posY === y + 1
-              //   )
-              // ) {
-              //   color = 0xcc90fe;
-              //   alpha = 1;
-              // }
-            }
-          }
-
-          store.cashMinimap.beginFill(color, alpha);
-          store.cashMinimap.lineStyle(0.1, lineColor, 0.2);
-          store.cashMinimap.drawRect(
-            size * (cell - 1),
-            size * (line - 1),
-            size,
-            size
+      store.gameScene = new Container();
+      store.gameScene.sortableChildren = true;
+      store.gameScene.zIndex = 2;
+      store.gameScene.x = store.defaultPosX;
+      store.gameScene.y = store.defaultPosY;
+      store.gameScene.scale.y = 2 / window.devicePixelRatio;
+      store.gameScene.scale.x = 2 / window.devicePixelRatio;
+      app.stage.addChild(store.gameScene);
+      app.stage.sortableChildren = true;
+      app.renderer.backgroundColor = "0x202020";
+      app.renderer.autoResize = true;
+      app.loader
+        .add("./assets/sheet.json")
+        .add("./assets/top_bottom.json")
+        .add("./assets/right_left.json")
+        .add("metalfont", "./assets/font1.ttf")
+        .load(setup);
+      function setup() {
+        store.id = app.loader.resources["./assets/sheet.json"].textures;
+        store.mountains_tb =
+          app.loader.resources["./assets/top_bottom.json"].textures;
+        store.mountains_rl =
+          app.loader.resources["./assets/right_left.json"].textures;
+        store.map = initMap(
+          Object.keys(sheet.frames).filter(el => !el.match("r.png")),
+          store.id,
+          store.allMapCount
+        );
+        checkUnits();
+        let joystics = getJoystics(store, vm.renderMap);
+        joystics.forEach(joy => app.stage.addChild(joy));
+        vm.renderMap();
+        initUal(async e => {
+          if (e[0].wax) e[0].rpc = e[0].wax.rpc;
+          store.user = e[0];
+          let link = localStorage.getItem("endpoint");
+          if (link) vm.changeEndpoint(link);
+          vm.store.user = store.user;
+          await getIngameTanks(
+            onLoadedSocket,
+            onUnitMove,
+            onUnitAttack,
+            onUnitMine,
+            onUnitCollect,
+            vm.onUnitDrop,
+            vm.onUnitRepair
           );
-          store.cashMinimap.scale.x = scale;
-          store.cashMinimap.scale.y = scale;
-          store.cashMinimap.endFill();
-          store.cashMinimap.zIndex = 2;
+        });
+        document.getElementById("dev").addEventListener("click", e => {
+          enableInteractiveMap(store.gameScene);
+          e.target.style.visibility = "hidden";
+        });
+        document.getElementById("signout").addEventListener("click", e => {
+          localStorage.clear();
+          location.reload();
+        });
+        document.getElementById("drop_stuff").addEventListener("click", e => {
+          dropStuffTransaction({ id: store.unit.unit.asset_id });
+        });
+        store.coordinates = new Text(``, {
+          fontSize: 30,
+          fontFamily: "metalwar",
+          fill: 0xffffff,
+        });
+        store.coordinates.zIndex = 3;
+        app.stage.addChild(store.coordinates);
+        // document.getElementById("log").addEventListener("click", e => {
+        //   console.log(store.logs);
+        // });
+        // document
+        //   .getElementById("garage_button")
+        //   .addEventListener("click", () => showGarage(false));
+      }
+      function onLoadedSocket() {
+        setObjectsOnMap(store.objectsOnMap);
+        vm.store.garages = store.objectsOnMap
+          .filter(el => el.type === "garage")
+          .map(el => {
+            let { posX, posY } = el;
+            let count = store.getGaragesUnits({ x: posX, y: posY }).length;
+            return { posX, posY, count };
+          });
+        console.log("objects setted");
+        setUnits(store.unitsInVisibleZone);
+        console.log("units setted");
+        vm.renderMap();
+        console.log("map rendered");
+      }
+      async function onUnitMove({ id, x, y }) {
+        let tank = store.unitsFromKeys[id];
+        tank.posX = x;
+        tank.posY = y;
+        let ground = store.visibleZone.find(
+          el => el.posX === x && el.posY === y
+        );
+        if (!ground) return 0;
+        if (!tank.ground) {
+          setUnit(tank, ground, false, "unit");
+          await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
+          return 0;
+        }
+        moveUnit(tank, ground);
+        if (tank.poised) {
+          tank.health -= 10;
+          tank.poised--;
+          checkDestroy(tank);
+        }
+        let timeout = tank.getMoveCooldown();
+        tank.lockedTime = timeout;
+        if (ground.type === "garage") {
+          let tp = new AnimatedSprite(
+            ["1.png", "2.png", "3.png"].map(el =>
+              Texture.from(`./assets/tp/${el}`)
+            )
+          );
+          tp.animationSpeed = 1;
+          tp.scale.x = 1.5;
+          tp.scale.y = 1.5;
+          tp.x -= 50;
+          tp.y -= 50;
+          tp.play();
+          tank.addChild(tp);
+          window.sound("teleport");
+          setTimeout(async () => {
+            await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
+            tank.removeChild(tp);
+          }, 1000);
         }
       }
-      store.miniMap.addChild(store.cashMinimap);
-    }
-    function checkUnits() {
-      setInterval(() => {
-        store.unitsInVisibleZone.forEach(el => {
-          if (el.lockedTime === 0) return 0;
-          if (Date.now() > el.lockedTime) {
-            el.lockedTime = 0;
-            el.unit.alpha = 1;
-          } else {
-            el.unit.alpha = 0.5;
-            el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
-          }
-        });
-      }, 1000);
-    }
-    async function unitAction(unit, target) {
-      unit.unit.direction = getDirection(unit.ground, target);
-      let action = unit.unit.action;
-      let crash = new AnimatedSprite(
-        action.crash.map(el => Texture.from(`./assets/${el}`))
-      );
-      let fires = (() => {
-        let arr = [];
-        let fire;
-        for (let i = 0; i < action.repeat; i++) {
-          fire = new AnimatedSprite(
-            action.textures.map(el => Texture.from(`./assets/${el}`))
-          );
-          fire.animationSpeed = action.speed;
-          fire.scale.x = action.scale;
-          fire.scale.y = action.scale;
-          fire.x = action[getDirection(unit.ground, target)].x;
-          fire.y = action[getDirection(unit.ground, target)].y;
-          fire.angle = action[getDirection(unit.ground, target)].angle;
-          fire.zIndex = 1;
-          fire.play();
-          arr.push(fire);
+      async function onUnitCollect({ id, x, y }) {
+        let tank = store.unitsFromKeys[id];
+        if (!tank) return 0;
+        let stuff = store.objectsOnMap.find(
+          el => el.posX === x && el.posY === y
+        );
+        let index = store.objectsOnMap.findIndex(
+          el => el.posX === x && el.posY === y
+        );
+        if (!stuff) return 0;
+        let { amount, weight } = stuff;
+        let freeSpace = tank.unit.capacity - tank.stuffCount;
+        if (amount > freeSpace) {
+          amount = freeSpace;
+          tank.unit.stuff.push({ amount, weight });
+          tank.stuffCount = tank.stuffCount;
+          stuff.amount -= amount;
+          return tank.alphaCounter(`+${amount}`);
         }
-        return arr;
-      })();
-      unit.zIndex = 10;
-      fires.forEach(fire => unit.addChild(fire));
-      let { x, y } = target;
-      x -= unit.x + action.diffX;
-      y -= unit.y + action.diffY;
-      // unit.lockedTime = Date.now() + 5000;
-      // unit.unit.alpha = 0.5;
-      Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
-      if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
-      if (action.throw) {
-        for (let i = 0; i < fires.length; i++) {
-          await shuffleUnit(unit);
-          await gsap.to(fires[i], {
-            x,
-            y,
+        gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
+        await gsap.to(stuff, {
+          x: tank.x + 50,
+          y: tank.y + 50,
+          alpha: 0,
+          duration: 1.5,
+        });
+        tank.unit.stuff.push({ amount, weight });
+        tank.stuffCount = tank.stuffCount;
+        store.gameScene.removeChild(stuff);
+        store.objectsOnMap.splice(index, 1);
+      }
+      function checkDestroy(unit) {
+        if (unit.health <= 0) {
+          onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
+          vm.onUnitDrop({ id: unit.unit.asset_id });
+        }
+      }
+
+      async function onUnitAttack({ id, target_id, timeout }) {
+        let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
+        let targetTank = store.unitsInVisibleZone.find(
+          el => el.unit.asset_id === target_id
+        );
+        if (!tank || !targetTank) {
+          return 0;
+        } else {
+          let ground = targetTank.ground;
+          tank.lockedTime = timeout;
+          if (targetTank.self) tank.agressive = true;
+          await unitAction(tank, ground);
+          checkDestroy(tank);
+          if (tank.poised) {
+            tank.health -= 10;
+            tank.poised--;
+            checkDestroy(tank);
+          }
+        }
+      }
+      async function onUnitMine({ id, timeout, amount }) {
+        let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
+        if (!tank) return 0;
+        else {
+          let freeSpace = tank.unit.capacity - tank.stuffCount;
+          if (amount > freeSpace) amount = freeSpace;
+          tank.unit.stuff.push({ amount, weight: 1 });
+          tank.miningAnimation();
+          await shuffleUnit(tank);
+          await shuffleUnit(tank);
+          tank.stuffCount = tank.stuffCount;
+          await tank.alphaCounter(`+${amount}`, 0xffee00);
+          tank.lockedTime = timeout;
+        }
+      }
+
+      function initMiniMap() {
+        let bg = Sprite.from("./assets/minimap.png");
+        if (store.miniMap) return 0;
+        store.miniMap = new Container();
+        store.miniMap.addChild(bg);
+        let filter = new ColorMatrixFilter();
+        filter.brightness(0.7);
+        bg.filters = [filter];
+        bg.zIndex = 1;
+        store.miniMap.width = 200;
+        store.miniMap.height = 200;
+        store.miniMap.x = window.innerWidth - store.miniMap.width - 50;
+        store.miniMap.y = window.innerHeight - store.miniMap.height - 50;
+        bg.width = 1;
+        bg.height = 1;
+        store.miniMap.zIndex = 5;
+        store.miniMap.sortableChildren = true;
+        app.stage.addChild(store.miniMap);
+        renderMiniMap();
+      }
+      async function renderMiniMap() {
+        if (store.cashMinimap) store.miniMap.removeChild(store.cashMinimap);
+        store.cashMinimap = new Graphics();
+        let size = 1;
+        let scale = 0.1;
+        let realSquareSize = store.miniMap.width * size * scale;
+        let oneLine = Math.floor(store.miniMap.width / realSquareSize);
+        let countLines = Math.floor(store.miniMap.height / realSquareSize);
+        let mapWidth = store.allMapCount * 0.005;
+        let oneCellInset = Math.ceil(mapWidth / oneLine);
+        for (let line = 1; line <= countLines; line++) {
+          for (let cell = 1; cell <= oneLine; cell++) {
+            let color = 0x00aa00;
+            let alpha = 0;
+            let lineColor = 0xffffff;
+            // color = 0xcc90fe;
+            for (
+              let x = (cell - 1) * oneCellInset;
+              x < cell * oneCellInset;
+              x++
+            ) {
+              for (
+                let y = (line - 1) * oneCellInset;
+                y < line * oneCellInset;
+                y++
+              ) {
+                if (
+                  store.unitsInVisibleZone.some(
+                    el => el.posX === x + 1 && el.posY === y + 1
+                  )
+                )
+                  alpha = 1;
+                // if (
+                //   store.objectsOnMap.some(
+                //     el => el.posX === x + 1 && el.posY === y + 1
+                //   )
+                // ) {
+                //   color = 0xcc90fe;
+                //   alpha = 1;
+                // }
+              }
+            }
+
+            store.cashMinimap.beginFill(color, alpha);
+            store.cashMinimap.lineStyle(0.1, lineColor, 0.2);
+            store.cashMinimap.drawRect(
+              size * (cell - 1),
+              size * (line - 1),
+              size,
+              size
+            );
+            store.cashMinimap.scale.x = scale;
+            store.cashMinimap.scale.y = scale;
+            store.cashMinimap.endFill();
+            store.cashMinimap.zIndex = 2;
+          }
+        }
+        store.miniMap.addChild(store.cashMinimap);
+      }
+      function checkUnits() {
+        setInterval(() => {
+          store.unitsInVisibleZone.forEach(el => {
+            if (el.lockedTime === 0) return 0;
+            if (Date.now() > el.lockedTime) {
+              el.lockedTime = 0;
+              el.unit.alpha = 1;
+            } else {
+              el.unit.alpha = 0.5;
+              el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
+            }
+          });
+        }, 1000);
+      }
+      async function unitAction(unit, target) {
+        unit.unit.direction = getDirection(unit.ground, target);
+        let action = unit.unit.action;
+        let crash = new AnimatedSprite(
+          action.crash.map(el => Texture.from(`./assets/${el}`))
+        );
+        let fires = (() => {
+          let arr = [];
+          let fire;
+          for (let i = 0; i < action.repeat; i++) {
+            fire = new AnimatedSprite(
+              action.textures.map(el => Texture.from(`./assets/${el}`))
+            );
+            fire.animationSpeed = action.speed;
+            fire.scale.x = action.scale;
+            fire.scale.y = action.scale;
+            fire.x = action[getDirection(unit.ground, target)].x;
+            fire.y = action[getDirection(unit.ground, target)].y;
+            fire.angle = action[getDirection(unit.ground, target)].angle;
+            fire.zIndex = 1;
+            fire.play();
+            arr.push(fire);
+          }
+          return arr;
+        })();
+        unit.zIndex = 10;
+        fires.forEach(fire => unit.addChild(fire));
+        let { x, y } = target;
+        x -= unit.x + action.diffX;
+        y -= unit.y + action.diffY;
+        // unit.lockedTime = Date.now() + 5000;
+        // unit.unit.alpha = 0.5;
+        Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
+        if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
+        if (action.throw) {
+          for (let i = 0; i < fires.length; i++) {
+            await shuffleUnit(unit);
+            await gsap.to(fires[i], {
+              x,
+              y,
+              duration: 0.5,
+              ease: "Expo.easeIn",
+            });
+          }
+        } else {
+          await gsap.to(fires[0], {
+            alpha: 1,
             duration: 0.5,
             ease: "Expo.easeIn",
           });
         }
-      } else {
-        await gsap.to(fires[0], {
-          alpha: 1,
-          duration: 0.5,
-          ease: "Expo.easeIn",
-        });
-      }
-      try {
-        Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
-      } catch (e) {}
-      window.sound("crash");
-      unit.zIndex = 1;
-      fires.forEach(fire => unit.removeChild(fire));
-      target.unit.addChild(crash);
-      crash.animationSpeed = 0.2;
-      crash.x = 35;
-      crash.y = 30;
-      let damage = unit.unit.attack * 3;
-      if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
-      if (damage < 0) damage = 0;
-      target.unit.health -= damage;
-      target.unit.alphaCounter(`-${damage}`, 0xff1111);
-      if (target.unit.health <= 0) {
-        target.unit.health = 0;
-        crash.scale.x = 1.5;
-        crash.scale.y = 1.5;
-        target.unit.unit.alpha = 0.5;
-        crash.x = -20;
-        crash.y = -90;
+        try {
+          Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
+        } catch (e) {}
+        window.sound("crash");
+        unit.zIndex = 1;
+        fires.forEach(fire => unit.removeChild(fire));
+        target.unit.addChild(crash);
+        crash.animationSpeed = 0.2;
+        crash.x = 35;
+        crash.y = 30;
+        let damage = unit.unit.attack * 3;
+        if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
+        if (damage < 0) damage = 0;
+        target.unit.health -= damage;
+        target.unit.alphaCounter(`-${damage}`, 0xff1111);
+        if (target.unit.health <= 0) {
+          target.unit.health = 0;
+          crash.scale.x = 1.5;
+          crash.scale.y = 1.5;
+          target.unit.unit.alpha = 0.5;
+          crash.x = -20;
+          crash.y = -90;
+          crash.play();
+          checkDestroy(target.unit);
+          setTimeout(async () => {
+            target.unit.unit.texture =
+              target.unit.unit.broken[target.unit.unit.direction];
+            gsap.to(target.unit.unit, { alpha: 1, duration: 2 });
+            gsap.to(crash.scale, { x: 1.2, y: 1.2, duration: 2 });
+            gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
+            await gsap.to(crash, { alpha: 0, duration: 2 });
+            target.unit.removeChild(crash);
+          }, 2000);
+          return 0;
+        }
+        crash.zIndex = 3;
+        crash.scale.x = 0.5;
+        crash.scale.y = 0.5;
         crash.play();
-        checkDestroy(target.unit);
         setTimeout(async () => {
-          target.unit.unit.texture =
-            target.unit.unit.broken[target.unit.unit.direction];
-          gsap.to(target.unit.unit, { alpha: 1, duration: 2 });
-          gsap.to(crash.scale, { x: 1.2, y: 1.2, duration: 2 });
-          gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
+          gsap.to(target.unit, { alpha: 1, duration: 1 });
+          gsap.to(crash.scale, { x: 0.1, y: 0.1, duration: 2 });
+          gsap.to(crash, { x: crash.x + 15, y: crash.y + 20, duration: 2 });
           await gsap.to(crash, { alpha: 0, duration: 2 });
           target.unit.removeChild(crash);
         }, 2000);
-        return 0;
       }
-      crash.zIndex = 3;
-      crash.scale.x = 0.5;
-      crash.scale.y = 0.5;
-      crash.play();
-      setTimeout(async () => {
-        gsap.to(target.unit, { alpha: 1, duration: 1 });
-        gsap.to(crash.scale, { x: 0.1, y: 0.1, duration: 2 });
-        gsap.to(crash, { x: crash.x + 15, y: crash.y + 20, duration: 2 });
-        await gsap.to(crash, { alpha: 0, duration: 2 });
-        target.unit.removeChild(crash);
-      }, 2000);
-    }
-    function setObjectsOnMap(objects) {
-      objects.forEach((el, i) => {
-        setObjectOnMap(el);
+      function setObjectsOnMap(objects) {
+        objects.forEach((el, i) => {
+          vm.setObjectOnMap(el);
+        });
+      }
+
+      function setUnits(units) {
+        units.forEach((el, i) => {
+          if (isNaN(el.posX) || isNaN(el.posY)) return 0;
+          store.gameScene.addChild(el);
+          setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
+        });
+      }
+      window.addEventListener("resize", e => {
+        app.renderer.resize(window.innerWidth, window.innerHeight);
       });
-    }
-    function setObjectOnMap(el) {
-      let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
-      let randomX = Math.floor(Math.random() * (199 - 170)) + 170;
-      if (el.scaled) {
-        el.scale.x = el.scaled;
-        el.scale.y = el.scaled;
-      }
-      if (el.type === "stuff") {
-        el.interactive = true;
-        el.buttonMode = true;
-        el.on("pointerover", e => {
-          el.filters = [
-            new BevelFilter({
-              lightColor: 0xff69,
-              thickness: 5,
-              rotation: 0,
-              shadowColor: 0xff69,
-              lightAlpha: 0.5,
-              shadowAlpha: 0.5,
-            }),
-          ];
-        });
-        el.on("pointerout", e => (el.filters = []));
-        el.on("pointerup", async e => {
-          await collectStuffTransaction({
-            id: store.unit.unit.asset_id,
-            x: el.posX,
-            y: el.posY,
-          });
-        });
-      }
-      if (el.posX === 1 && el.posY === 1)
-        el.on("pointerup", async e => {
-          await moveUnit(store.unit, el);
-          await gsap.to(store.unit, {
-            alpha: 0,
-            y: store.unit.y - 200,
-            duration: 1,
-          });
-          showGarage();
-          store.unit = {};
-        });
-      let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
-      let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
-      setUnit(el, store.map[y][x], true, el.type);
-      store.gameScene.addChild(el);
-    }
-    function setUnits(units) {
-      units.forEach((el, i) => {
-        if (isNaN(el.posX) || isNaN(el.posY)) return 0;
-        store.gameScene.addChild(el);
-        setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
+      document.querySelector("canvas").addEventListener("contextmenu", e => {
+        e.preventDefault();
       });
-    }
-    window.addEventListener("resize", e => {
-      app.renderer.resize(window.innerWidth, window.innerHeight);
-    });
-    document.querySelector("canvas").addEventListener("contextmenu", e => {
-      e.preventDefault();
-    });
+    },
+  },
+  mounted() {
+    this.initPixi();
   },
 };
 </script>
