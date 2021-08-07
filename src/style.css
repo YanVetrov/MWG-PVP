@@ -6,7 +6,11 @@ body {
 
 * {
   font-family: 'metalwar';
+  scrollbar-width: none;
+}
 
+.units_container .__rail-is-vertical {
+  right: 0 !important;
 }
 
 #ual-button {

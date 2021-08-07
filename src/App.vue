@@ -46,8 +46,8 @@
           :is="tab.component"
           :tanks="store.units"
           :garages="store.garages"
-          :garageX="garageX"
-          :garageY="garageY"
+          :garageX="store.garageX"
+          :garageY="store.garageY"
           :soundEnabled="true"
           :musicEnabled="true"
           :fullscreen="true"
@@ -327,8 +327,8 @@ export default {
       });
     },
     async showGarage({ posX, posY }, teleport) {
-      this.garageX = posX;
-      this.garageY = posY;
+      this.store.garageX = posX;
+      this.store.garageY = posY;
 
       let units = store.getGaragesUnits({ x: posX, y: posY }).map(el => {
         let main = el.unit;
@@ -666,6 +666,11 @@ export default {
             let count = store.getGaragesUnits({ x: posX, y: posY }).length;
             return { posX, posY, count };
           });
+        vm.store.garages.sort((a, b) => {
+          if (a.posX + a.posY > b.posX + b.posY) return 1;
+          if (a.posX + a.posY < b.posX + b.posY) return -1;
+          else return 0;
+        });
         console.log("objects setted");
         setUnits(store.unitsInVisibleZone);
         console.log("units setted");

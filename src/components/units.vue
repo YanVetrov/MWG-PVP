@@ -1,13 +1,13 @@
 <template>
-  <scroll :ops="ops">
-    <div class="units_container">
-      <div class="units_column">
-        <div
-          class="units_line"
-          :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
-          v-for="tank in tanks"
-          :key="tank.id"
-        >
+  <div class="units_container">
+    <scroll :ops="ops">
+      <transition-group
+        name="fade"
+        tag="div"
+        mode="out-in"
+        class="units_column"
+      >
+        <div class="units_line" v-for="tank in tanks" :key="tank.asset_id">
           <div class="units_image">
             <div
               class="crash"
@@ -36,7 +36,10 @@
                 }}]
               </div>
             </div>
-            <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
+            <img
+              :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
+              :src="require(`~/assets/cards/${tank.name}/dr.png`)"
+            />
             <div class="hp_bar" v-if="!isNaN(tank.hp)">
               <div class="hp_line" :style="{ width: calcHP(tank) + '%' }"></div>
               <div class="hp_text">{{ tank.hp }}/{{ tank.strength }}</div>
@@ -97,7 +100,8 @@
             </div>
           </div>
         </div>
-        <div v-if="tanks && tanks.length === 0" class="no_data">
+
+        <div v-if="tanks && tanks.length === 0" key="no_data" class="no_data">
           No units found. You can buy units on
           <a
             target="_blank"
@@ -121,7 +125,9 @@
           <button @click="$emit('tab', 4)">settings</button> or check the ban
           status of your wallet.
         </div>
-      </div>
+      </transition-group>
+    </scroll>
+    <scroll :ops="ops">
       <div class="garage_column">
         <div style="display:flex;">
           <div class="button raid" @click="filterGarage = ''">all</div>
@@ -141,15 +147,20 @@
                 X:{{ garage.posX }} Y:{{ garage.posY }}
               </div>
               <div class="garage_count">YOUR UNITS: {{ garage.count }}</div>
-              <div @click="$emit('enterGarage', garage)" class="button raid">
+              <div
+                v-if="garage.posX != garageX && garage.posY != garageY"
+                @click="$emit('enterGarage', garage)"
+                class="button raid"
+              >
                 ENTER GARAGE
               </div>
+              <div class="here" v-else>YOU HERE</div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </scroll>
+    </scroll>
+  </div>
 </template>
 <script>
 import switchbox from "./switch.vue";
@@ -244,16 +255,17 @@ export default {
   position: relative;
 }
 .units_column {
-  width: 50%;
+  width: 96%;
   display: flex;
   flex-wrap: wrap;
 }
 .units_line {
   width: 50%;
 }
+
 .garage_column {
-  padding: 25px;
-  width: 35%;
+  padding: 20px;
+  width: 90%;
 }
 .garage_column .button {
   margin: 10px;
@@ -282,6 +294,10 @@ export default {
   margin: 0;
   padding: 12px 0;
   margin-top: 10px;
+}
+.here {
+  color: silver;
+  font-size: 15px;
 }
 .garage_coordinates,
 .garage_count {
