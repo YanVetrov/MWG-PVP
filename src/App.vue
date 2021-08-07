@@ -30,7 +30,7 @@
     </div> -->
     <mainMenu
       :show="show"
-      v-if="show"
+      v-show="show"
       :tabs="tabs.map(el => el.name)"
       :tab="tab.name"
       :balance="123"
@@ -64,7 +64,7 @@
           :MDT="0"
           @repair="repair"
           @deploy="deploy"
-          @enterGarage="showGarage"
+          @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
         />
       </transition>
@@ -326,9 +326,10 @@ export default {
         }
       });
     },
-    async showGarage({ posX, posY }) {
+    async showGarage({ posX, posY }, teleport) {
       this.garageX = posX;
       this.garageY = posY;
+
       let units = store.getGaragesUnits({ x: posX, y: posY }).map(el => {
         let main = el.unit;
         let {
@@ -360,13 +361,16 @@ export default {
           stuff,
         };
       });
-      let x = posX - 3;
-      let y = posY - 5;
-      store.x = x;
-      store.y = y;
       this.$set(this.store, "units", units);
       this.show = true;
-      this.renderMap();
+      if (teleport) {
+        let x = posX - 3;
+        let y = posY - 5;
+        store.x = x;
+        store.y = y;
+
+        this.renderMap();
+      }
     },
     changeEndpoint(link) {
       store.user.rpc.endpoint = link;
