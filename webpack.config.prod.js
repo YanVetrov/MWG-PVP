@@ -3,6 +3,7 @@ const HTMLWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
 const CompressionPlugin = require("compression-webpack-plugin");
+const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
 const { extendDefaultPlugins } = require("svgo");
 module.exports = {
   mode: "production",
