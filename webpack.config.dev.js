@@ -36,32 +36,32 @@ module.exports = {
           },
         ],
       },
-      {
-        test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
-        use: [
-          {
-            loader: "url-loader",
-            options: {
-              name: "[path][name].[ext]",
-              sourceMap: false,
-              esModule: false,
-              publicPath: "/",
-            },
-          },
-        ],
-      },
       // {
       //   test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
       //   use: [
       //     {
-      //       loader: "file-loader",
+      //       loader: "url-loader",
       //       options: {
       //         name: "[path][name].[ext]",
       //         sourceMap: false,
+      //         esModule: false,
+      //         publicPath: "/",
       //       },
       //     },
       //   ],
       // },
+      {
+        test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+        use: [
+          {
+            loader: "file-loader",
+            options: {
+              name: "[path][name].[ext]",
+              sourceMap: false,
+            },
+          },
+        ],
+      },
     ],
   },
   plugins: [
