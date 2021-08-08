@@ -445,6 +445,7 @@ async function getIngameTanks(
           } else {
             let locked = el.next_availability * 1000 > Date.now();
             let lockedTime = el.next_availability * 1000;
+            el.capacity *= 10;
             tank = {
               ...el,
               ...tank,
