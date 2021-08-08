@@ -3,6 +3,7 @@ const HTMLWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
 const webpack = require("webpack");
+const CompressionPlugin = require("compression-webpack-plugin");
 module.exports = {
   mode: "production",
   resolve: {
@@ -86,5 +87,6 @@ module.exports = {
       minify: false,
     }),
     new VueLoaderPlugin(),
+    new CompressionPlugin(),
   ],
 };
