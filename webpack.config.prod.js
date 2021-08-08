@@ -3,7 +3,7 @@ const HTMLWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
 const CompressionPlugin = require("compression-webpack-plugin");
-const ImageminPlugin = require("imagemin-webpack-plugin").default;
+const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
 module.exports = {
   mode: "production",
   resolve: {
@@ -55,7 +55,28 @@ module.exports = {
       //   ],
       // },
       {
-        test: /\.(png|jpg|gif|mp3|ttf|svg)$/i,
+        test: /\.(png|jpg|gif|svg)$/i,
+        use: [
+          {
+            loader: "file-loader",
+            options: {
+              name: "[path][name].[ext]",
+              sourceMap: false,
+            },
+          },
+          {
+            loader: ImageMinimizerPlugin.loader,
+            options: {
+              severityError: "warning",
+              minimizerOptions: {
+                plugins: ["gifsicle", "optipng", "jpegtran"],
+              },
+            },
+          },
+        ],
+      },
+      {
+        test: /\.(mp3|ttf)$/i,
         use: [
           {
             loader: "file-loader",
@@ -80,7 +101,6 @@ module.exports = {
         },
       ],
     }),
-    new ImageminPlugin({ test: /\.(jpe?g|png|gif|svg)$/i }),
     new HTMLWebpackPlugin({
       template: "src/index.html",
       filename: "index.html",
