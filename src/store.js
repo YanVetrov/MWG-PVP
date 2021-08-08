@@ -49,7 +49,7 @@ Object.defineProperty(store, "unit", {
   set(unit) {
     if (this.u) {
       this.u.active = false;
-      this.u.interactive = true;
+      this.u.interactive = false;
       this.u.buttonMode = false;
       if (this.u.ground) this.u.ground.filters = [];
     }

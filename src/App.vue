@@ -442,7 +442,7 @@ export default {
       if (tank.poised) {
         tank.health -= 10;
         tank.poised--;
-        checkDestroy(tank);
+        this.checkDestroy(tank);
       }
       let timeout = tank.getMoveCooldown();
       tank.lockedTime = timeout;
@@ -808,11 +808,11 @@ export default {
           tank.lockedTime = timeout;
           if (targetTank.self) tank.agressive = true;
           await unitAction(tank, ground);
-          checkDestroy(tank);
+          vm.checkDestroy(tank);
           if (tank.poised) {
             tank.health -= 10;
             tank.poised--;
-            checkDestroy(tank);
+            vm.checkDestroy(tank);
           }
         }
       }
@@ -999,7 +999,7 @@ export default {
           crash.x = -20;
           crash.y = -90;
           crash.play();
-          checkDestroy(target.unit);
+          vm.checkDestroy(target.unit);
           setTimeout(async () => {
             target.unit.unit.texture =
               target.unit.unit.broken[target.unit.unit.direction];
