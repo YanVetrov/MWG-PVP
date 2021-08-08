@@ -5,9 +5,7 @@
       sign out
     </button>
     <button id="dev">не нажимать</button>
-    <button id="drop_stuff">
-      drop stuff
-    </button>
+
     <!-- <button id="log">
         log actions
     </button> -->
@@ -712,7 +710,11 @@ export default {
             onUnitCollect,
             vm.onUnitDrop,
             vm.onUnitRepair,
-            vm.checkUnitChange
+            vm.checkUnitChange,
+            e =>
+              e.data.button === 2
+                ? dropStuffTransaction({ id: e.target.unit.asset_id })
+                : ""
           );
         });
         document.getElementById("dev").addEventListener("click", e => {
@@ -722,9 +724,6 @@ export default {
         document.getElementById("signout").addEventListener("click", e => {
           localStorage.clear();
           location.reload();
-        });
-        document.getElementById("drop_stuff").addEventListener("click", e => {
-          dropStuffTransaction({ id: store.unit.unit.asset_id });
         });
         store.coordinates = new Text(``, {
           fontSize: 30,

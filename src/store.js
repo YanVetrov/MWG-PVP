@@ -49,10 +49,14 @@ Object.defineProperty(store, "unit", {
   set(unit) {
     if (this.u) {
       this.u.active = false;
+      this.u.interactive = true;
+      this.u.buttonMode = false;
       if (this.u.ground) this.u.ground.filters = [];
     }
     if (unit) {
       unit.active = true;
+      unit.buttonMode = true;
+      unit.interactive = true;
       if (unit.ground)
         unit.ground.filters = [
           new BevelFilter({
@@ -113,7 +117,7 @@ function createObjectOnMap(el) {
   Object.keys(el).forEach(key => (sprite[key] = el[key]));
   return sprite;
 }
-function createUnits(arr) {
+function createUnits(arr, handler) {
   return arr.map((el, i) => {
     let directions = ["u", "d", "r", "l", "ur", "ul", "dl", "dr"];
     let random = Math.ceil(Math.random() * (directions.length - 1));
@@ -244,6 +248,7 @@ function createUnits(arr) {
     container.addChild(container.owner);
     container.addChild(container.stuffCountText);
     container.addChild(sprite);
+    if (el.self) container.on("pointerup", handler);
     Object.defineProperty(container, "timer", {
       get() {
         return this.timerText.text;
@@ -363,7 +368,8 @@ async function getIngameTanks(
   handlerCollect,
   handlerDropStuff,
   handlerRepair,
-  unitChanges
+  unitChanges,
+  unitOnClickHandler
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -459,7 +465,10 @@ async function getIngameTanks(
             arr.push(tank);
           }
         });
-        store.units = createUnits([...arr, validator, wolf2]);
+        store.units = createUnits(
+          [...arr, validator, wolf2],
+          unitOnClickHandler
+        );
         store.unit = store.units[0];
         store.unitsGetted = true;
         if (store.stuffGetted) handler();
