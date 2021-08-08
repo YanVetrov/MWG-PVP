@@ -4,7 +4,6 @@
     <button id="signout" v-show="store.user">
       sign out
     </button>
-    <button id="dev">не нажимать</button>
 
     <!-- <button id="log">
         log actions
@@ -717,14 +716,19 @@ export default {
                 : ""
           );
         });
-        document.getElementById("dev").addEventListener("click", e => {
-          enableInteractiveMap(store.gameScene);
-          e.target.style.visibility = "hidden";
-        });
+        if (location.hash === "#1") enableInteractiveMap(store.gameScene);
         document.getElementById("signout").addEventListener("click", e => {
           localStorage.clear();
           location.reload();
         });
+        document.addEventListener(
+          "contextmenu",
+          e => {
+            e.preventDefault();
+            e.stopPropagation();
+          },
+          true
+        );
         store.coordinates = new Text(``, {
           fontSize: 30,
           fontFamily: "metalwar",
