@@ -3,8 +3,7 @@ const HTMLWebpackPlugin = require("html-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
 const path = require("path");
 const CompressionPlugin = require("compression-webpack-plugin");
-const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
-const { extendDefaultPlugins } = require("svgo");
+const ImageminPlugin = require("imagemin-webpack-plugin").default;
 module.exports = {
   mode: "production",
   resolve: {
@@ -81,37 +80,12 @@ module.exports = {
         },
       ],
     }),
+    new ImageminPlugin({ test: /\.(jpe?g|png|gif|svg)$/i }),
     new HTMLWebpackPlugin({
       template: "src/index.html",
       filename: "index.html",
       hash: true,
       minify: false,
-    }),
-    new ImageMinimizerPlugin({
-      minimizerOptions: {
-        plugins: [
-          ["gifsicle", { interlaced: true }],
-          ["jpegtran", { progressive: true }],
-          ["optipng", { optimizationLevel: 5 }],
-          [
-            "svgo",
-            {
-              plugins: extendDefaultPlugins([
-                {
-                  name: "removeViewBox",
-                  active: false,
-                },
-                {
-                  name: "addAttributesToSVGElement",
-                  params: {
-                    attributes: [{ xmlns: "http://www.w3.org/2000/svg" }],
-                  },
-                },
-              ]),
-            },
-          ],
-        ],
-      },
     }),
     new VueLoaderPlugin(),
     new CompressionPlugin(),
