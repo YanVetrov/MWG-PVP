@@ -58,6 +58,7 @@ module.exports = {
             options: {
               name: "[path][name].[ext]",
               sourceMap: false,
+              esModule: false,
             },
           },
         ],
