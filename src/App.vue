@@ -256,8 +256,11 @@ export default {
               shadowAlpha: 0.5,
             }),
           ];
+          console.log(el.filters);
         });
-        el.on("pointerout", e => (el.filters = []));
+        el.on("pointerout", e => {
+          el.filters = [];
+        });
         el.on("pointerup", async e => {
           await collectStuffTransaction({
             id: store.unit.unit.asset_id,
