@@ -13,165 +13,53 @@ body {
   right: 0 !important;
 }
 
-#ual-button {
+#login {
   position: fixed;
   z-index: 5;
-  top: 15px;
-  right: 115px;
+  top: 40%;
+  right: 43%;
 }
 
-#signout {
-  position: fixed;
-  z-index: 5;
-  top: 15px;
-  right: 115px;
-  font-size: 25px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: #eee;
-  background: rgba(0, 0, 0, 0.5);
+#login img {
+  position: relative;
+  left: 65px;
 }
 
-#garage_button,
-#drop_stuff,
-#log {
-  position: fixed;
-  z-index: 7;
-  top: 15px;
-  right: 315px;
-  font-size: 25px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: #eee;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-#drop_stuff {
-  right: 500px;
-
-}
-
-#log {
-  right: 0px;
-  top: 200px;
-
-}
-
-#prev,
-#next {
-  position: fixed;
-  z-index: 9;
-  top: 15px;
-  right: 455px;
-  font-size: 15px;
-  padding: 10px 20px;
-  border-radius: 5px;
-  color: #eee;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-#next {
-  right: 305px;
-}
-
-#dev {
-  position: fixed;
-  z-index: 5;
-  top: 15px;
-  left: 115px;
-  font-size: 20px;
-}
-
-.garage_main {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  flex-direction: column;
-  padding-top: 50px;
-  color: white;
-  z-index: 5;
-}
-
-.tank_wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  height: 80%;
-  overflow-y: scroll;
-}
-
-.tank {
-  height: 230px;
-  width: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: column;
-  border: 1px solid white;
-  border-radius: 5px;
-  color: white;
-  padding: 10px 0;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 10px;
-  transition: all .1s ease;
-  cursor: pointer;
-}
-
-.tank:hover {
-  transform: scale(1.05);
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 2px 2px 15px white;
-
-}
-
-.tank img {
-  width: 100%;
-}
-
-.hp_bar {
-  font-size: 12px;
-  color: aquamarine
-}
-
-.repair_button {
-  padding: 2px;
-  width: 100%;
-  transition: all .1s ease;
+.fake_login {
+  color: rebeccapurple;
+  position: relative;
+  top: 46px;
+  z-index: -1;
+  width: 225px;
+  padding: 16px 4px;
   text-align: center;
+  border: 1px solid rebeccapurple;
 }
 
-.repair_button:hover {
-  background: white;
-  color: black;
+.loadings {
+  color: white;
+  top: 50px;
+  position: relative;
 }
 
-@media screen and (max-width: 813px) {
-  .tank {
-    height: 150px;
-    width: 100px;
-  }
-
-  .tank img {
-    width: 65%;
-  }
-
-  .tank div {
-    font-size: 10px;
-  }
-
-  h1 {
-    font-size: 15px;
-  }
-
-  #garage_button {
-    font-size: 10px;
-  }
+#login:hover .fake_login {
+  color: white;
+  background: rebeccapurple;
+  border-radius: 10px;
 }
+
+#ual-button {
+  opacity: 0;
+}
+
+
+.main_view {
+  height: 100vh;
+  background: black;
+}
+
+
+
 
 * {
   transition: all 0.3s ease;

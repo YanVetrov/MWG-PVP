@@ -47,4 +47,65 @@ async function initUal(handler) {
     ual.init();
   }
 }
-export { initUal };
+async function transaction({ user, name, data }) {
+  let account = await user.getAccountName();
+  let options = {
+    actions: [
+      {
+        account: "metalwargame",
+        name,
+        authorization: [
+          {
+            actor: account,
+            permission: user.requestPermission,
+          },
+        ],
+        data: {
+          asset_owner: account,
+          ...data,
+        },
+      },
+    ],
+  };
+  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
+    try {
+      response = await user.signTransaction(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return e.cause.message;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
+    options.actions[0].authorization[0].permission = "active";
+    try {
+      response = await user.wax.api.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+        broadcast: true,
+        sign: true,
+      });
+      return true;
+    } catch (e) {
+      console.log("WCW Error: ");
+      console.log({ ...e }, e);
+      let errorText = "";
+      if (
+        e &&
+        e.json &&
+        e.json.error &&
+        e.json.error.details &&
+        e.json.error.details[0]
+      )
+        errorText = e.json.error.details[0].message;
+      else
+        errorText =
+          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      return errorText;
+    }
+  }
+}
+export { initUal, transaction };

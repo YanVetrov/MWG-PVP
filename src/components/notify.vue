@@ -3,7 +3,7 @@
     <transition-group name="slide" tag="div">
       <banner
         v-for="(message, i) in notify"
-        :key="message.id"
+        :key="i"
         :text="message.text"
         :img="message.img"
         :type="message.type"
@@ -14,10 +14,10 @@
   </div>
 </template>
 <script>
-import banner from "./banner";
+import banner from "./banner.vue";
 export default {
   components: { banner },
-  props: ["notify"]
+  props: ["notify"],
 };
 </script>
 <style scoped>

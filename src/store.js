@@ -4,6 +4,7 @@ import base from "./units_templates.js";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
+import { transaction } from "./auth.js";
 const objectsOnMap = [];
 let store = {
   state: null,
@@ -30,13 +31,14 @@ let store = {
   cash: [],
   text: {},
   visibleZone: [],
-  defaultPosX: 1200,
-  defaultPosY: -400,
-  x: 0,
-  y: 0,
+  defaultPosX: 1000,
+  defaultPosY: -350,
+  x: -5,
+  y: -5,
   user: {},
   units: [],
   unusedUnits: [],
+  vue: {},
   objectsOnMap,
   getGaragesUnits({ x, y }) {
     return this.selfUnits.filter(el => el.posX === x && el.posY === y);
@@ -436,13 +438,13 @@ async function getIngameTanks(
   // store.units = createUnits([...arr, validator, wolf2]);
   // store.unit = store.units[0];
   const ws = new WebSocket("wss://game.metal-war.com/ws/");
-  ws.onopen = () => console.log("websocket connected");
+  ws.onopen = () => store.vue.loadings.push("websocket connected");
   ws.onmessage = async message => {
     if (typeof message.data === "object") {
       const array = new Uint8Array(await message.data.arrayBuffer());
       let units = unpack_units(array);
       if (Object.keys(units).length > 1000) {
-        console.log("units getted");
+        store.vue.loadings.push("units ready");
         let allTanks = Object.values(units);
         let arr = [];
         allTanks.forEach(el => {
@@ -575,325 +577,67 @@ function inlog(obj) {
 }
 async function moveTransaction({ id, x, y }) {
   if (!id) return true;
-  let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwargame",
-        name: "unitmove",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: account,
-          asset_id: id,
-          x,
-          y,
-        },
-      },
-    ],
-  };
-  let response = {};
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-        broadcast: true,
-        sign: true,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "unitmove",
+    data: {
+      asset_id: id,
+      x,
+      y,
+    },
+  });
+  return errorHandler(response);
 }
 async function dropStuffTransaction({ id }) {
   if (!id) return true;
-  let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwargame",
-        name: "dropstuff",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: account,
-          asset_id: id,
-        },
-      },
-    ],
-  };
-  let response = {};
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-        broadcast: true,
-        sign: true,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "dropstuff",
+    data: {
+      asset_id: id,
+    },
+  });
+  return errorHandler(response);
 }
 async function collectStuffTransaction({ id, x, y }) {
   if (!id) return true;
-  let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwargame",
-        name: "collectstuff",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: account,
-          asset_id: id,
-          x,
-          y,
-        },
-      },
-    ],
-  };
-  let response = {};
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-        broadcast: true,
-        sign: true,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "collectstuff",
+    data: {
+      asset_id: id,
+      x,
+      y,
+    },
+  });
+  return errorHandler(response);
 }
 async function fireTransaction({ id, target_id }) {
   if (!id) return true;
-  let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwargame",
-        name: "unitattack",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: account,
-          asset_id: id,
-          target_id,
-        },
-      },
-    ],
-  };
-  let response = {};
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-        broadcast: true,
-        sign: true,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "unitattack",
+    data: {
+      asset_owner: account,
+      asset_id: id,
+      target_id,
+    },
+  });
+  return errorHandler(response);
 }
 async function mineTransaction({ id, x, y }) {
   if (!id) return true;
-  let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwargame",
-        name: "unitmine",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: account,
-          asset_id: id,
-          x,
-          y,
-        },
-      },
-    ],
-  };
-  let response = {};
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-        broadcast: true,
-        sign: true,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "unitmine",
+    data: {
+      asset_owner: account,
+      asset_id: id,
+      x,
+      y,
+    },
+  });
+  return errorHandler(response);
 }
 async function repair({ count, id }) {
   let tank = store.selfUnits.find(el => el.id === id);
@@ -947,6 +691,7 @@ async function repair({ count, id }) {
       return true;
     } catch (e) {
       console.log({ ...e });
+      errorHandler(e.cause.message);
       return false;
     }
   }
@@ -975,8 +720,16 @@ async function repair({ count, id }) {
       else
         errorText =
           "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
+      errorHandler(errorText);
       return false;
     }
+  }
+}
+function errorHandler(response) {
+  if (response === true) return true;
+  else {
+    store.vue.errors.push({ text: response });
+    return false;
   }
 }
 export {

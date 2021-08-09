@@ -1,30 +1,24 @@
 <template>
   <div class="main_view">
-    <div id="login" v-show="!store.user"></div>
-    <button id="signout" v-show="store.user">
-      sign out
-    </button>
-
-    <!-- <button id="log">
-        log actions
-    </button> -->
-    <!-- <button id="garage_button" @click="showGarage">
-      SHOW GARAGE
-    </button>
-    <div class="garage_main" v-if="show">
-      <h1>
-        YOUR UNITS (<span id="count_in_garage">{{ store.units.length }}</span
-        >)
-      </h1>
-      <div class="tank_wrapper">
-        <div class="tank" v-for="unit in store.units" :key="unit.id">
-          <img :src="'./assets/cards/' + unit.name + '/dr.png'" />
-          <div class="tank_name">{{ unit.name }}</div>
-          <div class="hp_bar">{{ unit.hp }}/{{ unit.strength }}</div>
-          <div class="repair_button">REPAIR ({{ unit.repair }})</div>
+    <div id="login" v-show="!store.user || !ready">
+      <img src="./assets/tumbler.png" />
+      <div v-show="!store.user" class="fake_login">
+        sign in
+      </div>
+      <div class="loadings" tag="div" name="slide">
+        <div
+          v-for="(mes, i) in loadings"
+          class="loading_message"
+          :key="mes + mes"
+        >
+          {{ mes }}
         </div>
       </div>
-    </div> -->
+    </div>
+    <transition name="slide">
+      <notify :notify="errors" />
+    </transition>
+
     <mainMenu
       :show="show"
       v-show="show"
@@ -63,10 +57,14 @@
           @deploy="deploy"
           @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
+          @clear="signout"
+          @logout="signout"
         />
       </transition>
     </mainMenu>
-    <canvas id="canvas1"></canvas>
+    <transition name="fade">
+      <canvas v-show="store.user && ready" id="canvas1"></canvas>
+    </transition>
   </div>
 </template>
 
@@ -80,6 +78,7 @@ import units from "./components/units.vue";
 import unique from "./components/unique.vue";
 import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
+import notify from "./components/notify.vue";
 // import game from "./components/game.vue";
 let tabs = [
   { name: "Garage", component: units },
@@ -169,7 +168,7 @@ export default {
     settings,
     // loader,
     packs,
-    // notify,
+    notify,
     // game,
     units,
   },
@@ -183,11 +182,18 @@ export default {
         user: false,
       },
       show: false,
+      errors: [],
+      ready: false,
+      loadings: [],
     };
   },
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    signout() {
+      localStorage.clear();
+      location.reload();
     },
     checkUnitChange(unit) {
       console.log("process...");
@@ -408,8 +414,8 @@ export default {
       this.$set(this.store, "units", units);
       this.show = true;
       if (teleport) {
-        let x = posX - 3;
-        let y = posY - 5;
+        let x = posX - 6;
+        let y = posY - 6;
         store.x = x;
         store.y = y;
         this.renderMap();
@@ -671,8 +677,8 @@ export default {
       store.gameScene.zIndex = 2;
       store.gameScene.x = store.defaultPosX;
       store.gameScene.y = store.defaultPosY;
-      store.gameScene.scale.y = 2 / window.devicePixelRatio;
-      store.gameScene.scale.x = 2 / window.devicePixelRatio;
+      store.gameScene.scale.y = 1.2 / window.devicePixelRatio;
+      store.gameScene.scale.x = 1.2 / window.devicePixelRatio;
       app.stage.addChild(store.gameScene);
       app.stage.sortableChildren = true;
       app.renderer.backgroundColor = "0x202020";
@@ -720,10 +726,6 @@ export default {
           );
         });
         if (location.hash === "#1") enableInteractiveMap(store.gameScene);
-        document.getElementById("signout").addEventListener("click", e => {
-          localStorage.clear();
-          location.reload();
-        });
         document.addEventListener(
           "contextmenu",
           e => {
@@ -760,11 +762,13 @@ export default {
           if (a.posX + a.posY < b.posX + b.posY) return -1;
           else return 0;
         });
-        console.log("objects setted");
+        vm.loadings.push("objects setted");
         setUnits(store.unitsInVisibleZone);
-        console.log("units setted");
+        vm.loadings.push("units setted");
         vm.renderMap();
-        console.log("map rendered");
+        vm.loadings.push("map rendered");
+        vm.loadings.push("ready.");
+        setTimeout(() => (vm.ready = true), 2000);
       }
 
       async function onUnitCollect({ id, x, y }) {
@@ -1048,6 +1052,7 @@ export default {
     },
   },
   mounted() {
+    store.vue = this;
     this.initPixi();
   },
 };
