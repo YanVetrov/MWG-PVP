@@ -49,6 +49,7 @@ async function initUal(handler) {
 }
 async function transaction({ user, name, data }) {
   let account = await user.getAccountName();
+  let response = {};
   let options = {
     actions: [
       {
