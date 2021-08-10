@@ -196,12 +196,9 @@ export default {
       location.reload();
     },
     checkUnitChange(unit) {
-      console.log("process...");
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) return 0;
-      console.log("tank finded...");
       if (unit.hp != localTank.health) {
-        console.log(`hp moved. ${localTank.health} -> ${unit.hp}`);
         localTank.health = unit.hp;
         if (this.show && unit.owner === store.user.accountName) {
           let vueTank = this.store.units.find(
@@ -211,17 +208,9 @@ export default {
         }
       }
       if (unit.x != localTank.posX || unit.y != localTank.posY) {
-        console.log(
-          `location moved. ${localTank.posX} ${localTank.posY} -> ${unit.x} ${unit.y}`
-        );
         this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
       }
       if (localTank.lockedTime !== unit.next_availability * 1000) {
-        console.log(
-          `next availability moved. ${
-            localTank.lockedTime
-          } -> ${unit.next_availability * 1000}`
-        );
         localTank.lockedTime = unit.next_availability * 1000;
         if (this.show && unit.owner === store.user.accountName) {
           let vueTank = this.store.units.find(
@@ -370,8 +359,11 @@ export default {
     },
     checkDestroy(unit) {
       if (unit.health <= 0) {
-        this.onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 });
         this.onUnitDrop({ id: unit.unit.asset_id });
+        setTimeout(
+          () => this.onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 }),
+          3000
+        );
       }
     },
     async showGarage({ posX, posY }, teleport) {
@@ -440,21 +432,21 @@ export default {
       let tank = store.unitsFromKeys[id];
       tank.posX = x;
       tank.posY = y;
+      if (tank.poised) {
+        tank.health -= 10;
+        tank.poised--;
+        this.checkDestroy(tank);
+      }
       let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
-      if (!ground) return 0;
+      let timeout = tank.getMoveCooldown();
+      tank.lockedTime = timeout;
+      if (!ground) return store.gameScene.removeChild(tank);
       if (!tank.ground) {
         setUnit(tank, ground, false, "unit");
         await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
         return 0;
       }
       moveUnit(tank, ground);
-      if (tank.poised) {
-        tank.health -= 10;
-        tank.poised--;
-        this.checkDestroy(tank);
-      }
-      let timeout = tank.getMoveCooldown();
-      tank.lockedTime = timeout;
       if (ground.type === "garage") {
         let tp = new AnimatedSprite(
           ["1.png", "2.png", "3.png"].map(el =>
