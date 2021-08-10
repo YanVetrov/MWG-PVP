@@ -675,8 +675,8 @@ export default {
       store.gameScene.zIndex = 2;
       store.gameScene.x = store.defaultPosX;
       store.gameScene.y = store.defaultPosY;
-      store.gameScene.scale.y = 0.6;
-      store.gameScene.scale.x = 0.6;
+      store.gameScene.scale.y = 0.8;
+      store.gameScene.scale.x = 0.8;
       app.stage.addChild(store.gameScene);
       app.stage.sortableChildren = true;
       app.renderer.backgroundColor = "0x202020";
