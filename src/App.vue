@@ -440,7 +440,11 @@ export default {
       let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
       let timeout = tank.getMoveCooldown();
       tank.lockedTime = timeout;
-      if (!ground) return store.gameScene.removeChild(tank);
+      if (!ground) {
+        tank.ground.unit = null;
+        tank.ground = null;
+        return store.gameScene.removeChild(tank);
+      }
       if (!tank.ground) {
         setUnit(tank, ground, false, "unit");
         await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
