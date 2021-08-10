@@ -61,8 +61,8 @@ function getMontain(frames, store, id) {
 function getJoystics(store, renderMap) {
   let joystics = [
     createJoystic({ x: window.innerWidth / 2, y: 0, angle: 90 }, () => {
-      if (store.x > -5) store.x--;
-      if (store.y > -5) store.y--;
+      if (store.x > -10) store.x--;
+      if (store.y > -10) store.y--;
       renderMap();
     }),
     createJoystic(
@@ -75,19 +75,19 @@ function getJoystics(store, renderMap) {
     ),
     createJoystic({ x: 0, y: window.innerHeight / 2 - 50, angle: 0 }, () => {
       store.y++;
-      if (store.x > -5) store.x--;
+      if (store.x > -10) store.x--;
       renderMap();
     }),
     createJoystic(
       { x: window.innerWidth, y: window.innerHeight / 2, angle: 180 },
       () => {
-        if (store.y > -5) store.y--;
+        if (store.y > -10) store.y--;
         store.x++;
         renderMap();
       }
     ),
     createJoystic({ x: window.innerWidth, y: 40, angle: 135 }, () => {
-      if (store.y > -5) store.y--;
+      if (store.y > -10) store.y--;
       renderMap();
     }),
     createJoystic({ x: 0, y: window.innerHeight - 40, angle: -45 }, () => {
@@ -95,7 +95,7 @@ function getJoystics(store, renderMap) {
       renderMap();
     }),
     createJoystic({ x: 40, y: -5, angle: 45 }, () => {
-      if (store.x > -5) store.x--;
+      if (store.x > -10) store.x--;
       renderMap();
     }),
     createJoystic(

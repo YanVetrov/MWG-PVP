@@ -543,6 +543,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
+      store.gameScene.resolution = 2;
       if (target.blocked) return 0;
       target.blocked = true;
       if (target.unclickable) return (target.blocked = false);
@@ -667,8 +668,9 @@ export default {
       const app = new Application({
         width: window.innerWidth,
         height: window.innerHeight,
-        antialias: true,
-        resolution: 1,
+        // antialias: true,
+        resolution: devicePixelRatio,
+        autoDensity: true,
         view: document.getElementById("canvas1"),
       });
 
@@ -677,8 +679,8 @@ export default {
       store.gameScene.zIndex = 2;
       store.gameScene.x = store.defaultPosX;
       store.gameScene.y = store.defaultPosY;
-      store.gameScene.scale.y = 1.2 / window.devicePixelRatio;
-      store.gameScene.scale.x = 1.2 / window.devicePixelRatio;
+      store.gameScene.scale.y = 0.6;
+      store.gameScene.scale.x = 0.6;
       app.stage.addChild(store.gameScene);
       app.stage.sortableChildren = true;
       app.renderer.backgroundColor = "0x202020";

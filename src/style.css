@@ -20,7 +20,7 @@ body {
   right: 43%;
 }
 
-#login img {
+#login>img {
   position: relative;
   left: 65px;
 }
@@ -52,6 +52,72 @@ body {
   opacity: 0;
 }
 
+#ual-modal-selection-content,
+#ual-modal-message-content,
+.ual-auth-button {
+  background: black !important;
+  border: 1px solid rebeccapurple !important;
+}
+
+.anchor-link .anchor-link-inner,
+.anchor-link .anchor-link-request {
+  background: black !important;
+}
+
+.anchor-link .anchor-link-inner {
+  border: 1px solid rebeccapurple !important
+}
+
+.anchor-link .anchor-link-close {
+  display: none !important;
+}
+
+.anchor-link .anchor-link-button {
+  color: rebeccapurple !important;
+  background: transparent !important;
+  border: 1px solid rebeccapurple !important;
+}
+
+.anchor-link .anchor-link-title,
+#ual-modal-message-description {
+  color: white !important;
+}
+
+.anchor-link .anchor-link-qr svg {
+  background: white;
+}
+
+.ual-auth-button:hover {
+  background: rebeccapurple !important;
+  transform: scale(1.05);
+}
+
+.ual-modal-content-description {
+  color: rebeccapurple !important;
+  font-size: 25px !important;
+  margin-bottom: 50px !important;
+}
+
+.ual-open-learnMoreButton {
+  color: silver !important;
+}
+
+.ual-auth-icon-wrapper {
+  padding: 0 10px !important;
+  width: auto !important;
+}
+
+.ual-auth-icon {
+  max-height: 35px !important;
+}
+
+.ual-auth-text {
+  font-size: 17px !important;
+}
+
+.fa-chevron-right {
+  font-size: 23px !important;
+}
 
 .main_view {
   height: 100vh;
