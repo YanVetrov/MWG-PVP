@@ -724,7 +724,7 @@ export default {
             e =>
               e.data.button === 2
                 ? dropStuffTransaction({ id: e.target.unit.asset_id })
-                : ""
+                : (store.unit = {})
           );
         });
         if (location.hash === "#1") enableInteractiveMap(store.gameScene);
