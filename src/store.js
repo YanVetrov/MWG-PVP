@@ -618,7 +618,6 @@ async function fireTransaction({ id, target_id }) {
     user: store.user,
     name: "unitattack",
     data: {
-      asset_owner: account,
       asset_id: id,
       target_id,
     },
@@ -631,7 +630,6 @@ async function mineTransaction({ id, x, y }) {
     user: store.user,
     name: "unitmine",
     data: {
-      asset_owner: account,
       asset_id: id,
       x,
       y,
