@@ -728,7 +728,7 @@ export default {
                 : (store.unit = {})
           );
         });
-        if (location.hash === "#1") enableInteractiveMap(store.gameScene);
+        if (location.hash === "#1") enableInteractiveMap(store.gameScene, vm.renderMap);
         document.addEventListener(
           "contextmenu",
           e => {

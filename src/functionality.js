@@ -2,6 +2,7 @@ import { Sprite, Text, Container, Point, Graphics } from "pixi.js";
 import { DropShadowFilter } from "@pixi/filter-drop-shadow";
 import { BevelFilter } from "@pixi/filter-bevel";
 import { gsap } from "gsap";
+import { store } from "./store";
 function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
   let joystick = Sprite.from("./assets/joystic.png");
   let joyContainer = new Container();
@@ -161,21 +162,70 @@ function isAvailableAttack(unit, target) {
   if (diffX > available || diffY > available) return false;
   else return true;
 }
-async function enableInteractiveMap(zone) {
+function centerVisibleZone(zone, renderMap) {
+  let needRender = false;
+
+  let newCellsInLine = Math.floor(window.innerWidth / zone.scale.x * 0.75 / ((256 - 2) / 2));
+  if (Math.abs(store.cellsInLine - newCellsInLine) > 2) {
+    store.cellsInLine = newCellsInLine;
+    store.countLines = store.cellsInLine;
+    console.log(store.cellsInLine);
+    needRender = true;
+  }
+
+
+  let dx = (256 - 2) / 2 * zone.scale.x;
+  let dy = (128 - 2) / 2 * zone.scale.y;
+
+  let centerX = window.innerWidth / 2;
+  let centerY = window.innerHeight / 2 - dy * store.cellsInLine + dy * 3;
+
+
+  while (zone.x > centerX + dx * 2) {
+    store.x--;
+    zone.x -= dx;
+    zone.y -= dy;
+    needRender = true;
+  }
+  while (zone.x < centerX - dx * 2) {
+    store.x++;
+    zone.x += dx;
+    zone.y += dy;
+    needRender = true;
+  }
+
+  while (zone.y > centerY + dy * 2) {
+    store.y--;
+    zone.x += dx;
+    zone.y -= dy;
+    needRender = true;
+  }
+  while (zone.y < centerY - dy * 2) {
+    store.y++;
+    zone.x -= dx;
+    zone.y += dy;
+    needRender = true;
+  }
+  if (needRender) {
+    renderMap();
+  }
+}
+async function enableInteractiveMap(zone, renderMap) {
   window.addEventListener("mousewheel", e => {
     let { x, y } = zone.scale;
+    let k = 1.02;
     if (e.deltaY > 0 && x > 0.1) {
-      zone.scale.x /= 1.02;
-      zone.scale.y /= 1.02;
-      zone.x += 5;
-      zone.y += 5;
+      zone.x
+      zone.y += store.cellsInLine * (128 - 2) / 2 * zone.scale.y * (1 - 1 / k);
+      zone.scale.x /= k;
+      zone.scale.y /= k;
     }
     if (e.deltaY < 0 && x < 1.5) {
-      zone.scale.x *= 1.02;
-      zone.scale.y *= 1.02;
-      zone.x += (window.innerWidth / 2 - e.clientX) / 50;
-      zone.y += (window.innerHeight / 2 - e.clientY) / 50;
+      zone.y += store.cellsInLine * (128 - 2) / 2 * zone.scale.y * (1 - 1 * k);
+      zone.scale.x *= k;
+      zone.scale.y *= k;
     }
+    centerVisibleZone(zone, renderMap);
   });
   window.addEventListener("mousedown", e => {
     zone.dragging = true;
@@ -211,6 +261,8 @@ async function enableInteractiveMap(zone) {
       zone.y -= deltaY;
       zone.dragY = e.clientY;
       zone.blockedUI = true;
+      
+      centerVisibleZone(zone, renderMap);
     }
   });
   window.addEventListener("touchmove", e => {
