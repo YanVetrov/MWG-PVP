@@ -165,14 +165,14 @@ async function enableInteractiveMap(zone) {
   window.addEventListener("mousewheel", e => {
     let { x, y } = zone.scale;
     if (e.deltaY > 0 && x > 0.1) {
-      zone.scale.x -= 0.01;
-      zone.scale.y -= 0.01;
+      zone.scale.x /= 1.02;
+      zone.scale.y /= 1.02;
       zone.x += 5;
       zone.y += 5;
     }
     if (e.deltaY < 0 && x < 1.5) {
-      zone.scale.x += 0.01;
-      zone.scale.y += 0.01;
+      zone.scale.x *= 1.02;
+      zone.scale.y *= 1.02;
       zone.x += (window.innerWidth / 2 - e.clientX) / 50;
       zone.y += (window.innerHeight / 2 - e.clientY) / 50;
     }
