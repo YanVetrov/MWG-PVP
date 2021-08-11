@@ -206,9 +206,9 @@ async function enableInteractiveMap(zone) {
       let deltaX = zone.dragX - e.clientX;
       let deltaY = zone.dragY - e.clientY;
       if (Math.abs(deltaY) < 2 && Math.abs(deltaX) < 2) return 0;
-      zone.x += deltaX;
+      zone.x -= deltaX;
       zone.dragX = e.clientX;
-      zone.y += deltaY;
+      zone.y -= deltaY;
       zone.dragY = e.clientY;
       zone.blockedUI = true;
     }
