@@ -315,13 +315,18 @@ export default {
         }
         line.forEach(cell => store.visibleZone.push(cell));
       });
+      let date = Date.now();
+      console.log("map ready " + (Date.now() - date));
       store.visibleZone.forEach((el, i) => this.addSprite(el, i));
+      console.log("map rendered " + (Date.now() - date));
       store.unitsInVisibleZone.forEach(el =>
         sortUnit(el, store.unit, store.visibleZone, store.gameScene)
       );
+      console.log("units sorted " + (Date.now() - date));
       store.objectsOnMap.forEach(el =>
         sortUnit(el, store.unit, store.visibleZone, store.gameScene)
       );
+      console.log("obj sorted " + (Date.now() - date));
       // initMiniMap();
       // renderMiniMap();
     },

@@ -91,11 +91,22 @@ Object.defineProperty(store, "garages", {
 });
 Object.defineProperty(store, "unitsInVisibleZone", {
   get() {
+    // return this.units.filter(
+    //   el =>
+    //     this.visibleZone.some(
+    //       ground => ground.posX === el.posX && ground.posY === el.posY
+    //     ) &&
+    //     (!this.garages.some(
+    //       ground => ground.posX === el.posX && ground.posY === el.posY
+    //     ) ||
+    //       el.self)
+    // );
     return this.units.filter(
       el =>
-        this.visibleZone.some(
-          ground => ground.posX === el.posX && ground.posY === el.posY
-        ) &&
+        el.posX >= store.x &&
+        el.posX < store.x + store.cellsInLine &&
+        el.posY >= store.y &&
+        el.posY < store.y + store.countLines &&
         (!this.garages.some(
           ground => ground.posX === el.posX && ground.posY === el.posY
         ) ||
@@ -467,10 +478,7 @@ async function getIngameTanks(
             arr.push(tank);
           }
         });
-        store.units = createUnits(
-          [...arr, validator, wolf2],
-          unitOnClickHandler
-        );
+        store.units = createUnits([...arr], unitOnClickHandler);
         store.unit = store.units[0];
         store.unitsGetted = true;
         if (store.stuffGetted) handler();
