@@ -47,22 +47,22 @@ async function initUal(handler) {
     ual.init();
   }
 }
-async function transaction({ user, name, data }) {
-  let account = await user.getAccountName();
+async function transaction({ user, name, data, account = "metalwargame" }) {
+  let owner = await user.getAccountName();
   let response = {};
   let options = {
     actions: [
       {
-        account: "metalwargame",
+        account,
         name,
         authorization: [
           {
-            actor: account,
+            actor: owner,
             permission: user.requestPermission,
           },
         ],
         data: {
-          asset_owner: account,
+          asset_owner: owner,
           ...data,
         },
       },

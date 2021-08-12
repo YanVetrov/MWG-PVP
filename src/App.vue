@@ -57,6 +57,7 @@
           @deploy="deploy"
           @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
+          @teleport="teleport"
           @clear="signout"
           @logout="signout"
         />
@@ -131,6 +132,7 @@ import {
   mineTransaction,
   dropStuffTransaction,
   collectStuffTransaction,
+  teleportTransaction,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -189,6 +191,22 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    async teleport({ units, garage }) {
+      let ids = units.map(el => el.asset_id).join(":");
+      let location = garage.posX * 100000 + garage.posY;
+      let count = garage.amount * units.length;
+      let memo = `tp:${location}:${ids}`;
+      await teleportTransaction({ memo, count });
+    },
+    async onTeleport({ ids, location, self }) {
+      let posX = parseInt(location / 100000);
+      let posY = parseInt(location % 100000);
+      ids.forEach(id => {
+        store.unitsFromKeys[id].posX = posX;
+        store.unitsFromKeys[id].posY = posY;
+      });
+      if (self) this.showGarage({ posX, posY });
     },
     signout() {
       localStorage.clear();
@@ -407,6 +425,7 @@ export default {
           repairing,
           stuff,
           unlockedTime,
+          selected: false,
         };
       });
       this.$set(this.store, "units", units);
@@ -568,6 +587,12 @@ export default {
               store.unit.unit.type !== "battle"
             )
               return (target.blocked = false);
+            if (target.unit.admin) {
+              this.errors.push({
+                text: "Please don't attack developers and testers.",
+              });
+              return (target.blocked = false);
+            }
             store.unit.unit.direction = getDirection(store.unit.ground, target);
             let clone = store.unit;
             if (clone.proccess) return (target.blocked = false);
@@ -724,7 +749,8 @@ export default {
             e =>
               e.data.button === 2
                 ? dropStuffTransaction({ id: e.target.unit.asset_id })
-                : (store.unit = {})
+                : (store.unit = {}),
+            vm.onTeleport
           );
         });
         enableInteractiveMap(store.gameScene, vm.renderMap);
@@ -755,9 +781,9 @@ export default {
         vm.store.garages = store.objectsOnMap
           .filter(el => el.type === "garage")
           .map(el => {
-            let { posX, posY } = el;
+            let { posX, posY, amount } = el;
             let count = store.getGaragesUnits({ x: posX, y: posY }).length;
-            return { posX, posY, count };
+            return { posX, posY, count, amount };
           });
         vm.store.garages.sort((a, b) => {
           if (a.posX + a.posY > b.posX + b.posY) return 1;

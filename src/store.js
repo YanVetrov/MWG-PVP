@@ -8,6 +8,9 @@ import { transaction } from "./auth.js";
 const objectsOnMap = [];
 let store = {
   state: null,
+  admins: {
+    metalwartest: true,
+  },
   stuffGetted: false,
   unitsGetted: false,
   id: null,
@@ -208,6 +211,7 @@ function createUnits(arr, handler) {
       fontFamily: "metalwar",
       fontSize: 15,
     });
+    if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
       let node = new Text(text, {
         fill: color,
@@ -383,7 +387,8 @@ async function getIngameTanks(
   handlerDropStuff,
   handlerRepair,
   unitChanges,
-  unitOnClickHandler
+  unitOnClickHandler,
+  handlerTeleport,
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -420,6 +425,7 @@ async function getIngameTanks(
         scaled: 0.5,
         diffX: -5,
         diffY: -10,
+        amount: el.price,
         type: "garage",
       })
     );
@@ -541,6 +547,17 @@ async function getIngameTanks(
                 let id = el.data.memo.split(":")[1];
                 handlerRepair({ id });
               });
+              data.data
+              .filter(
+                el => el.data && el.data.memo && el.data.memo.match("tp:")
+              )
+              .forEach(el => {
+                let str = el.data.memo.split(':');
+                let location = str[1];
+                let ids = str.slice(2,99)
+                let self =  el.data.from === account;
+                handlerTeleport({ location, ids,self });
+              });
           }
         });
       }
@@ -647,90 +664,35 @@ async function mineTransaction({ id, x, y }) {
   return errorHandler(response);
 }
 async function repair({ count, id }) {
-  let tank = store.selfUnits.find(el => el.id === id);
-  if (!tank) tank = {};
+  if (!id) return true;
   let account = await store.user.getAccountName();
-  let options = {
-    actions: [
-      {
-        account: "metalwarmint",
-        name: "transfer",
-        authorization: [
-          {
-            actor: account,
-            permission: store.user.requestPermission,
-          },
-        ],
-        data: {
-          from: account,
-          to: "metalwargame",
-          memo: `repair:${id}`,
-          quantity: `${count} MWM`,
-        },
-      },
-    ],
-  };
-
-  let response = {};
-  if (tank.discountEnabled || tank.discountTypeEnabled) {
-    let clone = JSON.parse(JSON.stringify(options.actions[0]));
-    let log = {
-      PDT: "discount1",
-      MDT: "discount2",
-      CDT: "discount3",
-    };
-    let discount = "PDT";
-    if (tank.discountTypeEnabled) {
-      if (tank.type === "battle") discount = "CDT";
-      else discount = "MDT";
-    }
-    clone.data.memo = `${log[discount]}:${id}`;
-    clone.data.quantity = `1 ${discount}`;
-    options.actions.unshift(clone);
-  }
-  tank.repairing = true;
-  if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
-    try {
-      response = await store.user.signTransaction(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log({ ...e });
-      errorHandler(e.cause.message);
-      return false;
-    }
-  }
-  if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
-    if (options.actions[1])
-      options.actions[1].authorization[0].permission = "active";
-    try {
-      response = await store.user.wax.api.transact(options, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
-      return true;
-    } catch (e) {
-      console.log("WCW Error: ");
-      console.log({ ...e }, e);
-      let errorText = "";
-      if (
-        e &&
-        e.json &&
-        e.json.error &&
-        e.json.error.details &&
-        e.json.error.details[0]
-      )
-        errorText = e.json.error.details[0].message;
-      else
-        errorText =
-          "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
-      errorHandler(errorText);
-      return false;
-    }
-  }
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "metalwarmint",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo: `repair:${id}`,
+      quantity: `${count} MWM`,
+    },
+  });
+  return errorHandler(response);
+}
+async function teleportTransaction({ count, memo }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "metalwarmint",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo,
+      quantity: `${count} MWM`,
+    },
+  });
+  return errorHandler(response);
 }
 function errorHandler(response) {
   if (response === true) return true;
@@ -751,4 +713,5 @@ export {
   mineTransaction,
   dropStuffTransaction,
   collectStuffTransaction,
+  teleportTransaction,
 };

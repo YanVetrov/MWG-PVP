@@ -36,6 +36,22 @@
                 }}]
               </div>
             </div>
+            <div
+              @click="
+                selectedUnits.length < 10
+                  ? (tank.selected = !tank.selected)
+                  : ''
+              "
+              style="display:flex;position:absolute;align-items:center;color:wheat;width:30%;"
+            >
+              <div
+                class="button"
+                :class="{ raid: !tank.selected }"
+                style="padding:5px;margin:10px;"
+              >
+                {{ tank.selected ? "-" : "+" }}
+              </div>
+            </div>
             <img
               :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
               :src="require(`~/assets/cards/${tank.name}/dr.png`)"
@@ -140,6 +156,21 @@
         </div>
         <div class="garage_container">
           <div class="garage" v-for="(garage, i) in filteredGarages" :key="i">
+            <transition name="fade">
+              <div
+                @click="$emit('teleport', { units: selectedUnits, garage })"
+                class="teleport_selected"
+                v-if="
+                  selectedUnits.length &&
+                    !(garage.posX === garageX && garage.posY === garageY)
+                "
+              >
+                teleport units there [{{
+                  garage.amount * selectedUnits.length
+                }}
+                MWM]
+              </div>
+            </transition>
             <img src="../assets/teleport.png" />
             <div class="garage_info">
               <div class="garage_name">TELEPORT</div>
@@ -165,6 +196,12 @@
         </div>
       </div>
     </scroll>
+    <!-- <div class="selected_units">
+      <div class="selected_unit" v-for="tank in selectedUnits" :key="tank.id">
+        <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
+        <div class="selected_unit_name">{{ tank.name }}</div>
+      </div>
+    </div> -->
   </div>
 </template>
 <script>
@@ -224,7 +261,11 @@ export default {
         return this.garages.filter(el => el.count == 0);
       else return this.garages;
     },
+    selectedUnits() {
+      return this.tanks.filter(el => el.selected);
+    },
   },
+
   methods: {
     repair(tank) {
       let discount = 0;
@@ -287,6 +328,18 @@ export default {
   align-items: center;
   color: white;
   margin-bottom: 25px;
+  position: relative;
+}
+.teleport_selected {
+  position: absolute;
+  width: 30%;
+  left: 0;
+  padding: 28px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.3);
+  color: lime;
+  text-align: center;
+  cursor: pointer;
 }
 .garage img {
   width: 47%;
