@@ -103,10 +103,10 @@ Object.defineProperty(store, "unitsInVisibleZone", {
     // );
     return this.units.filter(
       el =>
-        el.posX >= store.x &&
-        el.posX < store.x + store.cellsInLine &&
-        el.posY >= store.y &&
-        el.posY < store.y + store.countLines &&
+        el.posX >= store.x + 1 &&
+        el.posX < store.x + 1 + store.cellsInLine &&
+        el.posY >= store.y + 1 &&
+        el.posY < store.y + 1 + store.countLines &&
         (!this.garages.some(
           ground => ground.posX === el.posX && ground.posY === el.posY
         ) ||
@@ -165,6 +165,7 @@ function createUnits(arr, handler) {
     container.posY = parseInt(el.location % 100000);
     container.diffX = el.diffX;
     container.diffY = el.diffY;
+    container.type = "unit";
     Object.keys(el).forEach(key => (sprite[key] = el[key]));
     Object.defineProperty(sprite, "direction", {
       get() {

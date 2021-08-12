@@ -107,7 +107,6 @@ import {
   updateText,
   setUnit,
   getMontain,
-  getJoystics,
   background,
   getDirection,
   isAvailableMove,
@@ -270,8 +269,12 @@ export default {
       store.gameScene.addChild(el);
     },
     async renderMap() {
-      store.unitsInVisibleZone.forEach(el => store.gameScene.removeChild(el));
+      console.log(store.gameScene.children.filter(el => el.type === "unit"));
+      // store.unitsInVisibleZone.forEach(el => store.gameScene.removeChild(el));
       store.visibleZone.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el =>
+        el.type === "unit" ? store.gameScene.removeChild(el) : ""
+      );
       store.visibleZone = [];
       let y = store.y;
       let x = store.x;
@@ -704,8 +707,6 @@ export default {
           store.allMapCount
         );
         checkUnits();
-        let joystics = getJoystics(store, vm.renderMap);
-        joystics.forEach(joy => app.stage.addChild(joy));
         vm.renderMap();
         initUal(async e => {
           if (e[0].wax) e[0].rpc = e[0].wax.rpc;
@@ -728,7 +729,7 @@ export default {
                 : (store.unit = {})
           );
         });
-        if (location.hash === "#1") enableInteractiveMap(store.gameScene, vm.renderMap);
+        enableInteractiveMap(store.gameScene, vm.renderMap);
         document.addEventListener(
           "contextmenu",
           e => {

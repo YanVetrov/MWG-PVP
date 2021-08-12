@@ -165,7 +165,9 @@ function isAvailableAttack(unit, target) {
 function centerVisibleZone(zone, renderMap) {
   let needRender = false;
 
-  let newCellsInLine = Math.floor(window.innerWidth / zone.scale.x * 0.75 / ((256 - 2) / 2));
+  let newCellsInLine = Math.floor(
+    ((window.innerWidth / zone.scale.x) * 1.5) / ((256 - 2) / 2)
+  );
   let cellsToUpdate = Math.max(2, Math.floor(newCellsInLine / 8));
   if (Math.abs(store.cellsInLine - newCellsInLine) > cellsToUpdate * 2) {
     store.cellsInLine = newCellsInLine;
@@ -173,25 +175,29 @@ function centerVisibleZone(zone, renderMap) {
     needRender = true;
   }
 
-  let dx = (256 - 2) / 2 * zone.scale.x;
-  let dy = (128 - 2) / 2 * zone.scale.y;
+  let dx = ((256 - 2) / 2) * zone.scale.x;
+  let dy = ((128 - 2) / 2) * zone.scale.y;
 
   let centerX = window.innerWidth / 2;
   let centerY = window.innerHeight / 2 - dy * store.cellsInLine + dy * 3;
 
-  if (Math.abs(zone.x - centerX) > dx * cellsToUpdate ||
-      Math.abs(zone.y - centerY) > dy * cellsToUpdate) {
+  if (
+    Math.abs(zone.x - centerX) > dx * cellsToUpdate ||
+    Math.abs(zone.y - centerY) > dy * cellsToUpdate
+  ) {
     needRender = true;
   }
   if (needRender) {
-    let n = Math.round(( (zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2);
-    let m = Math.round((-(zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2);
+    let n = Math.round(((zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2);
+    let m = Math.round(
+      (-(zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2
+    );
     store.x -= n;
     store.y -= m;
     zone.x += -dx * n + dx * m;
     zone.y += -dy * n - dy * m;
 
-    console.log(zone.x, zone.y)
+    console.log(zone.x, zone.y);
 
     renderMap();
   }
@@ -201,12 +207,14 @@ async function enableInteractiveMap(zone, renderMap) {
     let { x, y } = zone.scale;
     let k = 1.02;
     if (e.deltaY > 0 && x > 0.1) {
-      zone.y += store.cellsInLine * (128 - 2) / 2 * zone.scale.y * (1 - 1 / k);
+      zone.y +=
+        ((store.cellsInLine * (128 - 2)) / 2) * zone.scale.y * (1 - 1 / k);
       zone.scale.x /= k;
       zone.scale.y /= k;
     }
     if (e.deltaY < 0 && x < 1.5) {
-      zone.y += store.cellsInLine * (128 - 2) / 2 * zone.scale.y * (1 - 1 * k);
+      zone.y +=
+        ((store.cellsInLine * (128 - 2)) / 2) * zone.scale.y * (1 - 1 * k);
       zone.scale.x *= k;
       zone.scale.y *= k;
     }
@@ -246,7 +254,7 @@ async function enableInteractiveMap(zone, renderMap) {
       zone.y -= deltaY;
       zone.dragY = e.clientY;
       zone.blockedUI = true;
-      
+
       centerVisibleZone(zone, renderMap);
     }
   });
@@ -267,6 +275,7 @@ async function enableInteractiveMap(zone, renderMap) {
       zone.y -= deltaY;
       zone.dragY = e.clientY;
       zone.blockedUI = true;
+      centerVisibleZone(zone, renderMap);
       return 0;
     }
     if (e.touches.length >= 2) {
@@ -292,6 +301,7 @@ async function enableInteractiveMap(zone, renderMap) {
       tpCache.leftFinger = leftFinger;
       zone.blockedMultitouch = true;
       zone.blockedUI = true;
+      centerVisibleZone(zone, renderMap);
     }
   });
   window.addEventListener("touchend", e => {
