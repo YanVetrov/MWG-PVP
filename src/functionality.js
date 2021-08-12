@@ -166,13 +166,12 @@ function centerVisibleZone(zone, renderMap) {
   let needRender = false;
 
   let newCellsInLine = Math.floor(window.innerWidth / zone.scale.x * 0.75 / ((256 - 2) / 2));
-  if (Math.abs(store.cellsInLine - newCellsInLine) > 2) {
+  let cellsToUpdate = Math.max(2, Math.floor(newCellsInLine / 8));
+  if (Math.abs(store.cellsInLine - newCellsInLine) > cellsToUpdate * 2) {
     store.cellsInLine = newCellsInLine;
     store.countLines = store.cellsInLine;
-    console.log(store.cellsInLine);
     needRender = true;
   }
-
 
   let dx = (256 - 2) / 2 * zone.scale.x;
   let dy = (128 - 2) / 2 * zone.scale.y;
@@ -180,33 +179,20 @@ function centerVisibleZone(zone, renderMap) {
   let centerX = window.innerWidth / 2;
   let centerY = window.innerHeight / 2 - dy * store.cellsInLine + dy * 3;
 
-
-  while (zone.x > centerX + dx * 2) {
-    store.x--;
-    zone.x -= dx;
-    zone.y -= dy;
-    needRender = true;
-  }
-  while (zone.x < centerX - dx * 2) {
-    store.x++;
-    zone.x += dx;
-    zone.y += dy;
-    needRender = true;
-  }
-
-  while (zone.y > centerY + dy * 2) {
-    store.y--;
-    zone.x += dx;
-    zone.y -= dy;
-    needRender = true;
-  }
-  while (zone.y < centerY - dy * 2) {
-    store.y++;
-    zone.x -= dx;
-    zone.y += dy;
+  if (Math.abs(zone.x - centerX) > dx * cellsToUpdate ||
+      Math.abs(zone.y - centerY) > dy * cellsToUpdate) {
     needRender = true;
   }
   if (needRender) {
+    let n = Math.round(( (zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2);
+    let m = Math.round((-(zone.x - centerX) / dx + (zone.y - centerY) / dy) / 2);
+    store.x -= n;
+    store.y -= m;
+    zone.x += -dx * n + dx * m;
+    zone.y += -dy * n - dy * m;
+
+    console.log(zone.x, zone.y)
+
     renderMap();
   }
 }
@@ -215,7 +201,6 @@ async function enableInteractiveMap(zone, renderMap) {
     let { x, y } = zone.scale;
     let k = 1.02;
     if (e.deltaY > 0 && x > 0.1) {
-      zone.x
       zone.y += store.cellsInLine * (128 - 2) / 2 * zone.scale.y * (1 - 1 / k);
       zone.scale.x /= k;
       zone.scale.y /= k;
