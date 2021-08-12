@@ -356,6 +356,9 @@ export default {
     async onUnitDrop({ id }) {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
+      if (tank.health <= 0) {
+        tank.unit.stuff.push(tank.getShards());
+      }
       tank.unit.stuff.forEach((el, i) => {
         if (el.amount <= 0) return 0;
         let random = Math.ceil(Math.random() * 7);

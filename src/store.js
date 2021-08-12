@@ -201,6 +201,11 @@ function createUnits(arr, handler) {
     });
     container.stuffCountText.x = 70;
     container.stuffCountText.y = 10;
+    container.getShards = () => ({
+      type: el.shardCode,
+      amount: el.shardCount,
+      weight: 1,
+    });
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
       fill: el.self ? 0x00ffaa : 0xff3377,
       fontFamily: "metalwar",
@@ -388,7 +393,7 @@ async function getIngameTanks(
   handlerRepair,
   unitChanges,
   unitOnClickHandler,
-  handlerTeleport,
+  handlerTeleport
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -547,16 +552,16 @@ async function getIngameTanks(
                 let id = el.data.memo.split(":")[1];
                 handlerRepair({ id });
               });
-              data.data
+            data.data
               .filter(
                 el => el.data && el.data.memo && el.data.memo.match("tp:")
               )
               .forEach(el => {
-                let str = el.data.memo.split(':');
+                let str = el.data.memo.split(":");
                 let location = str[1];
-                let ids = str.slice(2,99)
-                let self =  el.data.from === account;
-                handlerTeleport({ location, ids,self });
+                let ids = str.slice(2, 99);
+                let self = el.data.from === account;
+                handlerTeleport({ location, ids, self });
               });
           }
         });
