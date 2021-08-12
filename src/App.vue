@@ -203,10 +203,14 @@ export default {
       let posX = parseInt(location / 100000);
       let posY = parseInt(location % 100000);
       ids.forEach(id => {
-        store.unitsFromKeys[id].posX = posX;
-        store.unitsFromKeys[id].posY = posY;
+        let unit = store.unitsFromKeys[id];
+        unit.posX = posX;
+        unit.posY = posY;
+        if (self) this.onUnitMove({ id, x: posX, y: posY });
       });
-      if (self) this.showGarage({ posX, posY });
+      if (self) {
+        this.showGarage({ posX, posY });
+      }
     },
     signout() {
       localStorage.clear();
