@@ -269,8 +269,6 @@ export default {
       store.gameScene.addChild(el);
     },
     async renderMap() {
-      console.log(store.gameScene.children.filter(el => el.type === "unit"));
-      // store.unitsInVisibleZone.forEach(el => store.gameScene.removeChild(el));
       store.visibleZone.forEach(el => store.gameScene.removeChild(el));
       store.gameScene.children.forEach(el =>
         el.type === "unit" ? store.gameScene.removeChild(el) : ""
