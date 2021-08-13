@@ -292,9 +292,7 @@ export default {
     },
     async renderMap() {
       store.visibleZone.forEach(el => store.gameScene.removeChild(el));
-      store.gameScene.children.forEach(el =>
-        el.type === "unit" ? store.gameScene.removeChild(el) : ""
-      );
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.visibleZone = [];
       let y = store.y;
       let x = store.x;
@@ -340,12 +338,13 @@ export default {
       });
       let date = Date.now();
       console.log("map ready " + (Date.now() - date));
-      store.visibleZone.forEach((el, i) => this.addSprite(el, i));
       console.log("map rendered " + (Date.now() - date));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.visibleZone.forEach((el, i) => this.addSprite(el, i));
       store.unitsInVisibleZone.forEach(el =>
         sortUnit(el, store.unit, store.visibleZone, store.gameScene)
-      );
-      console.log("units sorted " + (Date.now() - date));
+      ),
+        console.log("units sorted " + (Date.now() - date));
       store.objectsOnMap.forEach(el =>
         sortUnit(el, store.unit, store.visibleZone, store.gameScene)
       );
@@ -356,7 +355,18 @@ export default {
     async onUnitDrop({ id }) {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
-      if (tank.health <= 0) {
+      let inGarage = store.garages.some(
+        el => el.posX === tank.posX && el.posY === tank.posY
+      );
+      if (inGarage) {
+        tank.unit.stuff = [];
+        tank.stuffCount = 0;
+        if (this.show) {
+          let unit = this.store.units.find(el => el.asset_id === id);
+          if (unit) unit.stuff = [];
+        }
+      }
+      if (tank.health <= 0 && !tank.unit.stuff.length) {
         tank.unit.stuff.push(tank.getShards());
       }
       tank.unit.stuff.forEach((el, i) => {
@@ -380,6 +390,7 @@ export default {
         store.objectsOnMap.push(stuff);
         this.setObjectOnMap(stuff);
         sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
+
         tank.unit.stuff = [];
         tank.stuffCount = 0;
         if (this.show) {
