@@ -183,6 +183,7 @@ function createUnits(arr, handler) {
     container.name = el.name;
     container.locked = false;
     container.lt = 0;
+
     container.timerText = new Text("", {
       fill: 0xefefef,
       fontFamily: "metalwar",
@@ -265,6 +266,7 @@ function createUnits(arr, handler) {
     container.owner.x = 40;
     container.self = el.self;
     container.unit = sprite;
+    container.unit.y = 20;
     container.agr = { value: false, timeout: "" };
     container.addChild(container.timerText);
     container.addChild(container.hpText);
@@ -427,9 +429,9 @@ async function getIngameTanks(
         image: "teleport",
         posX,
         posY,
-        scaled: 0.5,
-        diffX: -5,
-        diffY: -10,
+        scaled: 0.7,
+        diffX: 15,
+        diffY: -20,
         amount: el.price,
         type: "garage",
       })

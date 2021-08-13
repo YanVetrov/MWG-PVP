@@ -36,7 +36,7 @@ let base = [
     lvl: 4,
     repairing: false,
     diffX: 50,
-    diffY: -40,
+    diffY: -30,
     action: {
       ur: { x: 200, y: -140, angle: 50 },
       r: { x: 320, y: 25, angle: 100 },
@@ -74,7 +74,7 @@ let base = [
     lvl: 3,
     repairing: false,
     diffX: 50,
-    diffY: -40,
+    diffY: -30,
     action: {
       ur: { x: 80, y: 25, angle: 50 },
       r: { x: 90, y: 45, angle: 100 },
@@ -113,7 +113,7 @@ let base = [
     lvl: 1,
     repairing: false,
     diffX: 50,
-    diffY: -40,
+    diffY: -30,
   },
   {
     id: 126334,
@@ -132,8 +132,8 @@ let base = [
     discountTypeEnabled: false,
     lvl: 5,
     repairing: false,
-    diffX: 50,
-    diffY: -40,
+    diffX: 60,
+    diffY: -30,
     action: {
       ur: { x: 150, y: -120, angle: 50 },
       r: { x: 250, y: 15, angle: 100 },
@@ -172,7 +172,7 @@ let base = [
     lvl: 2,
     repairing: false,
     diffX: 50,
-    diffY: -40,
+    diffY: -30,
     action: {
       ur: { x: 80, y: 25, angle: 50 },
       r: { x: 90, y: 45, angle: 100 },

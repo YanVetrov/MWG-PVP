@@ -1013,15 +1013,20 @@ export default {
         Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
         if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
         if (action.throw) {
+          let actions = [];
           for (let i = 0; i < fires.length; i++) {
-            await shuffleUnit(unit);
-            await gsap.to(fires[i], {
-              x,
-              y,
-              duration: 0.5,
-              ease: "Expo.easeIn",
+            actions.push(async () => {
+              await shuffleUnit(unit);
+              await gsap.to(fires[i], {
+                x,
+                y,
+                duration: 0.5,
+                delay: i / 3,
+                ease: "Expo.easeIn",
+              });
             });
           }
+          await Promise.all(actions.map(el => el()));
         } else {
           await gsap.to(fires[0], {
             alpha: 1,
