@@ -83,6 +83,13 @@ body {
   color: white !important;
 }
 
+.alpha {
+  right: 0;
+  position: fixed;
+  color: orangered;
+  animation: bubble 5s 1s infinite alternate-reverse;
+}
+
 .anchor-link .anchor-link-qr svg {
   background: rebeccapurple;
 }

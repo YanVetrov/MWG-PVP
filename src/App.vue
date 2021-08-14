@@ -18,7 +18,7 @@
     <transition name="slide">
       <notify :notify="errors" />
     </transition>
-
+    <div class="alpha">open pre-alfa test: {{ store.user.accountName }}</div>
     <mainMenu
       :show="show"
       v-show="show"
