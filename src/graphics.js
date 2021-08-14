@@ -1,4 +1,4 @@
-import { Graphics, Container } from "pixi.js";
+import { Graphics, Container, Sprite } from "pixi.js";
 
 function getBorder() {
   const border = new Graphics();
@@ -26,7 +26,7 @@ function getCircle() {
 const generateSpinner = obj => {
   const container = new Container();
 
-  const base = PIXI.Sprite.from("./assets/timer.png");
+  const base = Sprite.from("./assets/timer.png");
   const size = 100;
   base.width = size;
   base.height = size;
