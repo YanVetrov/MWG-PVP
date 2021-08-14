@@ -1,5 +1,13 @@
-import { Sprite, Texture, Container, Text, AnimatedSprite } from "pixi.js";
+import {
+  Sprite,
+  Texture,
+  Container,
+  Text,
+  Graphics,
+  AnimatedSprite,
+} from "pixi.js";
 import { gsap } from "gsap";
+import { generateSpinner } from "./graphics.js";
 import base from "./units_templates.js";
 import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 import unpack_units from "./parser";
@@ -159,8 +167,10 @@ function createUnits(arr, handler) {
         );
       }
     });
+
     let container = new Container();
-    container.zIndex = 6;
+    container.sortableChildren = true;
+    generateSpinner(container);
     sprite.width = 120;
     sprite.height = 120;
     sprite.dir = "ul";
@@ -184,38 +194,44 @@ function createUnits(arr, handler) {
     container.locked = false;
     container.lt = 0;
 
-    container.timerText = new Text("", {
-      fill: 0xefefef,
-      fontFamily: "metalwar",
-      fontSize: 15,
-    });
+    // container.timerText = new Text("", {
+    //   fill: 0xefefef,
+    //   fontFamily: "metalwar",
+    //   fontSize: 15,
+    // });
 
-    container.timerText.x = 70;
-    container.timerText.y = -20;
+    // container.timerText.x = 70;
+    // container.timerText.y = -20;
     let amount = el.stuff
       ? el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0)
       : 0;
     container.stuffCountText = new Text(`${amount}/${el.capacity}`, {
       fill: 0xefefef,
       fontFamily: "metalwar",
-      fontSize: 15,
+      fontSize: 10,
+      stroke: "#454545",
+      strokeThickness: 2,
     });
-    container.stuffCountText.x = 70;
-    container.stuffCountText.y = 10;
+    container.stuffCountText.x = 30;
+    container.stuffCountText.y = -3;
     container.getShards = () => ({
       type: el.shardCode,
       amount: el.shardCount,
       weight: 1,
     });
     container.hpText = new Text(`${el.hp}/${el.strength}`, {
-      fill: el.self ? 0x00ffaa : 0xff3377,
+      fill: 0xefefef,
       fontFamily: "metalwar",
-      fontSize: 15,
+      fontSize: 10,
+      stroke: "#454545",
+      strokeThickness: 2,
     });
     container.owner = new Text(`${el.owner || "Enemy"}`, {
       fill: el.self ? 0x00ffaa : 0xff3377,
       fontFamily: "metalwar",
       fontSize: 15,
+      stroke: "#efefef",
+      strokeThickness: 2,
     });
     if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
@@ -261,28 +277,82 @@ function createUnits(arr, handler) {
         Date.now() + Math.floor(store.defualtCellCost / this.unit.speed) * 1000
       );
     };
-    container.hpText.x = 50;
-    container.hpText.y = -10;
-    container.owner.x = 40;
+    container.hpText.x = 30;
+    container.hpText.y = -3;
+    let healthBar = new Container();
+    healthBar.x = 50;
+    healthBar.y = 20;
+    container.addChild(healthBar);
+    healthBar.zIndex = 3;
+    let innerBar = new Graphics();
+    innerBar.beginFill(0x333);
+    innerBar.drawRoundedRect(0, 0, 100, 8, 30);
+    innerBar.endFill();
+    healthBar.addChild(innerBar);
+
+    let outerBar = new Graphics();
+    let percent = (el.hp / el.strength) * 100;
+    outerBar.beginFill(percent < 30 ? 0xaa0011 : 0x00ff00);
+    outerBar.drawRoundedRect(0, 0, (el.hp / el.strength) * 100, 8, 30);
+    outerBar.endFill();
+    healthBar.addChild(outerBar);
+
+    healthBar.outer = outerBar;
+    let capacityBar = new Container();
+    capacityBar.x = 50;
+    capacityBar.y = 30;
+    container.addChild(capacityBar);
+    capacityBar.zIndex = 3;
+    let innerBar1 = new Graphics();
+    innerBar1.beginFill(0x333);
+    innerBar1.drawRoundedRect(0, 0, 100, 8, 30);
+    innerBar1.endFill();
+    capacityBar.addChild(innerBar1);
+
+    let outerBar1 = new Graphics();
+    outerBar1.beginFill(0xede247);
+    outerBar1.drawRoundedRect(
+      0,
+      0,
+      el.stuff
+        ? (el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0) /
+            el.capacity) *
+            100
+        : 0,
+      8,
+      30
+    );
+    outerBar1.endFill();
+    capacityBar.addChild(outerBar1);
+
+    healthBar.outer = outerBar;
+    container.owner.x = 50;
     container.self = el.self;
     container.unit = sprite;
     container.unit.y = 20;
     container.agr = { value: false, timeout: "" };
-    container.addChild(container.timerText);
-    container.addChild(container.hpText);
+    container.spinner.scale.set(0.2);
+    container.spinner.y = -20;
+    container.spinner.x = 80;
+    container.spinner.zIndex = 9;
+    container.spinner.alpha = 0.5;
+    // container.addChild(container.timerText);
+    healthBar.addChild(container.hpText);
     container.addChild(container.owner);
-    container.addChild(container.stuffCountText);
+    capacityBar.addChild(container.stuffCountText);
     container.addChild(sprite);
+    container.healthBar = outerBar;
+    container.capacityBar = outerBar1;
     if (el.self) container.on("pointerup", handler);
-    Object.defineProperty(container, "timer", {
-      get() {
-        return this.timerText.text;
-      },
-      set(val) {
-        if (!val) val = "";
-        this.timerText.text = val;
-      },
-    });
+    // Object.defineProperty(container, "timer", {
+    //   get() {
+    //     return this.timerText.text;
+    //   },
+    //   set(val) {
+    //     if (!val) val = "";
+    //     this.timerText.text = val;
+    //   },
+    // });
     Object.defineProperty(container, "stuffCount", {
       get() {
         return this.unit.stuff
@@ -301,7 +371,7 @@ function createUnits(arr, handler) {
         this.lt = val;
         if (!val) {
           val = null;
-          this.timer = 0;
+          // this.timer = 0;
         }
         this.locked = !!val;
       },
@@ -333,13 +403,15 @@ function createUnits(arr, handler) {
         return this.unit.hp;
       },
       async set(val) {
-        let color = 0x00ffaa;
-        if (val < 10) color = 0xff9999;
+        let color = 0x00ff00;
+        let percent = (val / this.unit.strength) * 100;
+        if (percent < 30) color = 0xff9999;
         if (this.unit.hp === 0 && val > 0) {
           this.unit.texture = this.unit[this.unit.direction];
         }
+        this.healthBar.width = (val / this.unit.strength) * 100;
+        this.healthBar.tint = color;
         this.unit.hp = val;
-        this.hpText.style.fill = color;
         this.hpText.text = `${val}/${this.unit.strength}`;
         if (val === 0) {
           this.unit.texture = this.unit.broken[this.unit.direction];
@@ -504,6 +576,11 @@ async function getIngameTanks(
     } else {
       let data = JSON.parse(message.data);
       console.log(data);
+      if (data.type === "units" && data.data) {
+        console.log("check unit...");
+        let allTanks = Object.values(units);
+        allTanks.forEach(el => unitChanges(el));
+      }
       if (
         data.type === "actions" &&
         data.data &&

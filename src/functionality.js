@@ -136,6 +136,7 @@ async function sortUnit(unit, activeUnit, zone, container) {
     let y = unit.diffY || -10;
     unit.x = ground.x + x;
     unit.y = ground.y + y;
+    unit.zIndex = unit.posX + unit.posY;
     container.addChild(unit);
     unit.visible = true;
     if (!unit.ground) setUnit(unit, ground, false, "unit");
@@ -342,6 +343,7 @@ async function moveUnit(unit, ground) {
   ground.unit = unit;
   unit.posX = ground.posX;
   unit.posY = ground.posY;
+  unit.zIndex = unit.posX + unit.posY;
   unit.alpha = 1;
   window.sound("go");
   let x = unit.diffX || Math.abs(ground.width - unit.unit.width) / 2.5;

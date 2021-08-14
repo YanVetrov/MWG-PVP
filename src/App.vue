@@ -582,6 +582,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
+      console.log(target);
       store.gameScene.resolution = 2;
       if (target.blocked) return 0;
       target.blocked = true;
@@ -971,9 +972,11 @@ export default {
             if (Date.now() > el.lockedTime) {
               el.lockedTime = 0;
               el.unit.alpha = 1;
+              el.stopTimer();
             } else {
-              el.unit.alpha = 0.5;
-              el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
+              el.unit.alpha = 0.7;
+              // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
+              el.setTimer(Math.ceil(el.lockedTime));
             }
           });
         }, 1000);
