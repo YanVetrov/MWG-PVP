@@ -484,8 +484,10 @@ export default {
       let timeout = tank.getMoveCooldown();
       tank.lockedTime = timeout;
       if (!ground) {
-        tank.ground.unit = null;
-        tank.ground = null;
+        if (tank.ground) {
+          tank.ground.unit = null;
+          tank.ground = null;
+        }
         return store.gameScene.removeChild(tank);
       }
       if (!tank.ground) {
