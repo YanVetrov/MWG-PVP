@@ -131,7 +131,6 @@ function initMap(arr, store, count) {
 async function sortUnit(unit, activeUnit, zone, container) {
   let ground = zone.find(gr => gr.posX === unit.posX && gr.posY === unit.posY);
   if (ground) {
-    console.log(unit, ground);
     let x = unit.diffX || 60;
     let y = unit.diffY || -10;
     unit.x = ground.x + x;
@@ -198,8 +197,6 @@ function centerVisibleZone(zone, renderMap) {
     store.y -= m;
     zone.x += -dx * n + dx * m;
     zone.y += -dy * n - dy * m;
-
-    console.log(zone.x, zone.y);
 
     renderMap();
   }
