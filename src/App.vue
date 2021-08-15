@@ -219,7 +219,9 @@ export default {
     checkUnitChange(unit) {
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) return 0;
+      let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
+        console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
         if (this.show && unit.owner === store.user.accountName) {
           let vueTank = this.store.units.find(
@@ -229,9 +231,14 @@ export default {
         }
       }
       if (unit.x != localTank.posX || unit.y != localTank.posY) {
+        console.log(template + `X:${unit.x} -> Y:${unit.y}`);
         this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
       }
       if (localTank.lockedTime !== unit.next_availability * 1000) {
+        console.log(
+          template +
+            `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
+        );
         localTank.lockedTime = unit.next_availability * 1000;
         if (this.show && unit.owner === store.user.accountName) {
           let vueTank = this.store.units.find(
@@ -272,7 +279,6 @@ export default {
               shadowAlpha: 0.5,
             }),
           ];
-          console.log(el.filters);
         });
         el.on("pointerout", e => {
           el.filters = [];
@@ -473,6 +479,9 @@ export default {
     },
     async onUnitMove({ id, x, y }) {
       let tank = store.unitsFromKeys[id];
+      console.log(
+        `action(onUnitMove) - ${tank.name}(${tank.owner.text}) posX:${tank.posX} posY:${tank.posY} -> posX:${x} posY:${y}`
+      );
       tank.posX = x;
       tank.posY = y;
       if (tank.poised) {
@@ -584,7 +593,6 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(target);
       store.gameScene.resolution = 2;
       if (target.blocked) return 0;
       target.blocked = true;
@@ -853,21 +861,25 @@ export default {
       }
 
       async function onUnitAttack({ id, target_id, timeout }) {
-        let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
-        let targetTank = store.unitsInVisibleZone.find(
-          el => el.unit.asset_id === target_id
-        );
+        let tank = store.unitsFromKeys[id];
+        let targetTank = store.unitsFromKeys[target_id];
         if (!tank || !targetTank) {
           return 0;
         } else {
-          let ground = targetTank.ground;
+          console.log(
+            `action(onUnitAction) - ${tank.name}(${tank.owner.text}) -> ${targetTank.name}(${targetTank.owner.text})`
+          );
           tank.lockedTime = timeout;
           if (targetTank.self) tank.agressive = true;
-          await unitAction(tank, ground);
-          vm.checkDestroy(tank);
+
           if (tank.poised) {
             tank.health -= 10;
             tank.poised--;
+            vm.checkDestroy(tank);
+          }
+          if (tank.visible && targetTank.visible) {
+            let ground = targetTank.ground;
+            await unitAction(tank, ground);
             vm.checkDestroy(tank);
           }
         }

@@ -361,6 +361,14 @@ function createUnits(arr, handler) {
       },
       set(val) {
         this.stuffCountText.text = `${val}/${this.unit.capacity}`;
+        this.capacityBar.width = this.unit.stuff
+          ? (this.unit.stuff.reduce(
+              (acc, el) => acc + el.amount * el.weight,
+              0
+            ) /
+              this.unit.capacity) *
+            100
+          : 0;
       },
     });
     Object.defineProperty(container, "lockedTime", {
@@ -569,7 +577,6 @@ async function getIngameTanks(
         store.unitsGetted = true;
         if (store.stuffGetted) handler();
       } else {
-        console.log("check unit...");
         let allTanks = Object.values(units);
         allTanks.forEach(el => unitChanges(el));
       }
@@ -577,7 +584,6 @@ async function getIngameTanks(
       let data = JSON.parse(message.data);
       console.log(data);
       if (data.type === "units" && data.data) {
-        console.log("check unit...");
         let allTanks = Object.values(units);
         allTanks.forEach(el => unitChanges(el));
       }

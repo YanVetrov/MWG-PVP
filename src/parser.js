@@ -132,7 +132,6 @@ const unpack_units = array => {
     }
     group_length = read_uint16();
   }
-  console.log(Object.values(units).slice(0, 100));
   return units;
 };
 

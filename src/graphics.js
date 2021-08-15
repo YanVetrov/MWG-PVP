@@ -47,12 +47,10 @@ const generateSpinner = obj => {
   const maxCount = 377;
   obj.updateSpinner = delta => {
     count += delta;
-    console.log(count);
     phase += delta / 60;
     phase %= Math.PI * 2;
     const angleStart = 0 - Math.PI / 2;
     const angle = phase + angleStart;
-    console.log(angle);
     const radius = 50;
 
     const x1 = Math.cos(angleStart) * radius;
