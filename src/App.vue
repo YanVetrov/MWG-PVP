@@ -193,9 +193,9 @@ export default {
       return dropStuffTransaction(ev);
     },
     async teleport({ units, garage }) {
-      let ids = units.map(el => el.asset_id).join(":");
+      let ids = Object.values(units).map(el => el.asset_id).join(":");
       let location = garage.posX * 100000 + garage.posY;
-      let count = garage.amount * units.length;
+      let count = garage.amount * Object.keys(units).length;
       let memo = `tp:${location}:${ids}`;
       await teleportTransaction({ memo, count });
     },
@@ -203,7 +203,7 @@ export default {
       let posX = parseInt(location / 100000);
       let posY = parseInt(location % 100000);
       ids.forEach(id => {
-        let unit = store.unitsFromKeys[id];
+        let unit = store.units[id];
         unit.posX = posX;
         unit.posY = posY;
         if (self) this.onUnitMove({ id, x: posX, y: posY });
@@ -217,16 +217,14 @@ export default {
       location.reload();
     },
     checkUnitChange(unit) {
-      let localTank = store.unitsFromKeys[unit.asset_id];
+      let localTank = store.units[unit.asset_id];
       if (!localTank) return 0;
       let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
         if (this.show && unit.owner === store.user.accountName) {
-          let vueTank = this.store.units.find(
-            el => el.asset_id === unit.asset_id
-          );
+          let vueTank = this.store.units[unit.asset_id];
           if (vueTank) vueTank.hp = unit.hp;
         }
       }
@@ -241,20 +239,18 @@ export default {
         );
         localTank.lockedTime = unit.next_availability * 1000;
         if (this.show && unit.owner === store.user.accountName) {
-          let vueTank = this.store.units.find(
-            el => el.asset_id === unit.asset_id
-          );
+          let vueTank = this.store.units[unit.asset_id];
           if (vueTank) vueTank.unlockedTime = unit.next_availability * 1000;
         }
       }
     },
     async onUnitRepair({ id }) {
-      let tank = store.unitsFromKeys[id];
+      let tank = store.units[id];
       if (tank) {
         tank.health = tank.unit.strength;
       }
       if (this.show) {
-        let unit = this.store.units.find(el => el.asset_id === id);
+        let unit = this.store.units[id];
         if (unit) unit.hp = unit.strength;
       }
     },
@@ -359,7 +355,7 @@ export default {
       // renderMiniMap();
     },
     async onUnitDrop({ id }) {
-      let tank = store.unitsFromKeys[id];
+      let tank = store.units[id];
       if (!tank) return 0;
       let inGarage = store.garages.some(
         el => el.posX === tank.posX && el.posY === tank.posY
@@ -368,7 +364,7 @@ export default {
         tank.unit.stuff = [];
         tank.stuffCount = 0;
         if (this.show) {
-          let unit = this.store.units.find(el => el.asset_id === id);
+          let unit = this.store.units[id];
           if (unit) unit.stuff = [];
         }
       }
@@ -400,7 +396,7 @@ export default {
         tank.unit.stuff = [];
         tank.stuffCount = 0;
         if (this.show) {
-          let unit = this.store.units.find(el => el.asset_id === id);
+          let unit = this.store.units[id];
           if (unit) unit.stuff = [];
         }
       });
@@ -472,13 +468,13 @@ export default {
       await repair({ count, id });
     },
     deploy(unit) {
-      let tank = store.unitsFromKeys[unit.asset_id];
+      let tank = store.units[unit.asset_id];
       store.unit = tank;
       setColorAround(tank.ground, true);
       this.show = false;
     },
     async onUnitMove({ id, x, y }) {
-      let tank = store.unitsFromKeys[id];
+      let tank = store.units[id];
       console.log(
         `action(onUnitMove) - ${tank.name}(${tank.owner.text}) posX:${tank.posX} posY:${tank.posY} -> posX:${x} posY:${y}`
       );
@@ -829,7 +825,7 @@ export default {
       }
 
       async function onUnitCollect({ id, x, y }) {
-        let tank = store.unitsFromKeys[id];
+        let tank = store.units[id];
         if (!tank) return 0;
         let stuff = store.objectsOnMap.find(
           el => el.posX === x && el.posY === y
@@ -861,8 +857,8 @@ export default {
       }
 
       async function onUnitAttack({ id, target_id, timeout }) {
-        let tank = store.unitsFromKeys[id];
-        let targetTank = store.unitsFromKeys[target_id];
+        let tank = store.units[id];
+        let targetTank = store.units[target_id];
         if (!tank || !targetTank) {
           return 0;
         } else {

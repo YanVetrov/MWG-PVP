@@ -47,12 +47,12 @@ let store = {
   x: -5,
   y: -5,
   user: {},
-  units: [],
+  units: new Map(),
   unusedUnits: [],
   vue: {},
   objectsOnMap,
   getGaragesUnits({ x, y }) {
-    return this.selfUnits.filter(el => el.posX === x && el.posY === y);
+    return Object.values(this.units).filter(el => el.self && el.posX === x && el.posY === y);
   },
 };
 Object.defineProperty(store, "unit", {
@@ -87,12 +87,12 @@ Object.defineProperty(store, "unit", {
 });
 Object.defineProperty(store, "unusedUnits", {
   get() {
-    return this.units.filter(el => el.posX === 1 && el.posY === 1);
+    return Object.values(this.units).filter(el => el.posX === 1 && el.posY === 1);
   },
 });
 Object.defineProperty(store, "selfUnits", {
   get() {
-    return this.units.filter(el => el.self);
+    return Object.values(this.units).filter(el => el.self);
   },
 });
 Object.defineProperty(store, "garages", {
@@ -112,7 +112,7 @@ Object.defineProperty(store, "unitsInVisibleZone", {
     //     ) ||
     //       el.self)
     // );
-    return this.units.filter(
+    return Object.values(this.units).filter(
       el =>
         el.posX >= store.x + 1 &&
         el.posX < store.x + 1 + store.cellsInLine &&
@@ -125,14 +125,6 @@ Object.defineProperty(store, "unitsInVisibleZone", {
     );
   },
 });
-Object.defineProperty(store, "unitsFromKeys", {
-  get() {
-    return this.units.reduce((acc, el) => {
-      acc[el.unit.asset_id] = el;
-      return acc;
-    }, {});
-  },
-});
 function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
   sprite.zIndex = 1;
@@ -142,7 +134,8 @@ function createObjectOnMap(el) {
   return sprite;
 }
 function createUnits(arr, handler) {
-  return arr.map((el, i) => {
+  let units = {};
+  for (let el of arr) {
     let directions = ["u", "d", "r", "l", "ur", "ul", "dl", "dr"];
     let random = Math.ceil(Math.random() * (directions.length - 1));
     let sprite = Sprite.from(
@@ -460,8 +453,9 @@ function createUnits(arr, handler) {
       });
     }
     container.health = el.hp;
-    return container;
-  });
+    units[el.asset_id] = container;
+  };
+  return units;
 }
 const units = createUnits(base);
 const setExampleUnits = () => (store.units = createUnits(base));
@@ -573,7 +567,7 @@ async function getIngameTanks(
           }
         });
         store.units = createUnits([...arr], unitOnClickHandler);
-        store.unit = store.units[0];
+        store.unit = store.units[Object.keys(store.units)[0]];
         store.unitsGetted = true;
         if (store.stuffGetted) handler();
       } else {
@@ -805,3 +799,4 @@ export {
   collectStuffTransaction,
   teleportTransaction,
 };
+globalThis.store = store;

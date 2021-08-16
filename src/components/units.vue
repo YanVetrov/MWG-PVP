@@ -117,7 +117,7 @@
           </div>
         </div>
 
-        <div v-if="tanks && tanks.length === 0" key="no_data" class="no_data">
+        <div v-if="tanks && Object.keys(tanks).length === 0" key="no_data" class="no_data">
           No units found. You can buy units on
           <a
             target="_blank"
@@ -262,7 +262,7 @@ export default {
       else return this.garages;
     },
     selectedUnits() {
-      return this.tanks.filter(el => el.selected);
+      return Object.values(this.tanks).filter(el => el.selected);
     },
   },
 

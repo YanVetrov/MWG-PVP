@@ -129,7 +129,7 @@ function onLoadedSocket() {
   console.log("map rendered");
 }
 async function onUnitMove({ id, x, y }) {
-  let tank = store.unitsFromKeys[id];
+  let tank = store.units[id];
   tank.posX = x;
   tank.posY = y;
   let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
@@ -167,7 +167,7 @@ async function onUnitMove({ id, x, y }) {
 }
 async function onUnitCollect({ id, x, y }) {
   console.log("ok");
-  let tank = store.unitsFromKeys[id];
+  let tank = store.units[id];
   if (!tank) return 0;
   console.log("tank");
   let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
@@ -204,7 +204,7 @@ function checkDestroy(unit) {
   }
 }
 async function onUnitDrop({ id }) {
-  let tank = store.unitsFromKeys[id];
+  let tank = store.units[id];
   if (!tank) return 0;
   tank.unit.stuff.forEach((el, i) => {
     if (el.amount <= 0) return 0;

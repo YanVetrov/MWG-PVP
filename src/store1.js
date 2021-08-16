@@ -36,11 +36,11 @@ let state = {
   x: 0,
   y: 0,
   user: {},
-  units: [],
+  units: new Map(),
   unusedUnits: [],
   objectsOnMap,
   getGaragesUnits({ x, y }) {
-    return this.selfUnits.filter(el => el.posX === x && el.posY === y);
+    return Object.values(this.units).filter(el => el.self && el.posX === x && el.posY === y);
   },
 };
 Object.defineProperty(state, "unit", {
@@ -71,12 +71,12 @@ Object.defineProperty(state, "unit", {
 });
 Object.defineProperty(state, "unusedUnits", {
   get() {
-    return this.units.filter(el => el.posX === 1 && el.posY === 1);
+    return Object.values(this.units).filter(el => el.posX === 1 && el.posY === 1);
   },
 });
 Object.defineProperty(state, "selfUnits", {
   get() {
-    return this.units.filter(el => el.self);
+    return Object.values(this.units).filter(el => el.self);
   },
 });
 Object.defineProperty(state, "garages", {
@@ -86,7 +86,7 @@ Object.defineProperty(state, "garages", {
 });
 Object.defineProperty(state, "unitsInVisibleZone", {
   get() {
-    return this.units.filter(
+    return Object.values(this.units).filter(
       el =>
         this.visibleZone.some(
           ground => ground.posX === el.posX && ground.posY === el.posY
@@ -98,14 +98,6 @@ Object.defineProperty(state, "unitsInVisibleZone", {
     );
   },
 });
-Object.defineProperty(state, "unitsFromKeys", {
-  get() {
-    return this.units.reduce((acc, el) => {
-      acc[el.unit.asset_id] = el;
-      return acc;
-    });
-  },
-});
 function createObjectOnMap(el) {
   let sprite = Sprite.from(`./assets/${el.image}.png`);
   sprite.zIndex = 1;
@@ -115,7 +107,8 @@ function createObjectOnMap(el) {
   return sprite;
 }
 function createUnits(arr) {
-  return arr.map((el, i) => {
+  let units = {};
+  for (let el of arr) {
     let directions = ["u", "d", "r", "l", "ur", "ul", "dl", "dr"];
     let random = Math.ceil(Math.random() * (directions.length - 1));
     let sprite = Sprite.from(
@@ -351,8 +344,9 @@ function createUnits(arr) {
       });
     }
     container.health = el.hp;
-    return container;
-  });
+    units[el.asset_id] = container;
+  };
+  return units;
 }
 const actions = {
   async getIngameTanks(
@@ -513,7 +507,7 @@ const actions = {
                 )
                 .forEach(el => {
                   let id = el.data.memo.split(":")[1];
-                  let tank = state.unitsFromKeys[id];
+                  let tank = state.units[id];
                   if (!tank) return;
                   tank.health = tank.unit.strength;
                 });

@@ -69,7 +69,7 @@
           </div>
         </div>
       </div>
-      <loader v-if="!load && tanks.length === 0" />
+      <loader v-if="!load && Object.keys(tanks).length === 0" />
     </div>
   </transition>
 </template>
@@ -95,7 +95,7 @@ export default {
   },
   computed: {
     tanksLenght() {
-      return this.tanks.length;
+      return Object.keys(this.tanks).length;
     }
   },
   methods: {
@@ -144,7 +144,7 @@ export default {
   },
   mounted() {
     setTimeout(
-      () => this.$emit("tap", this.tanks[0] ? this.tanks[0].id : 0),
+      () => this.$emit("tap", Object.keys(this.tanks).length ? Object.values(this.tanks)[0].id : 0),
       10
     );
     setTimeout(() => (this.show = true), 1000);
@@ -153,7 +153,7 @@ export default {
     tanksLenght() {
       if (this.tanksLenght > 0)
         setTimeout(
-          () => this.$emit("tap", this.tanks[0] ? this.tanks[0].id : 0),
+          () => this.$emit("tap", Object.keys(this.tanks).length ? Object.values(this.tanks)[0].id : 0),
           10
         );
     }
