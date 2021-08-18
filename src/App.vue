@@ -219,6 +219,7 @@ export default {
     checkUnitChange(unit) {
       let localTank = store.units[unit.asset_id];
       if (!localTank) return 0;
+      localTank.lazyInit && localTank.lazyInit();
       let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
@@ -475,6 +476,7 @@ export default {
     },
     async onUnitMove({ id, x, y }) {
       let tank = store.units[id];
+      tank.lazyInit && tank.lazyInit();
       console.log(
         `action(onUnitMove) - ${tank.name}(${tank.owner.text}) posX:${tank.posX} posY:${tank.posY} -> posX:${x} posY:${y}`
       );
@@ -979,6 +981,7 @@ export default {
         setInterval(() => {
           store.unitsInVisibleZone.forEach(el => {
             if (el.lockedTime === 0) return 0;
+            el.lazyInit && el.lazyInit();
             if (Date.now() > el.lockedTime) {
               el.lockedTime = 0;
               el.unit.alpha = 1;

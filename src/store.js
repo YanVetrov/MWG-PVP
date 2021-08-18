@@ -198,33 +198,10 @@ function createUnits(arr, handler) {
     let amount = el.stuff
       ? el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0)
       : 0;
-    container.stuffCountText = new Text(`${amount}/${el.capacity}`, {
-      fill: 0xefefef,
-      fontFamily: "metalwar",
-      fontSize: 10,
-      stroke: "#454545",
-      strokeThickness: 2,
-    });
-    container.stuffCountText.x = 30;
-    container.stuffCountText.y = -3;
     container.getShards = () => ({
       type: el.shardCode,
       amount: el.shardCount,
       weight: 1,
-    });
-    container.hpText = new Text(`${el.hp}/${el.strength}`, {
-      fill: 0xefefef,
-      fontFamily: "metalwar",
-      fontSize: 10,
-      stroke: "#454545",
-      strokeThickness: 2,
-    });
-    container.owner = new Text(`${el.owner || "Enemy"}`, {
-      fill: el.self ? 0x00ffaa : 0xff3377,
-      fontFamily: "metalwar",
-      fontSize: 15,
-      stroke: "#efefef",
-      strokeThickness: 2,
     });
     if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
@@ -270,72 +247,10 @@ function createUnits(arr, handler) {
         Date.now() + Math.floor(store.defualtCellCost / this.unit.speed) * 1000
       );
     };
-    container.hpText.x = 30;
-    container.hpText.y = -3;
-    let healthBar = new Container();
-    healthBar.x = 50;
-    healthBar.y = 20;
-    container.addChild(healthBar);
-    healthBar.zIndex = 3;
-    let innerBar = new Graphics();
-    innerBar.beginFill(0x333);
-    innerBar.drawRoundedRect(0, 0, 100, 8, 30);
-    innerBar.endFill();
-    healthBar.addChild(innerBar);
-
-    let outerBar = new Graphics();
-    let percent = (el.hp / el.strength) * 100;
-    outerBar.beginFill(percent < 30 ? 0xaa0011 : 0x00ff00);
-    outerBar.drawRoundedRect(0, 0, (el.hp / el.strength) * 100, 8, 30);
-    outerBar.endFill();
-    healthBar.addChild(outerBar);
-
-    healthBar.outer = outerBar;
-    let capacityBar = new Container();
-    capacityBar.x = 50;
-    capacityBar.y = 30;
-    container.addChild(capacityBar);
-    capacityBar.zIndex = 3;
-    let innerBar1 = new Graphics();
-    innerBar1.beginFill(0x333);
-    innerBar1.drawRoundedRect(0, 0, 100, 8, 30);
-    innerBar1.endFill();
-    capacityBar.addChild(innerBar1);
-
-    let outerBar1 = new Graphics();
-    outerBar1.beginFill(0xede247);
-    outerBar1.drawRoundedRect(
-      0,
-      0,
-      el.stuff
-        ? (el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0) /
-            el.capacity) *
-            100
-        : 0,
-      8,
-      30
-    );
-    outerBar1.endFill();
-    capacityBar.addChild(outerBar1);
-
-    healthBar.outer = outerBar;
-    container.owner.x = 50;
     container.self = el.self;
     container.unit = sprite;
     container.unit.y = 20;
     container.agr = { value: false, timeout: "" };
-    container.spinner.scale.set(0.2);
-    container.spinner.y = -20;
-    container.spinner.x = 80;
-    container.spinner.zIndex = 9;
-    container.spinner.alpha = 0.5;
-    // container.addChild(container.timerText);
-    healthBar.addChild(container.hpText);
-    container.addChild(container.owner);
-    capacityBar.addChild(container.stuffCountText);
-    container.addChild(sprite);
-    container.healthBar = outerBar;
-    container.capacityBar = outerBar1;
     if (el.self) container.on("pointerup", handler);
     // Object.defineProperty(container, "timer", {
     //   get() {
@@ -346,6 +261,7 @@ function createUnits(arr, handler) {
     //     this.timerText.text = val;
     //   },
     // });
+
     Object.defineProperty(container, "stuffCount", {
       get() {
         return this.unit.stuff
@@ -353,15 +269,20 @@ function createUnits(arr, handler) {
           : 0;
       },
       set(val) {
-        this.stuffCountText.text = `${val}/${this.unit.capacity}`;
-        this.capacityBar.width = this.unit.stuff
-          ? (this.unit.stuff.reduce(
-              (acc, el) => acc + el.amount * el.weight,
-              0
-            ) /
-              this.unit.capacity) *
-            100
-          : 0;
+        this.stuffCountUpdate = () => {
+          this.stuffCountText.text = `${val}/${this.unit.capacity}`;
+          this.capacityBar.width = this.unit.stuff
+            ? (this.unit.stuff.reduce(
+                (acc, el) => acc + el.amount * el.weight,
+                0
+              ) /
+                this.unit.capacity) *
+              100
+            : 0;
+        };
+        if (this.stuffCountText) {
+          this.stuffCountUpdate();
+        }
       },
     });
     Object.defineProperty(container, "lockedTime", {
@@ -404,21 +325,26 @@ function createUnits(arr, handler) {
         return this.unit.hp;
       },
       async set(val) {
-        let color = 0x00ff00;
-        let percent = (val / this.unit.strength) * 100;
-        if (percent < 30) color = 0xff9999;
-        if (this.unit.hp === 0 && val > 0) {
-          this.unit.texture = this.unit[this.unit.direction];
+        this.healthUpdate = async () => {
+          let color = 0x00ff00;
+          let percent = (val / this.unit.strength) * 100;
+          if (percent < 30) color = 0xff9999;
+          if (this.unit.hp === 0 && val > 0) {
+            this.unit.texture = this.unit[this.unit.direction];
+          }
+          this.healthBar.width = (val / this.unit.strength) * 100;
+          this.healthBar.tint = color;
+          this.unit.hp = val;
+          this.hpText.text = `${val}/${this.unit.strength}`;
+          if (val === 0) {
+            this.unit.texture = this.unit.broken[this.unit.direction];
+          }
+          await gsap.to(this.hpText.scale, { x: 1.1, y: 1.1, duration: 0.1 });
+          await gsap.to(this.hpText.scale, { x: 1, y: 1, duration: 0.1 });
+        };
+        if (this.hpText) {
+          this.healthUpdate();
         }
-        this.healthBar.width = (val / this.unit.strength) * 100;
-        this.healthBar.tint = color;
-        this.unit.hp = val;
-        this.hpText.text = `${val}/${this.unit.strength}`;
-        if (val === 0) {
-          this.unit.texture = this.unit.broken[this.unit.direction];
-        }
-        await gsap.to(this.hpText.scale, { x: 1.1, y: 1.1, duration: 0.1 });
-        await gsap.to(this.hpText.scale, { x: 1, y: 1, duration: 0.1 });
       },
     });
     Object.defineProperty(container, "agressive", {
@@ -453,6 +379,100 @@ function createUnits(arr, handler) {
       });
     }
     container.health = el.hp;
+    container.lazyInit = () => {
+      container.stuffCountText = new Text(`${amount}/${el.capacity}`, {
+        fill: 0xefefef,
+        fontFamily: "metalwar",
+        fontSize: 10,
+        stroke: "#454545",
+        strokeThickness: 2,
+      });
+      container.stuffCountText.x = 30;
+      container.stuffCountText.y = -3;
+
+      container.hpText = new Text(`${el.hp}/${el.strength}`, {
+        fill: 0xefefef,
+        fontFamily: "metalwar",
+        fontSize: 10,
+        stroke: "#454545",
+        strokeThickness: 2,
+      });
+      container.owner = new Text(`${el.owner || "Enemy"}`, {
+        fill: el.self ? 0x00ffaa : 0xff3377,
+        fontFamily: "metalwar",
+        fontSize: 15,
+        stroke: "#efefef",
+        strokeThickness: 2,
+      });
+      container.owner.x = 50;
+
+      container.hpText.x = 30;
+      container.hpText.y = -3;
+      let healthBar = new Container();
+      healthBar.x = 50;
+      healthBar.y = 20;
+      container.addChild(healthBar);
+      healthBar.zIndex = 3;
+      let innerBar = new Graphics();
+      innerBar.beginFill(0x333);
+      innerBar.drawRoundedRect(0, 0, 100, 8, 30);
+      innerBar.endFill();
+      healthBar.addChild(innerBar);
+
+      let outerBar = new Graphics();
+      let percent = (el.hp / el.strength) * 100;
+      outerBar.beginFill(percent < 30 ? 0xaa0011 : 0x00ff00);
+      outerBar.drawRoundedRect(0, 0, (el.hp / el.strength) * 100, 8, 30);
+      outerBar.endFill();
+      healthBar.addChild(outerBar);
+
+      healthBar.outer = outerBar;
+      let capacityBar = new Container();
+      capacityBar.x = 50;
+      capacityBar.y = 30;
+      container.addChild(capacityBar);
+      capacityBar.zIndex = 3;
+      let innerBar1 = new Graphics();
+      innerBar1.beginFill(0x333);
+      innerBar1.drawRoundedRect(0, 0, 100, 8, 30);
+      innerBar1.endFill();
+      capacityBar.addChild(innerBar1);
+
+      let outerBar1 = new Graphics();
+      outerBar1.beginFill(0xede247);
+      outerBar1.drawRoundedRect(
+        0,
+        0,
+        el.stuff
+          ? (el.stuff.reduce((acc, el) => acc + el.amount * el.weight, 0) /
+              el.capacity) *
+              100
+          : 0,
+        8,
+        30
+      );
+      outerBar1.endFill();
+      capacityBar.addChild(outerBar1);
+
+      healthBar.outer = outerBar;
+      container.spinner.scale.set(0.2);
+      container.spinner.y = -20;
+      container.spinner.x = 80;
+      container.spinner.zIndex = 9;
+      container.spinner.alpha = 0.5;
+      // container.addChild(container.timerText);
+      healthBar.addChild(container.hpText);
+      container.addChild(container.owner);
+      capacityBar.addChild(container.stuffCountText);
+      container.addChild(sprite);
+      container.healthBar = outerBar;
+      container.capacityBar = outerBar1;
+
+      container.healthUpdate && container.healthUpdate();
+      container.stuffCountUpdate && container.stuffCountUpdate();
+
+      delete container.lazyInit;
+    };
     units[el.asset_id] = container;
   };
   return units;

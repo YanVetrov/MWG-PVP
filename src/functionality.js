@@ -402,6 +402,7 @@ function setUnit(unit, ground, unclickable = false, type) {
     return 0;
   }
   if (type === "unit") {
+    if (ground.type !== "garage") unit.lazyInit && unit.lazyInit();
     unit.posX = ground.posX;
     unit.posY = ground.posY;
     unit.ground = ground;

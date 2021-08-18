@@ -130,6 +130,7 @@ function onLoadedSocket() {
 }
 async function onUnitMove({ id, x, y }) {
   let tank = store.units[id];
+  tank.lazyInit && tank.lazyInit();
   tank.posX = x;
   tank.posY = y;
   let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
@@ -571,6 +572,7 @@ function checkUnits() {
   setInterval(() => {
     store.unitsInVisibleZone.forEach(el => {
       if (el.lockedTime === 0) return 0;
+      el.lazyInit && el.lazyInit();
       if (Date.now() > el.lockedTime) {
         el.lockedTime = 0;
         el.unit.alpha = 1;
