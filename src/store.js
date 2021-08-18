@@ -755,6 +755,7 @@ async function mineTransaction({ id, x, y }) {
 }
 async function repair({ count, id }) {
   if (!id) return true;
+  console.log(store.user);
   let account = await store.user.getAccountName();
   let response = await transaction({
     user: store.user,

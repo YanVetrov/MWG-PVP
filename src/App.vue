@@ -2,6 +2,15 @@
   <div class="main_view">
     <div id="login" v-show="!store.user || !ready">
       <img src="./assets/tumbler.png" />
+      <div v-if="!showPrivate" style="display:flex;justify-content:center">
+        <button @click="showPrivateField">
+          Enter with private key
+        </button>
+      </div>
+      <div v-else>
+        <input placeholder="private key" v-model="store.privateKey" />
+        <button @click="initLogin(store.privateKey)">enter</button>
+      </div>
       <div v-show="!store.user" class="fake_login">
         sign in
       </div>
@@ -176,11 +185,13 @@ export default {
   data() {
     return {
       tabs,
+      showPrivate: false,
       tab: tabs[0],
       store: {
         garageX: 0,
         garageY: 0,
         user: false,
+        privateKey: "",
       },
       show: false,
       errors: [],
@@ -191,6 +202,12 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    showPrivateField() {
+      alert(
+        "Metal war game does not store or transfer private keys and destroys them on the client after authentication for security purposes. Once logged in, you do not need to confirm and sign transactions. However, this login option is not recommended for the following users: \n1. to all users."
+      );
+      this.showPrivate = true;
     },
     async teleport({ units, garage }) {
       let ids = units.map(el => el.asset_id).join(":");
@@ -525,6 +542,45 @@ export default {
         }, 1000);
       }
     },
+    async onUnitAttack({ id, target_id, timeout }) {
+      let tank = store.unitsFromKeys[id];
+      let targetTank = store.unitsFromKeys[target_id];
+      if (!tank || !targetTank) {
+        return 0;
+      } else {
+        console.log(
+          `action(onUnitAction) - ${tank.name}(${tank.owner.text}) -> ${targetTank.name}(${targetTank.owner.text})`
+        );
+        tank.lockedTime = timeout;
+        if (targetTank.self) tank.agressive = true;
+
+        if (tank.poised) {
+          tank.health -= 10;
+          tank.poised--;
+          this.checkDestroy(tank);
+        }
+        if (tank.visible && targetTank.visible) {
+          let ground = targetTank.ground;
+          await this.unitAction(tank, ground);
+          this.checkDestroy(tank);
+        }
+      }
+    },
+    async onUnitMine({ id, timeout, amount }) {
+      let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
+      if (!tank) return 0;
+      else {
+        let freeSpace = tank.unit.capacity - tank.stuffCount;
+        if (amount > freeSpace) amount = freeSpace;
+        tank.unit.stuff.push({ amount, weight: 1 });
+        tank.miningAnimation();
+        await shuffleUnit(tank);
+        await shuffleUnit(tank);
+        tank.stuffCount = tank.stuffCount;
+        await tank.alphaCounter(`+${amount}`, 0xffee00);
+        tank.lockedTime = timeout;
+      }
+    },
     addSprite(target, i) {
       let index = i;
       let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
@@ -713,6 +769,215 @@ export default {
       if (ground.type === "geyser") {
       }
     },
+    onLoadedSocket() {
+      this.setObjectsOnMap(store.objectsOnMap);
+      this.store.garages = store.objectsOnMap
+        .filter(el => el.type === "garage")
+        .map(el => {
+          let { posX, posY, amount } = el;
+          let count = store.getGaragesUnits({ x: posX, y: posY }).length;
+          return { posX, posY, count, amount };
+        });
+      this.store.garages.sort((a, b) => {
+        if (a.posX + a.posY > b.posX + b.posY) return 1;
+        if (a.posX + a.posY < b.posX + b.posY) return -1;
+        else return 0;
+      });
+      this.loadings.push("objects setted");
+      this.setUnits(store.unitsInVisibleZone);
+      this.loadings.push("units setted");
+      this.renderMap();
+      this.loadings.push("map rendered");
+      this.loadings.push("ready.");
+      setTimeout(() => (this.ready = true), 2000);
+    },
+
+    async onUnitCollect({ id, x, y }) {
+      let tank = store.unitsFromKeys[id];
+      if (!tank) return 0;
+      let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
+      let index = store.objectsOnMap.findIndex(
+        el => el.posX === x && el.posY === y
+      );
+      if (!stuff) return 0;
+      let { amount, weight } = stuff;
+      let freeSpace = tank.unit.capacity - tank.stuffCount;
+      if (amount > freeSpace) {
+        amount = freeSpace;
+        tank.unit.stuff.push({ amount, weight });
+        tank.stuffCount = tank.stuffCount;
+        stuff.amount -= amount;
+        return tank.alphaCounter(`+${amount}`);
+      }
+      gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
+      await gsap.to(stuff, {
+        x: tank.x + 50,
+        y: tank.y + 50,
+        alpha: 0,
+        duration: 1.5,
+      });
+      tank.unit.stuff.push({ amount, weight });
+      tank.stuffCount = tank.stuffCount;
+      store.gameScene.removeChild(stuff);
+      store.objectsOnMap.splice(index, 1);
+    },
+    checkUnits() {
+      setInterval(() => {
+        store.unitsInVisibleZone.forEach(el => {
+          if (el.lockedTime === 0) return 0;
+          if (Date.now() > el.lockedTime) {
+            el.lockedTime = 0;
+            el.unit.alpha = 1;
+            el.stopTimer();
+          } else {
+            el.unit.alpha = 0.7;
+            // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
+            el.setTimer(Math.ceil(el.lockedTime));
+          }
+        });
+      }, 1000);
+    },
+
+    setObjectsOnMap(objects) {
+      objects.forEach((el, i) => {
+        this.setObjectOnMap(el);
+      });
+    },
+
+    setUnits(units) {
+      units.forEach((el, i) => {
+        if (isNaN(el.posX) || isNaN(el.posY)) return 0;
+        store.gameScene.addChild(el);
+        setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
+      });
+    },
+    initLogin(privateKey) {
+      initUal(async e => {
+        if (e[0].wax) e[0].rpc = e[0].wax.rpc;
+        store.user = e[0];
+        let link = localStorage.getItem("endpoint");
+        if (link) this.changeEndpoint(link);
+        this.store.user = store.user;
+        await getIngameTanks(
+          this.onLoadedSocket,
+          this.onUnitMove,
+          this.onUnitAttack,
+          this.onUnitMine,
+          this.onUnitCollect,
+          this.onUnitDrop,
+          this.onUnitRepair,
+          this.checkUnitChange,
+          e =>
+            e.data.button === 2
+              ? dropStuffTransaction({ id: e.target.unit.asset_id })
+              : (store.unit = {}),
+          this.onTeleport
+        );
+      }, privateKey);
+    },
+    async unitAction(unit, target) {
+      unit.unit.direction = getDirection(unit.ground, target);
+      let action = unit.unit.action;
+      let crash = new AnimatedSprite(
+        action.crash.map(el => Texture.from(`./assets/${el}`))
+      );
+      let fires = (() => {
+        let arr = [];
+        let fire;
+        for (let i = 0; i < action.repeat; i++) {
+          fire = new AnimatedSprite(
+            action.textures.map(el => Texture.from(`./assets/${el}`))
+          );
+          fire.animationSpeed = action.speed;
+          fire.scale.x = action.scale;
+          fire.scale.y = action.scale;
+          fire.x = action[getDirection(unit.ground, target)].x;
+          fire.y = action[getDirection(unit.ground, target)].y;
+          fire.angle = action[getDirection(unit.ground, target)].angle;
+          fire.zIndex = 1;
+          fire.play();
+          arr.push(fire);
+        }
+        return arr;
+      })();
+      unit.zIndex = 10;
+      fires.forEach(fire => unit.addChild(fire));
+      let { x, y } = target;
+      x -= unit.x + action.diffX;
+      y -= unit.y + action.diffY;
+      // unit.lockedTime = Date.now() + 5000;
+      // unit.unit.alpha = 0.5;
+      Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
+      if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
+      if (action.throw) {
+        let actions = [];
+        for (let i = 0; i < fires.length; i++) {
+          actions.push(async () => {
+            await shuffleUnit(unit);
+            await gsap.to(fires[i], {
+              x,
+              y,
+              duration: 0.5,
+              delay: i / 3,
+              ease: "Expo.easeIn",
+            });
+          });
+        }
+        await Promise.all(actions.map(el => el()));
+      } else {
+        await gsap.to(fires[0], {
+          alpha: 1,
+          duration: 0.5,
+          ease: "Expo.easeIn",
+        });
+      }
+      try {
+        Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
+      } catch (e) {}
+      window.sound("crash");
+      unit.zIndex = 1;
+      fires.forEach(fire => unit.removeChild(fire));
+      target.unit.addChild(crash);
+      crash.animationSpeed = 0.2;
+      crash.x = 35;
+      crash.y = 30;
+      let damage = unit.unit.attack * 3;
+      if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
+      if (damage < 0) damage = 0;
+      target.unit.health -= damage;
+      target.unit.alphaCounter(`-${damage}`, 0xff1111);
+      if (target.unit.health <= 0) {
+        target.unit.health = 0;
+        crash.scale.x = 1.5;
+        crash.scale.y = 1.5;
+        target.unit.unit.alpha = 0.5;
+        crash.x = -20;
+        crash.y = -90;
+        crash.play();
+        this.checkDestroy(target.unit);
+        setTimeout(async () => {
+          target.unit.unit.texture =
+            target.unit.unit.broken[target.unit.unit.direction];
+          gsap.to(target.unit.unit, { alpha: 1, duration: 2 });
+          gsap.to(crash.scale, { x: 1.2, y: 1.2, duration: 2 });
+          gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
+          await gsap.to(crash, { alpha: 0, duration: 2 });
+          target.unit.removeChild(crash);
+        }, 2000);
+        return 0;
+      }
+      crash.zIndex = 3;
+      crash.scale.x = 0.5;
+      crash.scale.y = 0.5;
+      crash.play();
+      setTimeout(async () => {
+        gsap.to(target.unit, { alpha: 1, duration: 1 });
+        gsap.to(crash.scale, { x: 0.1, y: 0.1, duration: 2 });
+        gsap.to(crash, { x: crash.x + 15, y: crash.y + 20, duration: 2 });
+        await gsap.to(crash, { alpha: 0, duration: 2 });
+        target.unit.removeChild(crash);
+      }, 2000);
+    },
     initPixi() {
       const vm = this;
       sound.add("crash", "./assets/sound/crash.mp3");
@@ -758,30 +1023,9 @@ export default {
           store.id,
           store.allMapCount
         );
-        checkUnits();
+        vm.checkUnits();
         vm.renderMap();
-        initUal(async e => {
-          if (e[0].wax) e[0].rpc = e[0].wax.rpc;
-          store.user = e[0];
-          let link = localStorage.getItem("endpoint");
-          if (link) vm.changeEndpoint(link);
-          vm.store.user = store.user;
-          await getIngameTanks(
-            onLoadedSocket,
-            vm.onUnitMove,
-            onUnitAttack,
-            onUnitMine,
-            onUnitCollect,
-            vm.onUnitDrop,
-            vm.onUnitRepair,
-            vm.checkUnitChange,
-            e =>
-              e.data.button === 2
-                ? dropStuffTransaction({ id: e.target.unit.asset_id })
-                : (store.unit = {}),
-            vm.onTeleport
-          );
-        });
+        vm.initLogin();
         enableInteractiveMap(store.gameScene, vm.renderMap);
         document.addEventListener(
           "contextmenu",
@@ -804,100 +1048,6 @@ export default {
         // document
         //   .getElementById("garage_button")
         //   .addEventListener("click", () => showGarage(false));
-      }
-      function onLoadedSocket() {
-        setObjectsOnMap(store.objectsOnMap);
-        vm.store.garages = store.objectsOnMap
-          .filter(el => el.type === "garage")
-          .map(el => {
-            let { posX, posY, amount } = el;
-            let count = store.getGaragesUnits({ x: posX, y: posY }).length;
-            return { posX, posY, count, amount };
-          });
-        vm.store.garages.sort((a, b) => {
-          if (a.posX + a.posY > b.posX + b.posY) return 1;
-          if (a.posX + a.posY < b.posX + b.posY) return -1;
-          else return 0;
-        });
-        vm.loadings.push("objects setted");
-        setUnits(store.unitsInVisibleZone);
-        vm.loadings.push("units setted");
-        vm.renderMap();
-        vm.loadings.push("map rendered");
-        vm.loadings.push("ready.");
-        setTimeout(() => (vm.ready = true), 2000);
-      }
-
-      async function onUnitCollect({ id, x, y }) {
-        let tank = store.unitsFromKeys[id];
-        if (!tank) return 0;
-        let stuff = store.objectsOnMap.find(
-          el => el.posX === x && el.posY === y
-        );
-        let index = store.objectsOnMap.findIndex(
-          el => el.posX === x && el.posY === y
-        );
-        if (!stuff) return 0;
-        let { amount, weight } = stuff;
-        let freeSpace = tank.unit.capacity - tank.stuffCount;
-        if (amount > freeSpace) {
-          amount = freeSpace;
-          tank.unit.stuff.push({ amount, weight });
-          tank.stuffCount = tank.stuffCount;
-          stuff.amount -= amount;
-          return tank.alphaCounter(`+${amount}`);
-        }
-        gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
-        await gsap.to(stuff, {
-          x: tank.x + 50,
-          y: tank.y + 50,
-          alpha: 0,
-          duration: 1.5,
-        });
-        tank.unit.stuff.push({ amount, weight });
-        tank.stuffCount = tank.stuffCount;
-        store.gameScene.removeChild(stuff);
-        store.objectsOnMap.splice(index, 1);
-      }
-
-      async function onUnitAttack({ id, target_id, timeout }) {
-        let tank = store.unitsFromKeys[id];
-        let targetTank = store.unitsFromKeys[target_id];
-        if (!tank || !targetTank) {
-          return 0;
-        } else {
-          console.log(
-            `action(onUnitAction) - ${tank.name}(${tank.owner.text}) -> ${targetTank.name}(${targetTank.owner.text})`
-          );
-          tank.lockedTime = timeout;
-          if (targetTank.self) tank.agressive = true;
-
-          if (tank.poised) {
-            tank.health -= 10;
-            tank.poised--;
-            vm.checkDestroy(tank);
-          }
-          if (tank.visible && targetTank.visible) {
-            let ground = targetTank.ground;
-            await unitAction(tank, ground);
-            vm.checkDestroy(tank);
-          }
-        }
-      }
-      async function onUnitMine({ id, timeout, amount }) {
-        let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
-        if (!tank) return 0;
-        else {
-          let freeSpace = tank.unit.capacity - tank.stuffCount;
-          if (amount > freeSpace) amount = freeSpace;
-          tank.unit.stuff.push({ amount, weight: 1 });
-          tank.miningAnimation();
-          await shuffleUnit(tank);
-          await shuffleUnit(tank);
-          tank.stuffCount = tank.stuffCount;
-          await tank.alphaCounter(`+${amount}`, 0xffee00);
-          tank.lockedTime = timeout;
-        }
       }
 
       function initMiniMap() {
@@ -979,138 +1129,7 @@ export default {
         }
         store.miniMap.addChild(store.cashMinimap);
       }
-      function checkUnits() {
-        setInterval(() => {
-          store.unitsInVisibleZone.forEach(el => {
-            if (el.lockedTime === 0) return 0;
-            if (Date.now() > el.lockedTime) {
-              el.lockedTime = 0;
-              el.unit.alpha = 1;
-              el.stopTimer();
-            } else {
-              el.unit.alpha = 0.7;
-              // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
-              el.setTimer(Math.ceil(el.lockedTime));
-            }
-          });
-        }, 1000);
-      }
-      async function unitAction(unit, target) {
-        unit.unit.direction = getDirection(unit.ground, target);
-        let action = unit.unit.action;
-        let crash = new AnimatedSprite(
-          action.crash.map(el => Texture.from(`./assets/${el}`))
-        );
-        let fires = (() => {
-          let arr = [];
-          let fire;
-          for (let i = 0; i < action.repeat; i++) {
-            fire = new AnimatedSprite(
-              action.textures.map(el => Texture.from(`./assets/${el}`))
-            );
-            fire.animationSpeed = action.speed;
-            fire.scale.x = action.scale;
-            fire.scale.y = action.scale;
-            fire.x = action[getDirection(unit.ground, target)].x;
-            fire.y = action[getDirection(unit.ground, target)].y;
-            fire.angle = action[getDirection(unit.ground, target)].angle;
-            fire.zIndex = 1;
-            fire.play();
-            arr.push(fire);
-          }
-          return arr;
-        })();
-        unit.zIndex = 10;
-        fires.forEach(fire => unit.addChild(fire));
-        let { x, y } = target;
-        x -= unit.x + action.diffX;
-        y -= unit.y + action.diffY;
-        // unit.lockedTime = Date.now() + 5000;
-        // unit.unit.alpha = 0.5;
-        Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
-        if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
-        if (action.throw) {
-          let actions = [];
-          for (let i = 0; i < fires.length; i++) {
-            actions.push(async () => {
-              await shuffleUnit(unit);
-              await gsap.to(fires[i], {
-                x,
-                y,
-                duration: 0.5,
-                delay: i / 3,
-                ease: "Expo.easeIn",
-              });
-            });
-          }
-          await Promise.all(actions.map(el => el()));
-        } else {
-          await gsap.to(fires[0], {
-            alpha: 1,
-            duration: 0.5,
-            ease: "Expo.easeIn",
-          });
-        }
-        try {
-          Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
-        } catch (e) {}
-        window.sound("crash");
-        unit.zIndex = 1;
-        fires.forEach(fire => unit.removeChild(fire));
-        target.unit.addChild(crash);
-        crash.animationSpeed = 0.2;
-        crash.x = 35;
-        crash.y = 30;
-        let damage = unit.unit.attack * 3;
-        if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
-        if (damage < 0) damage = 0;
-        target.unit.health -= damage;
-        target.unit.alphaCounter(`-${damage}`, 0xff1111);
-        if (target.unit.health <= 0) {
-          target.unit.health = 0;
-          crash.scale.x = 1.5;
-          crash.scale.y = 1.5;
-          target.unit.unit.alpha = 0.5;
-          crash.x = -20;
-          crash.y = -90;
-          crash.play();
-          vm.checkDestroy(target.unit);
-          setTimeout(async () => {
-            target.unit.unit.texture =
-              target.unit.unit.broken[target.unit.unit.direction];
-            gsap.to(target.unit.unit, { alpha: 1, duration: 2 });
-            gsap.to(crash.scale, { x: 1.2, y: 1.2, duration: 2 });
-            gsap.to(crash, { x: crash.x + 15, y: crash.y + 35, duration: 2 });
-            await gsap.to(crash, { alpha: 0, duration: 2 });
-            target.unit.removeChild(crash);
-          }, 2000);
-          return 0;
-        }
-        crash.zIndex = 3;
-        crash.scale.x = 0.5;
-        crash.scale.y = 0.5;
-        crash.play();
-        setTimeout(async () => {
-          gsap.to(target.unit, { alpha: 1, duration: 1 });
-          gsap.to(crash.scale, { x: 0.1, y: 0.1, duration: 2 });
-          gsap.to(crash, { x: crash.x + 15, y: crash.y + 20, duration: 2 });
-          await gsap.to(crash, { alpha: 0, duration: 2 });
-          target.unit.removeChild(crash);
-        }, 2000);
-      }
-      function setObjectsOnMap(objects) {
-        objects.forEach((el, i) => {
-          vm.setObjectOnMap(el);
-        });
-      }
 
-      function setUnits(units) {
-        units.forEach((el, i) => {
-          if (isNaN(el.posX) || isNaN(el.posY)) return 0;
-          store.gameScene.addChild(el);
-          setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
-        });
-      }
       window.addEventListener("resize", e => {
         app.renderer.resize(window.innerWidth, window.innerHeight);
       });

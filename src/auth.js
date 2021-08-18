@@ -1,6 +1,9 @@
 import { UALJs } from "ual-plainjs-renderer";
 import { Anchor } from "ual-anchor";
 import { Wax } from "ual-wax";
+import { Api, ApiInterfaces, JsonRpc, RpcError } from "eosjs";
+import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
+window.Buffer = window.Buffer || require("buffer").Buffer;
 const myAppName = "Metal war game PVP";
 const myChain = {
   chainId: "1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4",
@@ -12,10 +15,27 @@ const myChain = {
     },
   ],
 };
+
 const anchor = new Anchor([myChain], { appName: myAppName });
 const wax = new Wax([myChain], { appName: myAppName });
-
-async function initUal(handler) {
+async function initUal(handler, privateKey) {
+  if (privateKey) {
+    const rpc = new JsonRpc("https://wax.pink.gg");
+    const signatureProvider = new JsSignatureProvider([privateKey]);
+    const api = new Api({ rpc, signatureProvider });
+    localStorage.setItem("ual-session-authenticator", "private");
+    console.log(api);
+    let account = await api.rpc.get_accounts_by_authorizers(
+      [],
+      api.signatureProvider.availableKeys
+    );
+    account = account.accounts[0];
+    api.getAccountName = async () => account.account_name;
+    api.accountName = account.account_name;
+    api.requestPermission = account.permission_name;
+    localStorage.setItem("ual-session-authenticator", "private");
+    handler([api]);
+  }
   let auth = localStorage.getItem("ual-session-authenticator");
   let expire = localStorage.getItem("ual-session-expiration");
   wax.shouldInvalidateAfter = () => 53;
@@ -49,6 +69,7 @@ async function initUal(handler) {
 }
 async function transaction({ user, name, data, account = "metalwargame" }) {
   let owner = await user.getAccountName();
+  console.log(user);
   let response = {};
   let options = {
     actions: [
@@ -106,6 +127,18 @@ async function transaction({ user, name, data, account = "metalwargame" }) {
         errorText =
           "Something wrong. Сheck your browser for pop-up pages permission.(Required for work WAX cloud)";
       return errorText;
+    }
+  }
+  if (localStorage.getItem("ual-session-authenticator") === "private") {
+    try {
+      response = await user.transact(options, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+      return true;
+    } catch (e) {
+      console.log({ ...e });
+      return e;
     }
   }
 }
