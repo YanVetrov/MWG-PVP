@@ -811,7 +811,7 @@ async function report({ order_id }) {
   });
   return errorHandler(response);
 }
-async function claimRent({ order_id, amount }) {
+async function claimRent({ order_id, amount, receiver }) {
   let account = await store.user.getAccountName();
   if (!amount.match("WAX")) amount = amount + ".00000000 WAX";
   let response = await transaction([
@@ -829,7 +829,7 @@ async function claimRent({ order_id, amount }) {
       account: "eosio",
       data: {
         from: account,
-        receiver: account,
+        receiver,
         unstake_cpu_quantity: amount,
         unstake_net_quantity: "0.00000000 WAX",
       },
@@ -837,7 +837,7 @@ async function claimRent({ order_id, amount }) {
   ]);
   return errorHandler(response);
 }
-async function stakeRent({ order_id, amount }) {
+async function stakeRent({ order_id, amount, receiver }) {
   let account = await store.user.getAccountName();
   if (!amount.match("WAX")) amount = amount + ".00000000 WAX";
   let response = await transaction([
@@ -847,10 +847,10 @@ async function stakeRent({ order_id, amount }) {
       account: "eosio",
       data: {
         from: account,
-        receiver: account,
+        receiver,
         stake_cpu_quantity: amount,
         stake_net_quantity: "0.00000000 WAX",
-        transfer: 0,
+        transfer: false,
       },
     },
     {

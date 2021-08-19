@@ -46,7 +46,7 @@
             <div>
                     <button
                     v-if="item.start_time&&Math.floor((Date.now() / 1000 - item.start_time) * 100 / (item.days * 60 * 60 * 24))>=100"
-                     @click="$emit('claim',{order_id:item.id,amount:item.stake_money})">
+                     @click="$emit('claim',{order_id:item.id,amount:item.stake_money,receiver:item.owner})">
                      claim
                      </button>
             </div>
@@ -65,7 +65,7 @@
             </div>
             <div>
                     <button
-                     @click="$emit('stakeRent',{order_id:item.id,amount:item.stake_money})">
+                     @click="$emit('stakeRent',{order_id:item.id,amount:item.stake_money,receiver:item.owner})">
                      stake
                      </button>
             </div>
