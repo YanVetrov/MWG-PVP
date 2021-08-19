@@ -201,8 +201,9 @@ function centerVisibleZone(zone, renderMap) {
     renderMap();
   }
 }
-async function enableInteractiveMap(zone, renderMap) {
+async function enableInteractiveMap(zone, renderMap, vue) {
   window.addEventListener("mousewheel", e => {
+    if (vue.show) return 0;
     let { x, y } = zone.scale;
     let k = 1.02;
     if (e.deltaY > 0 && x > 0.1) {
@@ -220,12 +221,14 @@ async function enableInteractiveMap(zone, renderMap) {
     centerVisibleZone(zone, renderMap);
   });
   window.addEventListener("mousedown", e => {
+    if (vue.show) return 0;
     zone.dragging = true;
     zone.dragX = e.clientX;
     zone.dragY = e.clientY;
   });
   let tpCache = {};
   window.addEventListener("touchstart", e => {
+    if (vue.show) return 0;
     if (e.touches.length < 2) {
       e = e.touches[0];
       zone.dragging = true;
@@ -244,6 +247,7 @@ async function enableInteractiveMap(zone, renderMap) {
     }
   });
   window.addEventListener("mousemove", e => {
+    if (vue.show) return 0;
     if (zone.dragging) {
       let deltaX = zone.dragX - e.clientX;
       let deltaY = zone.dragY - e.clientY;
@@ -258,6 +262,7 @@ async function enableInteractiveMap(zone, renderMap) {
     }
   });
   window.addEventListener("touchmove", e => {
+    if (vue.show) return 0;
     let { x, y } = zone.scale;
     if (e.targetTouches.length < 2) {
       if (zone.blockedMultitouch) return 0;
@@ -304,6 +309,7 @@ async function enableInteractiveMap(zone, renderMap) {
     }
   });
   window.addEventListener("touchend", e => {
+    if (vue.show) return 0;
     zone.dragging = false;
     zone.dragX = null;
     zone.dragY = null;
@@ -314,6 +320,7 @@ async function enableInteractiveMap(zone, renderMap) {
     }, 100);
   });
   window.addEventListener("mouseup", e => {
+    if (vue.show) return 0;
     zone.dragging = false;
     zone.dragX = null;
     zone.dragY = null;

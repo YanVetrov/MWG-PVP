@@ -67,28 +67,31 @@ async function initUal(handler, privateKey) {
     ual.init();
   }
 }
-async function transaction({ user, name, data, account = "metalwargame" }) {
-  let owner = await user.getAccountName();
-  console.log(user);
+async function transaction(actions) {
+  if (!Array.isArray(actions)) actions = [actions];
   let response = {};
-  let options = {
-    actions: [
-      {
-        account,
-        name,
-        authorization: [
-          {
-            actor: owner,
-            permission: user.requestPermission,
-          },
-        ],
-        data: {
-          asset_owner: owner,
-          ...data,
+  let user = actions[0].user;
+  let owner = await user.getAccountName();
+  let options = { actions: [] };
+  actions.forEach(async action => {
+    let { name, data, account = "metalwargame" } = action;
+    let obj = {
+      account,
+      name,
+      authorization: [
+        {
+          actor: owner,
+          permission: user.requestPermission,
         },
+      ],
+      data: {
+        asset_owner: owner,
+        ...data,
       },
-    ],
-  };
+    };
+    options.actions.push(obj);
+  });
+  console.log(options.actions);
   if (localStorage.getItem("ual-session-authenticator") === "Anchor") {
     try {
       response = await user.signTransaction(options, {
@@ -130,6 +133,11 @@ async function transaction({ user, name, data, account = "metalwargame" }) {
     }
   }
   if (localStorage.getItem("ual-session-authenticator") === "private") {
+    let confirms = JSON.parse(localStorage.getItem("confirms"));
+    if (confirms && confirms[name]) {
+      let ok = confirm(name, data);
+      if (!ok) return "transaction not confirmed";
+    }
     try {
       response = await user.transact(options, {
         blocksBehind: 3,

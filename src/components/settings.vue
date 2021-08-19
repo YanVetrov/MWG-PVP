@@ -8,6 +8,8 @@
     </div>
     <div> <input type="checkbox" id="sound" @change="$emit('update:soundEnabled',$event.target.checked)" :checked="soundEnabled"></input> <label for="sound">Sound enabled</label> </div>
     <div> <input type="checkbox" id="music" @change="$emit('update:musicEnabled',$event.target.checked)" :checked="musicEnabled"></input> <label for="music">Music enabled</label> </div>
+    Request confirm transaction for(only private key sign in method):
+    <div> <label v-for="(val,key) in confirms" :key="key"> <input type="checkbox" :checked="val"/> {{key}}</label> </div>
     RPC ENDPOINT:
     <select @change="$emit('changeEndpoint',$event.target.value)" style="margin-top:20px">
       <option v-for="link in endpoints" :selected="user.rpc.endpoint===link" :key="link">{{link}}</option>
@@ -24,7 +26,7 @@
 import endpoints from '~/static/endpoints.js'
 
 export default {
-    props:['soundEnabled','musicEnabled','fullscreen','user','waxBalance','ping'],
+    props:['soundEnabled','musicEnabled','fullscreen','user','waxBalance','ping','confirms'],
     data(){
       return{
         endpoints

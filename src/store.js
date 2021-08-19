@@ -785,6 +785,100 @@ async function teleportTransaction({ count, memo }) {
   });
   return errorHandler(response);
 }
+async function rent({ amount, days, stake_amount }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "eosio.token",
+    data: {
+      from: account,
+      to: "metalwarrent",
+      memo: `${days} ${stake_amount}`,
+      quantity: `${amount}.00000000 WAX`,
+    },
+  });
+  return errorHandler(response);
+}
+async function report({ order_id }) {
+  let response = await transaction({
+    user: store.user,
+    name: "report",
+    account: "metalwarrent",
+    data: {
+      order_id,
+    },
+  });
+  return errorHandler(response);
+}
+async function claimRent({ order_id, amount }) {
+  let account = await store.user.getAccountName();
+  if (!amount.match("WAX")) amount = amount + ".00000000 WAX";
+  let response = await transaction([
+    {
+      user: store.user,
+      name: "claim",
+      account: "metalwarrent",
+      data: {
+        order_id,
+      },
+    },
+    {
+      user: store.user,
+      name: "undelegatebw",
+      account: "eosio",
+      data: {
+        from: account,
+        receiver: account,
+        unstake_cpu_quantity: amount,
+        unstake_net_quantity: "0.00000000 WAX",
+      },
+    },
+  ]);
+  return errorHandler(response);
+}
+async function stakeRent({ order_id, amount }) {
+  let account = await store.user.getAccountName();
+  if (!amount.match("WAX")) amount = amount + ".00000000 WAX";
+  let response = await transaction([
+    {
+      user: store.user,
+      name: "delegatebw",
+      account: "eosio",
+      data: {
+        from: account,
+        receiver: account,
+        stake_cpu_quantity: amount,
+        stake_net_quantity: "0.00000000 WAX",
+        transfer: 0,
+      },
+    },
+    {
+      user: store.user,
+      name: "stake",
+      account: "metalwarrent",
+      data: {
+        creditor: account,
+        order_id: order_id,
+      },
+    },
+  ]);
+  return errorHandler(response);
+}
+async function closeOrder({ order_id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction([
+    {
+      user: store.user,
+      name: "closeorder",
+      account: "metalwarrent",
+      data: {
+        order_id,
+      },
+    },
+  ]);
+  return errorHandler(response);
+}
 function errorHandler(response) {
   if (response === true) return true;
   else {
@@ -805,4 +899,9 @@ export {
   dropStuffTransaction,
   collectStuffTransaction,
   teleportTransaction,
+  rent,
+  report,
+  claimRent,
+  stakeRent,
+  closeOrder,
 };

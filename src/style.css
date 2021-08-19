@@ -4,6 +4,15 @@ body {
   overflow: hidden;
 }
 
+input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 3px solid rebeccapurple;
+  font-size: 15px;
+  margin: 12px 0;
+  padding: 5px;
+  color: wheat;
+}
+
 * {
   font-family: 'metalwar';
   scrollbar-width: none;

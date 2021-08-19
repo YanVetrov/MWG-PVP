@@ -48,6 +48,7 @@
           :garages="store.garages"
           :garageX="store.garageX"
           :garageY="store.garageY"
+          :confirms="confirms"
           :soundEnabled="true"
           :musicEnabled="true"
           :fullscreen="true"
@@ -63,6 +64,10 @@
           :PDT="0"
           :MDT="0"
           @repair="repair"
+          @order="orderRent"
+          @claimRent="claimRent"
+          @stakeRent="stakeRent"
+          @report="report"
           @deploy="deploy"
           @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
@@ -88,6 +93,7 @@ import units from "./components/units.vue";
 import unique from "./components/unique.vue";
 import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
+import orders from "./components/orders.vue";
 import notify from "./components/notify.vue";
 // import game from "./components/game.vue";
 let tabs = [
@@ -95,6 +101,7 @@ let tabs = [
   { name: "Shards", component: shards },
   { name: "Unique units", component: unique },
   { name: "Packs", component: packs },
+  { name: "Orders", component: orders },
   { name: "Settings", component: settings },
   // { name: "Game", component: game },
 ];
@@ -142,6 +149,11 @@ import {
   dropStuffTransaction,
   collectStuffTransaction,
   teleportTransaction,
+  rent,
+  claimRent,
+  report,
+  stakeRent,
+  closeOrder,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -187,6 +199,14 @@ export default {
       tabs,
       showPrivate: false,
       tab: tabs[0],
+      confirms: {
+        unitmove: false,
+        unitattack: false,
+        teleport: false,
+        repair: false,
+        collectstuff: false,
+        dropstuff: false,
+      },
       store: {
         garageX: 0,
         garageY: 0,
@@ -202,6 +222,24 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    orderRent(data) {
+      rent(data);
+    },
+    closeOrder(data) {
+      closeOrder(data);
+    },
+    claimRent(data) {
+      claimRent(data);
+    },
+    stakeRent(data) {
+      stakeRent(data);
+    },
+    report(data) {
+      report(data);
+    },
+    setConfirms() {
+      localStorage.setItem("confirm", JSON.stringify(this.confirms));
     },
     showPrivateField() {
       alert(
@@ -1026,7 +1064,7 @@ export default {
         vm.checkUnits();
         vm.renderMap();
         vm.initLogin();
-        enableInteractiveMap(store.gameScene, vm.renderMap);
+        enableInteractiveMap(store.gameScene, vm.renderMap,vm);
         document.addEventListener(
           "contextmenu",
           e => {
