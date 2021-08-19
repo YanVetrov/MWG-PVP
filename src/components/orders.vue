@@ -13,7 +13,7 @@
         <div>Your requests:</div>
         <div class="order" v-for="item in selfRequests" :key="item.id">
             <span style="    margin-right: 10px;">{{item.id}}: </span>
-            <div class="order_who" :style="!item.creditor?{opacity:0.7,color:wheat}:''">{{item.creditor||'no creditor'}}</div>
+            <div class="order_who" :style="!item.creditor?{opacity:0.7,color:'wheat'}:''">{{item.creditor||'no creditor'}}</div>
             <div class="mini">-></div>
             <div class="order_who" style="color:gold">YOU</div>
             <div class="order_percent">
@@ -56,7 +56,7 @@
     <div v-else class="list_orders">
         <div class="order" v-for="item in allOrdersFiltered" :key="item.id">
             <span style="    margin-right: 10px;">{{item.id}}: </span>
-            <div class="order_who" :style="!item.creditor?{opacity:0.7,color:wheat}:''">{{item.creditor||'no creditor'}}</div>
+            <div class="order_who" :style="!item.creditor?{opacity:0.7,color:'wheat'}:''">{{item.creditor||'no creditor'}}</div>
             <div class="mini">-></div>
             <div class="order_who">{{item.owner}}</div>
             <div class="order_percent">

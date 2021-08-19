@@ -68,6 +68,7 @@
           @claimRent="claimRent"
           @stakeRent="stakeRent"
           @report="report"
+          @closeOrder="closeOrder"
           @deploy="deploy"
           @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
@@ -1064,7 +1065,7 @@ export default {
         vm.checkUnits();
         vm.renderMap();
         vm.initLogin();
-        enableInteractiveMap(store.gameScene, vm.renderMap,vm);
+        enableInteractiveMap(store.gameScene, vm.renderMap, vm);
         document.addEventListener(
           "contextmenu",
           e => {
