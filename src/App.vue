@@ -1065,7 +1065,12 @@ export default {
         vm.checkUnits();
         vm.renderMap();
         vm.initLogin();
-        enableInteractiveMap(store.gameScene, vm.renderMap, vm);
+        enableInteractiveMap(
+          document.querySelector("canvas"),
+          store.gameScene,
+          vm.renderMap,
+          vm
+        );
         document.addEventListener(
           "contextmenu",
           e => {
