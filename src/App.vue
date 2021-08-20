@@ -102,7 +102,7 @@ let tabs = [
   { name: "Shards", component: shards },
   { name: "Unique units", component: unique },
   { name: "Packs", component: packs },
-  { name: "Orders", component: orders },
+  { name: "Rent CPU", component: orders },
   { name: "Settings", component: settings },
   // { name: "Game", component: game },
 ];

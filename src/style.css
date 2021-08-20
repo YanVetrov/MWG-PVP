@@ -13,6 +13,22 @@ input {
   color: wheat;
 }
 
+.active {
+
+  background: #a173cd;
+  color: white;
+  transform: scale(1.05);
+
+}
+
+button:active {
+
+  background: #a173cd;
+  color: white;
+  transform: scale(1.05);
+
+}
+
 * {
   font-family: 'metalwar';
   scrollbar-width: none;
