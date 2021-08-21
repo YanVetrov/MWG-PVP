@@ -475,7 +475,8 @@ async function getIngameTanks(
   handlerRepair,
   unitChanges,
   unitOnClickHandler,
-  handlerTeleport
+  handlerTeleport,
+  handlerStuff
 ) {
   let account = await store.user.getAccountName();
   let started = Date.now();
@@ -575,7 +576,7 @@ async function getIngameTanks(
         store.units = createUnits([...arr], unitOnClickHandler);
         store.unit = store.units[0];
         store.unitsGetted = true;
-        if (store.stuffGetted) handler();
+        handler();
       } else {
         let allTanks = Object.values(units);
         allTanks.forEach(el => unitChanges(el));
@@ -624,9 +625,9 @@ async function getIngameTanks(
             });
           }
           if (el.name === "dropstuff") {
-            handlerDropStuff({
-              id: ev.asset_id,
-            });
+            // handlerDropStuff({
+            //   id: ev.asset_id,
+            // });
           }
           if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
             data.data
@@ -652,37 +653,7 @@ async function getIngameTanks(
         });
       }
       if (data.type === "stuff") {
-        console.log(data);
-        if (store.stuffGetted) return 0;
-        let stuffs = Object.values(data.data);
-
-        stuffs.forEach(el => {
-          if (!el) return 0;
-          let posX = parseInt(el.location / 100000);
-          let posY = parseInt(el.location % 100000);
-          el.stuff.forEach((type, i) => {
-            let random = Math.ceil(Math.random() * 7);
-            objectsOnMap.push(
-              createObjectOnMap({
-                name: "stuff",
-                image: `metal/${random}`,
-                posX,
-                posY,
-                scaled: 0.35,
-                diffX: 35 + i * 10,
-                diffY: -10 + i * 10,
-                type: "stuff",
-                type_id: type.type,
-                amount: type.amount,
-                weight: type.weight,
-                zIndex: 1,
-                unground: true,
-              })
-            );
-          });
-        });
-        store.stuffGetted = true;
-        if (store.unitsGetted) handler();
+        handlerStuff(data.data);
       }
     }
   };

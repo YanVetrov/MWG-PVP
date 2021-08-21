@@ -248,6 +248,44 @@ export default {
       );
       this.showPrivate = true;
     },
+    async renderStuff(objStuff) {
+      store.gameScene.children
+        .filter(el => el.type === "stuff")
+        .forEach(el => store.gameScene.removeChild(el));
+      store.objectsOnMap = store.objectsOnMap.filter(el => el.type !== "stuff");
+      let stuffs = Object.values(objStuff)
+        .map(el => {
+          let posX = parseInt(el.location / 100000);
+          let posY = parseInt(el.location % 100000);
+          el.stuff.forEach(el => {
+            el.posX = posX;
+            el.posY = posY;
+          });
+          return el.stuff;
+        })
+        .reduce((acc, el) => acc.concat(el), []);
+      console.log(stuffs);
+      stuffs.forEach(el => {
+        let stuff = createObjectOnMap({
+          name: "stuff",
+          image: `metal/7`,
+          posX: el.posX,
+          posY: el.posY,
+          scaled: 0.35,
+          diffX: 35,
+          diffY: -10,
+          type: "stuff",
+          type_id: el.type,
+          amount: el.amount,
+          weight: el.weight,
+          zIndex: 1,
+          unground: true,
+        });
+        store.objectsOnMap.push(stuff);
+        this.setObjectOnMap(stuff);
+        sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
+      });
+    },
     async teleport({ units, garage }) {
       let ids = units.map(el => el.asset_id).join(":");
       let location = garage.posX * 100000 + garage.posY;
@@ -463,7 +501,7 @@ export default {
     },
     checkDestroy(unit) {
       if (unit.health <= 0) {
-        this.onUnitDrop({ id: unit.unit.asset_id });
+        // this.onUnitDrop({ id: unit.unit.asset_id });
         setTimeout(
           () => this.onUnitMove({ id: unit.unit.asset_id, x: 1, y: 1 }),
           3000
@@ -910,7 +948,8 @@ export default {
             e.data.button === 2
               ? dropStuffTransaction({ id: e.target.unit.asset_id })
               : (store.unit = {}),
-          this.onTeleport
+          this.onTeleport,
+          this.renderStuff
         );
       }, privateKey);
     },
