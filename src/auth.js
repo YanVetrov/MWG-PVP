@@ -105,7 +105,7 @@ async function transaction(actions) {
     }
   }
   if (localStorage.getItem("ual-session-authenticator") === "Wax") {
-    options.actions[0].authorization[0].permission = "active";
+    options.actions.forEach(el => (el.authorization[0].permission = "active"));
     try {
       response = await user.wax.api.transact(options, {
         blocksBehind: 3,
