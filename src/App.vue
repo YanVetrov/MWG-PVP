@@ -458,46 +458,14 @@ export default {
       let inGarage = store.garages.some(
         el => el.posX === tank.posX && el.posY === tank.posY
       );
-      if (inGarage) {
-        tank.unit.stuff = [];
-        tank.stuffCount = 0;
-        if (this.show) {
-          let unit = this.store.units.find(el => el.asset_id === id);
-          if (unit) unit.stuff = [];
-        }
-      }
-      if (tank.health <= 0 && !tank.unit.stuff.length) {
-        tank.unit.stuff.push(tank.getShards());
-      }
-      tank.unit.stuff.forEach((el, i) => {
-        if (el.amount <= 0) return 0;
-        let random = Math.ceil(Math.random() * 7);
-        let stuff = createObjectOnMap({
-          name: "stuff",
-          image: `metal/${random}`,
-          posX: tank.posX,
-          posY: tank.posY,
-          scaled: 0.35,
-          diffX: 35,
-          diffY: -10,
-          type: "stuff",
-          type_id: el.type,
-          amount: el.amount,
-          weight: el.weight,
-          zIndex: 1,
-          unground: true,
-        });
-        store.objectsOnMap.push(stuff);
-        this.setObjectOnMap(stuff);
-        sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
 
-        tank.unit.stuff = [];
-        tank.stuffCount = 0;
-        if (this.show) {
-          let unit = this.store.units.find(el => el.asset_id === id);
-          if (unit) unit.stuff = [];
-        }
-      });
+      tank.unit.stuff = [];
+      tank.stuffCount = 0;
+      tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
+      if (this.show) {
+        let unit = this.store.units.find(el => el.asset_id === id);
+        if (unit) unit.stuff = [];
+      }
     },
     checkDestroy(unit) {
       if (unit.health <= 0) {
@@ -727,6 +695,7 @@ export default {
     },
     async clickSprite(target, event) {
       store.gameScene.resolution = 2;
+      console.log(target.unit);
       if (target.blocked) return 0;
       target.blocked = true;
       if (target.unclickable) return (target.blocked = false);
@@ -876,6 +845,7 @@ export default {
       let index = store.objectsOnMap.findIndex(
         el => el.posX === x && el.posY === y
       );
+      tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
       if (!stuff) return 0;
       let { amount, weight } = stuff;
       let freeSpace = tank.unit.capacity - tank.stuffCount;

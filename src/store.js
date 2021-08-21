@@ -30,6 +30,7 @@ let store = {
   defaultFireTimeout: 30,
   defaultMoveTimeout: 30,
   defaultMineTimeout: 120,
+  defaultStuffAction: 60,
   defualtCellCost: 900,
   clicked: true,
   blockedUI: false,
@@ -330,6 +331,7 @@ function createUnits(arr, handler) {
     container.self = el.self;
     container.unit = sprite;
     container.unit.y = 20;
+    container.unit.x = 1;
     container.agr = { value: false, timeout: "" };
     container.spinner.scale.set(0.2);
     container.spinner.y = -20;
@@ -367,8 +369,8 @@ function createUnits(arr, handler) {
               0
             ) /
               this.unit.capacity) *
-            100
-          : 0;
+              100 || 1
+          : 1;
       },
     });
     Object.defineProperty(container, "lockedTime", {
@@ -417,7 +419,7 @@ function createUnits(arr, handler) {
         if (this.unit.hp === 0 && val > 0) {
           this.unit.texture = this.unit[this.unit.direction];
         }
-        this.healthBar.width = (val / this.unit.strength) * 100;
+        this.healthBar.width = (val / this.unit.strength) * 100 || 1;
         this.healthBar.tint = color;
         this.unit.hp = val;
         this.hpText.text = `${val}/${this.unit.strength}`;
@@ -625,9 +627,9 @@ async function getIngameTanks(
             });
           }
           if (el.name === "dropstuff") {
-            // handlerDropStuff({
-            //   id: ev.asset_id,
-            // });
+            handlerDropStuff({
+              id: ev.asset_id,
+            });
           }
           if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
             data.data
