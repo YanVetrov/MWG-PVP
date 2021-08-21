@@ -33,7 +33,7 @@
             <div class="mini"><img src="../assets/right-arrow.svg" /></div>
             <div class="order_who" style="color:gold">YOU</div>
             <div class="order_percent">
-                <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*100" /></div>
+                <div><timer v-if="item.start_time" :time="item.start_time*1000+(item.days*24*60*60*1000)" /></div>
                 <div class="micr">proposed {{item.price.split(' ')[0].split('.')[0]}}wax for {{item.stake_money.split(' ')[0].split('.')[0]}}wax(CPU) ({{item.days}}days)</div>
                 </div>
                 <div>
@@ -64,7 +64,7 @@
             <div class="mini"><img src="../assets/right-arrow.svg" /></div>
             <div class="order_who">{{item.owner}}</div>
             <div class="order_percent">
-                <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*100" /></div>
+                <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*1000" /></div>
                  <div class="micr">proposed {{item.price.split(' ')[0].split('.')[0]}}wax for {{item.stake_money.split(' ')[0].split('.')[0]}}wax(CPU) ({{item.days}}days)</div>
             </div>
             <div>
@@ -90,7 +90,7 @@
             <div class="mini"><img src="../assets/right-arrow.svg" /></div>
             <div class="order_who">{{item.owner}}</div>
             <div class="order_percent">
-                <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*100" /></div>
+                <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*1000" /></div>
                  <div class="micr">proposed {{item.price.split(' ')[0].split('.')[0]}}wax for {{item.stake_money.split(' ')[0].split('.')[0]}}wax(CPU) ({{item.days}}days)</div>
             </div>
             <div>
