@@ -28,6 +28,81 @@
       <notify :notify="errors" />
     </transition>
     <div class="alpha">open pre-alfa test: {{ store.user.accountName }}</div>
+    <div class="bar_ui">
+      <div class="bar_switcher" @click="activeBar = !activeBar">
+        <img
+          src="./assets/gear.svg"
+          :style="{
+            width: '10px',
+            transform: activeBar ? 'rotate(360deg)' : '',
+          }"
+        />
+      </div>
+      <div
+        class="bar_container"
+        :class="{ bar_container_unactive: !activeBar }"
+      >
+        <div class="bar_units">
+          <div
+            class="bar_unit"
+            @click="uiClick(k)"
+            v-for="k in store.selfUnits"
+            :key="k"
+          >
+            <img :src="`./assets/cards/${k.name}/dr.png`" />
+            <div>{{ k.name }}</div>
+            <div style="color:mediumseagreen;font-size:10px">
+              <span :style="{ color: k.hp < 20 ? 'red' : 'mediumseagreen' }">{{
+                k.hp
+              }}</span
+              >/{{ k.strength }}
+            </div>
+            <div style="font-size:10px">X:{{ k.posX }} Y:{{ k.posY }}</div>
+          </div>
+        </div>
+        <div class="bar_buttons">
+          <div
+            class="bar_button"
+            @click="
+              showGarage({ posX: 1, posY: 1 });
+              activeBar = false;
+            "
+          >
+            DEPLOY POINT
+          </div>
+          <div
+            class="bar_button"
+            @click="
+              show = true;
+              tab = tabs[1];
+              activeBar = false;
+            "
+          >
+            SHARDS
+          </div>
+          <div
+            class="bar_button"
+            @click="
+              show = true;
+              tab = tabs[4];
+              activeBar = false;
+            "
+          >
+            RENT CPU
+          </div>
+          <div
+            class="bar_button"
+            @click="
+              show = true;
+              tab = tabs[5];
+              activeBar = false;
+            "
+          >
+            SETTINGS
+          </div>
+        </div>
+      </div>
+    </div>
     <mainMenu
       :show="show"
       v-show="show"
@@ -202,6 +277,7 @@ export default {
       tabs,
       showPrivate: false,
       tab: tabs[0],
+      activeBar: false,
       confirms: {
         unitmove: true,
         unitattack: true,
@@ -224,6 +300,7 @@ export default {
         privateKey: "",
         balance: 0,
         shards: {},
+        selfUnits: [],
       },
       show: false,
       errors: [],
@@ -266,6 +343,23 @@ export default {
         "Metal war game does not store or transfer private keys and destroys them on the client after authentication for security purposes. Once logged in, you do not need to confirm and sign transactions. However, this login option is not recommended for the following users: \n1. to all users."
       );
       this.showPrivate = true;
+    },
+    uiClick(tank) {
+      let inGarage = store.garages.some(
+        el => el.posX === tank.posX && el.posY === tank.posY
+      );
+      if (inGarage) {
+        this.showGarage({ posX: tank.posX, posY: tank.posY }, true);
+      } else {
+        this.show = false;
+        let unit = store.unitsFromKeys[tank.asset_id];
+        let x = tank.posX - 6;
+        let y = tank.posY - 6;
+        store.x = x;
+        store.y = y;
+        store.unit = unit;
+        this.renderMap();
+      }
     },
     async renderStuff(objStuff) {
       store.gameScene.children
@@ -336,8 +430,8 @@ export default {
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
-        if (this.show && unit.owner === store.user.accountName) {
-          let vueTank = this.store.units.find(
+        if (unit.owner === store.user.accountName) {
+          let vueTank = this.store.selfUnits.find(
             el => el.asset_id === unit.asset_id
           );
           if (vueTank) vueTank.hp = unit.hp;
@@ -353,8 +447,8 @@ export default {
             `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
         );
         localTank.lockedTime = unit.next_availability * 1000;
-        if (this.show && unit.owner === store.user.accountName) {
-          let vueTank = this.store.units.find(
+        if (unit.owner === store.user.accountName) {
+          let vueTank = this.store.selfUnits.find(
             el => el.asset_id === unit.asset_id
           );
           if (vueTank) vueTank.unlockedTime = unit.next_availability * 1000;
@@ -366,8 +460,8 @@ export default {
       if (tank) {
         tank.health = tank.unit.strength;
       }
-      if (this.show) {
-        let unit = this.store.units.find(el => el.asset_id === id);
+      if (tank.self) {
+        let unit = this.store.selfUnits.find(el => el.asset_id === id);
         if (unit) unit.hp = unit.strength;
       }
     },
@@ -481,8 +575,8 @@ export default {
       tank.unit.stuff = [];
       tank.stuffCount = 0;
       tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
-      if (this.show) {
-        let unit = this.store.units.find(el => el.asset_id === id);
+      if (tank.self) {
+        let unit = this.store.selfUnits.find(el => el.asset_id === id);
         if (unit) unit.stuff = [];
       }
     },
@@ -499,41 +593,9 @@ export default {
       this.store.garageX = posX;
       this.store.garageY = posY;
 
-      let units = store.getGaragesUnits({ x: posX, y: posY }).map(el => {
-        let main = el.unit;
-        let unlockedTime = el.lockedTime;
-        let {
-          posX,
-          name,
-          image,
-          posY,
-          hp,
-          strength,
-          capacity,
-          asset_id,
-          repair,
-          load,
-          repairing,
-          stuff,
-        } = main;
-        return {
-          posX,
-          name,
-          image,
-          posY,
-          hp,
-          strength,
-          capacity,
-          asset_id,
-          repair,
-          load,
-          repairing,
-          stuff,
-          unlockedTime,
-          selected: false,
-        };
-      });
-      this.$set(this.store, "units", units);
+      this.store.units = this.store.selfUnits.filter(
+        el => el.posX === posX && el.posY === posY
+      );
       this.show = true;
       if (teleport) {
         let x = posX - 6;
@@ -569,6 +631,11 @@ export default {
         tank.health -= 10;
         tank.poised--;
         this.checkDestroy(tank);
+      }
+      if (tank.self) {
+        let vueUnit = this.store.selfUnits.find(el => el.asset_id === id);
+        vueUnit.posX = x;
+        vueUnit.posY = y;
       }
       let ground = store.visibleZone.find(el => el.posX === x && el.posY === y);
       let timeout = tank.getMoveCooldown();
@@ -713,84 +780,89 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      store.gameScene.resolution = 2;
-      console.log(target.unit);
-      if (target.blocked) return 0;
-      target.blocked = true;
-      if (target.unclickable) return (target.blocked = false);
-      if (store.gameScene.blockedUI) return (target.blocked = false);
-      if (store.unit) {
-        setColorAround(store.unit, false);
-      }
-      if (target.unit && target.type !== "garage") {
-        if (target.unit.self) {
-          if (target.unit.unit.type === "validator" && target.unit.locked) {
-            moveUnit(store.unit, target);
-            await gsap.to(store.unit, { alpha: 0, duration: 2 });
-          }
-          store.unit = target.unit;
-        } else {
-          if (store.unit !== target.unit) {
-            if (store.unit.locked) return (target.blocked = false);
-            if (
-              !isAvailableAttack(store.unit, target) ||
-              store.unit.unit.type !== "battle"
-            )
-              return (target.blocked = false);
-            if (target.unit.admin) {
-              this.errors.push({
-                text: "Please don't attack developers and testers.",
+      try {
+        if (target.blocked) return 0;
+        target.blocked = true;
+        if (target.unclickable) return (target.blocked = false);
+        if (store.gameScene.blockedUI) return (target.blocked = false);
+        if (store.unit) {
+          setColorAround(store.unit, false);
+        }
+        if (target.unit && target.type !== "garage") {
+          if (target.unit.self) {
+            if (target.unit.unit.type === "validator" && target.unit.locked) {
+              moveUnit(store.unit, target);
+              await gsap.to(store.unit, { alpha: 0, duration: 2 });
+            }
+            store.unit = target.unit;
+          } else {
+            if (store.unit !== target.unit) {
+              if (store.unit.locked) return (target.blocked = false);
+              if (
+                !isAvailableAttack(store.unit, target) ||
+                store.unit.unit.type !== "battle"
+              )
+                return (target.blocked = false);
+              if (target.unit.admin) {
+                this.errors.push({
+                  text: "Please don't attack developers and testers.",
+                });
+                return (target.blocked = false);
+              }
+              store.unit.unit.direction = getDirection(
+                store.unit.ground,
+                target
+              );
+              let clone = store.unit;
+              if (clone.proccess) return (target.blocked = false);
+              clone.proccess = true;
+              let res = await fireTransaction({
+                id: store.unit.unit.id,
+                target_id: target.unit.unit.id,
               });
+              clone.proccess = false;
               return (target.blocked = false);
             }
-            store.unit.unit.direction = getDirection(store.unit.ground, target);
-            let clone = store.unit;
-            if (clone.proccess) return (target.blocked = false);
-            clone.proccess = true;
-            let res = await fireTransaction({
-              id: store.unit.unit.id,
-              target_id: target.unit.unit.id,
-            });
-            clone.proccess = false;
+          }
+        }
+        if (target.type === "garage") {
+          if (event.type === "touchend") {
+            console.log(target.touch);
+            isNaN(target.touch) ? (target.touch = 1) : target.touch++;
+            clearTimeout(target.timeout);
+            target.timeout = setTimeout(() => {
+              target.touch = 0;
+              this.clickUnitMove(store.unit, target);
+            }, 1000);
+            if (target.touch === 2) {
+              target.touch = 0;
+              clearTimeout(target.timeout);
+
+              this.showGarage(
+                store.getGaragesUnits({ x: target.posX, y: target.posY })
+              );
+            }
+            return (target.blocked = false);
+          }
+          if (event.button === 2) {
+            this.showGarage({ posX: target.posX, posY: target.posY });
             return (target.blocked = false);
           }
         }
-      }
-      if (target.type === "garage") {
-        if (event.type === "touchend") {
-          console.log(target.touch);
-          isNaN(target.touch) ? (target.touch = 1) : target.touch++;
-          clearTimeout(target.timeout);
-          target.timeout = setTimeout(() => {
-            target.touch = 0;
-            this.clickUnitMove(store.unit, target);
-          }, 1000);
-          if (target.touch === 2) {
-            target.touch = 0;
-            clearTimeout(target.timeout);
-
-            this.showGarage(
-              store.getGaragesUnits({ x: target.posX, y: target.posY })
-            );
-          }
-          return (target.blocked = false);
+        if (
+          store.unit &&
+          store.unit.ground &&
+          (!target.unit || target.type === "garage")
+        ) {
+          if (store.unit.locked) return (target.blocked = false);
+          let clone = store.unit;
+          await this.clickUnitMove(clone, target);
         }
-        if (event.button === 2) {
-          this.showGarage({ posX: target.posX, posY: target.posY });
-          return (target.blocked = false);
-        }
+        store.coordinates.text = `X:${target.posX} Y:${target.posY}`;
+        target.blocked = false;
+      } catch (e) {
+        target.blocked = false;
       }
-      if (
-        store.unit &&
-        store.unit.ground &&
-        (!target.unit || target.type === "garage")
-      ) {
-        if (store.unit.locked) return (target.blocked = false);
-        let clone = store.unit;
-        await this.clickUnitMove(clone, target);
-      }
-      store.coordinates.text = `X:${target.posX} Y:${target.posY}`;
-      target.blocked = false;
     },
     async clickUnitMove(unit, ground) {
       if (!isAvailableMove(unit, ground)) return (ground.blocked = false);
@@ -850,6 +922,39 @@ export default {
       });
       this.loadings.push("objects setted");
       this.setUnits(store.unitsInVisibleZone);
+      this.store.selfUnits = store.selfUnits.map(el => {
+        let { posX, posY } = el;
+        let main = el.unit;
+        let unlockedTime = el.lockedTime;
+        let {
+          name,
+          image,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+        } = main;
+        return {
+          posX,
+          name,
+          image,
+          posY,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+          unlockedTime,
+          selected: false,
+        };
+      });
       this.loadings.push("units setted");
       this.renderMap();
       this.loadings.push("map rendered");

@@ -402,6 +402,94 @@ button:active {
   transform: translate(-50px, 0px);
 }
 
+.bar_ui {
+  position: fixed;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  z-index: 6;
+}
+
+.bar_switcher {
+  padding: 5px 20px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px 10px 0 0;
+  color: white;
+  cursor: pointer;
+  border: 2px solid rebeccapurple;
+  border-bottom-color: transparent;
+  z-index: 2;
+  position: relative;
+  top: 1px;
+}
+
+.bar_container {
+  background: rgba(0, 0, 0, 0.8);
+  height: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  border: 1px solid rebeccapurple;
+}
+
+.bar_container_unactive {
+  height: 0;
+}
+
+.bar_units {
+  display: flex;
+  align-items: center;
+  overflow-x: scroll;
+  height: 100%;
+  color: white;
+  width: 80%;
+}
+
+.bar_unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+  border: 1px solid #663399;
+  margin: 5px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.bar_unit:hover {
+  background: #663399;
+  transform: scale(1.05)
+}
+
+.bar_unit img {
+  width: 80px;
+}
+
+.bar_buttons {
+  width: 20%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-around;
+  height: 90%;
+}
+
+.bar_button {
+  padding: 10px;
+  color: white;
+  border: 1px solid rgb(126, 3, 126);
+  border-radius: 5px;
+  width: 67%;
+  cursor: pointer;
+}
+
+.bar_button:hover {
+  background: rgb(126, 3, 126);
+  transform: scale(1.05)
+}
+
 .button {
   background: rgba(0, 0, 0, 0.3);
   border: 3px solid;
