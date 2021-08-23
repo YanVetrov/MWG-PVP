@@ -240,7 +240,8 @@ export default {
 				index_position : 'secondary',
 				key_type : 'name',
 				lower_bound : store.user.accountName,
-				upper_bound : store.user.accountName
+                upper_bound : store.user.accountName,
+                limit:1000
             })
             let selfCredits = await store.user.rpc.get_table_rows({
 					code : 'metalwarrent',
@@ -249,14 +250,16 @@ export default {
 					index_position : 'tertiary',
 					key_type : 'name',
 					lower_bound : store.user.accountName,
-					upper_bound : store.user.accountName
+                    upper_bound : store.user.accountName,
+                    limit:1000
                 });
                 let allOrders = await store.user.rpc.get_table_rows({
 					code : 'metalwarrent',
 					scope : 'metalwarrent',
 					table : 'orders',
 					index_position : 'fourth',
-					key_type : 'i64',
+                    key_type : 'i64',
+                    limit:1000
 				});
             this.selfRequests = selfRequests.rows;
             this.selfCredits = selfCredits.rows;
