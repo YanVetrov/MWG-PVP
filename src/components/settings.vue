@@ -1,7 +1,7 @@
 <template>
     <div 
     class="settings" @click="test" style="overflow-y: scroll;
-    height: 100%;">
+    height: 90%;">
     <div class="username" v-if="user.accountName">{{user.accountName}}</div>
     <div style="display:flex;">
       <div style="width:50%">
