@@ -28,7 +28,7 @@
       <notify :notify="errors" />
     </transition>
     <div class="alpha">open pre-alfa test: {{ store.user.accountName }}</div>
-    <div class="bar_ui">
+    <div class="bar_ui" v-show="store.user">
       <div class="bar_switcher" @click="activeBar = !activeBar">
         <img
           src="./assets/gear.svg"
