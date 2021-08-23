@@ -6,7 +6,7 @@
         : $store.commit('global/notify', {
             text: 'the number of shards must be more than 500',
             type: 'regular',
-            img: image
+            img: image,
           })
     "
   >
@@ -34,10 +34,10 @@ export default {
       this.$store.commit("global/notify", {
         text: `${this.name}: ${count} Shards`,
         img: this.image,
-        type: "success"
+        type: "success",
       });
-    }
-  }
+    },
+  },
 };
 </script>
 <style scoped>

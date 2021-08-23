@@ -33,7 +33,7 @@
       v-show="show"
       :tabs="tabs.map(el => el.name)"
       :tab="tab.name"
-      :balance="123"
+      :balance="store.balance"
       @tabChange="tab = tabs[$event]"
       @open="
         showShards = true;
@@ -53,11 +53,11 @@
           :musicEnabled="true"
           :fullscreen="true"
           :user="store.user"
-          :shards="[]"
+          :shards="store.shards"
           :unique="[]"
           :waxBalance="123"
           :packs="[]"
-          :balance="123"
+          :balance="store.balance"
           :ping="123"
           :block="false"
           :CDT="0"
@@ -67,6 +67,7 @@
           @order="orderRent"
           @claimRent="claimRent"
           @stakeRent="stakeRent"
+          @confirm="setConfirms"
           @report="report"
           @closeOrder="closeOrder"
           @deploy="deploy"
@@ -96,6 +97,7 @@ import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
 import orders from "./components/orders.vue";
 import notify from "./components/notify.vue";
+import base from "./units_templates.js";
 // import game from "./components/game.vue";
 let tabs = [
   { name: "Garage", component: units },
@@ -201,18 +203,27 @@ export default {
       showPrivate: false,
       tab: tabs[0],
       confirms: {
-        unitmove: false,
-        unitattack: false,
-        teleport: false,
-        repair: false,
-        collectstuff: false,
-        dropstuff: false,
+        unitmove: true,
+        unitattack: true,
+        teleport: true,
+        collectstuff: true,
+        dropstuff: true,
+        transfer: false,
+        report: true,
+        claim: true,
+        undelegatebw: false,
+        delegatebw: false,
+        stake: true,
+        unstake: true,
+        closeorder: true,
       },
       store: {
         garageX: 0,
         garageY: 0,
         user: false,
         privateKey: "",
+        balance: 0,
+        shards: {},
       },
       show: false,
       errors: [],
@@ -239,8 +250,16 @@ export default {
     report(data) {
       report(data);
     },
-    setConfirms() {
-      localStorage.setItem("confirm", JSON.stringify(this.confirms));
+    setConfirms({ key, val }) {
+      console.log(key, val);
+      let confirms = JSON.parse(localStorage.getItem("confirms"));
+      if (confirms) {
+        Object.keys(confirms).forEach(
+          key => (this.confirms[key] = confirms[key])
+        );
+      }
+      if (key) this.confirms[key] = val;
+      localStorage.setItem("confirms", JSON.stringify(this.confirms));
     },
     showPrivateField() {
       alert(
@@ -1194,6 +1213,33 @@ export default {
   mounted() {
     store.vue = this;
     this.initPixi();
+    this.setConfirms({});
+    setInterval(async () => {
+      let res = await store.user.rpc.get_table_rows({
+        json: true,
+        code: "metalwarmint",
+        scope: store.user.accountName,
+        table: "accounts",
+        limit: 10000,
+        reverse: true,
+      });
+      let unique = res.rows.reduce((acc, el) => {
+        acc[el.balance.split(" ")[1]] = el.balance.split(" ")[0];
+        return acc;
+      }, {});
+      this.store.balance = unique.MWM;
+      this.store.shards = base
+        .map(el => {
+          return {
+            id: el.id,
+            name: el.name,
+            image: el.image,
+            shardCode: el.shardCode,
+            shards: unique[el.shardCode],
+          };
+        })
+        .filter(el => el.shards !== undefined);
+    }, 5000);
   },
 };
 </script>

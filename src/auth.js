@@ -134,7 +134,7 @@ async function transaction(actions) {
   }
   if (localStorage.getItem("ual-session-authenticator") === "private") {
     let confirms = JSON.parse(localStorage.getItem("confirms"));
-    if (confirms && confirms[name]) {
+    if (confirms && !confirms[name]) {
       let ok = confirm(name, data);
       if (!ok) return "transaction not confirmed";
     }

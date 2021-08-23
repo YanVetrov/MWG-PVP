@@ -1,5 +1,5 @@
 <template>
-  <div class="shards_cards">
+  <div class="shards_cards" style="height:88%">
     <div class="shards_line">
       <shard
         class="shards_point"
