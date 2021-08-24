@@ -103,6 +103,29 @@
         </div>
       </div>
     </div>
+    <!-- <div class="right_container">
+      <div class="battlelog_switcher"><</div>
+      <div class="battlelog_container">
+        <div class="battlelog">
+          <div class="battlelog_event">
+            <div class="event_block">
+              <img src="./assets/cards/ant/r.png" />
+              <div class="event_owner">metalwartest</div>
+            </div>
+            <div class="event_crash">
+              <img/>
+            </div>
+            <div class="event_block">
+              <img/>
+              <div class="event_owner"></div>
+            </div>
+            <div class="event_date">
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
     <mainMenu
       :show="show"
       v-show="show"
@@ -804,12 +827,7 @@ export default {
                 store.unit.unit.type !== "battle"
               )
                 return (target.blocked = false);
-              if (target.unit.admin) {
-                this.errors.push({
-                  text: "Please don't attack developers and testers.",
-                });
-                return (target.blocked = false);
-              }
+
               store.unit.unit.direction = getDirection(
                 store.unit.ground,
                 target

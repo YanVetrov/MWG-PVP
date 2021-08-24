@@ -490,6 +490,30 @@ button:active {
   transform: scale(1.05)
 }
 
+.right_container {
+  position: fixed;
+  right: 0;
+  display: flex;
+  align-items: center;
+}
+
+.battlelog_switcher {
+  padding: 20px 5px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 10px 0px 0px 10px;
+}
+
+.battlelog_container {
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+}
+
+.battlelog {
+  width: 300px;
+  height: 300px;
+}
+
 .button {
   background: rgba(0, 0, 0, 0.3);
   border: 3px solid;
