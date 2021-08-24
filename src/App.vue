@@ -1321,6 +1321,7 @@ export default {
     this.initPixi();
     this.setConfirms({});
     setInterval(async () => {
+      if (!store.user.rpc) return 0;
       let res = await store.user.rpc.get_table_rows({
         json: true,
         code: "metalwarmint",
