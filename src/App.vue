@@ -714,10 +714,17 @@ export default {
           tank.poised--;
           this.checkDestroy(tank);
         }
+
         if (tank.visible && targetTank.visible) {
           let ground = targetTank.ground;
           await this.unitAction(tank, ground);
           this.checkDestroy(tank);
+        }
+        if (targetTank.self) {
+          let vueTank = this.store.selfUnits.find(
+            el => el.asset_id === unit.asset_id
+          );
+          if (vueTank) vueTank.hp = targetTank.health;
         }
       }
     },
