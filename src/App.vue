@@ -500,6 +500,7 @@ export default {
       }
       let x = !isNaN(el.posY) ? el.posX - 1 : randomX;
       let y = !isNaN(el.posY) ? el.posY - 1 : randomY;
+      if (!store.map.length) return 0;
       setUnit(el, store.map[y][x], true, el.type);
       store.gameScene.addChild(el);
     },
