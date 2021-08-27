@@ -15,11 +15,7 @@
         sign in
       </div>
       <div class="loadings" tag="div" name="slide">
-        <div
-          v-for="(mes, i) in loadings"
-          class="loading_message"
-          :key="mes + mes"
-        >
+        <div v-for="(mes, i) in loadings" class="loading_message" :key="i">
           {{ mes }}
         </div>
       </div>
@@ -47,7 +43,7 @@
             class="bar_unit"
             @click="uiClick(k)"
             v-for="k in store.selfUnits"
-            :key="k"
+            :key="k.asset_id"
           >
             <img :src="`./assets/cards/${k.name}/dr.png`" />
             <div>{{ k.name }}</div>
@@ -143,6 +139,7 @@
         <component
           :is="tab.component"
           :tanks="store.units"
+          :units="store.selfUnits"
           :garages="store.garages"
           :garageX="store.garageX"
           :garageY="store.garageY"
@@ -324,6 +321,7 @@ export default {
         balance: 0,
         shards: {},
         selfUnits: [],
+        units: [],
       },
       show: false,
       errors: [],
@@ -440,6 +438,7 @@ export default {
       });
       if (self) {
         this.showGarage({ posX, posY });
+        this.store.selfUnits.forEach(el => (el.selected = false));
       }
     },
     signout() {
@@ -449,16 +448,22 @@ export default {
     checkUnitChange(unit) {
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) return 0;
+      if (unit.owner === store.user.accountName) {
+        let vueTank = this.store.selfUnits.find(
+          el => el.asset_id === unit.asset_id
+        );
+        if (vueTank) {
+          vueTank.hp = unit.hp;
+          vueTank.unlockedTime = unit.next_availability * 1000;
+          console.log((vueTank.unlockedTime - Date.now()) / 1000);
+          vueTank.posX = unit.x;
+          vueTank.posY = unit.y;
+        }
+      }
       let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
-        if (unit.owner === store.user.accountName) {
-          let vueTank = this.store.selfUnits.find(
-            el => el.asset_id === unit.asset_id
-          );
-          if (vueTank) vueTank.hp = unit.hp;
-        }
       }
       if (unit.x != localTank.posX || unit.y != localTank.posY) {
         console.log(template + `X:${unit.x} -> Y:${unit.y}`);
@@ -470,12 +475,6 @@ export default {
             `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
         );
         localTank.lockedTime = unit.next_availability * 1000;
-        if (unit.owner === store.user.accountName) {
-          let vueTank = this.store.selfUnits.find(
-            el => el.asset_id === unit.asset_id
-          );
-          if (vueTank) vueTank.unlockedTime = unit.next_availability * 1000;
-        }
       }
     },
     async onUnitRepair({ id }) {

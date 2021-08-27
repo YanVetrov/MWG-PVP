@@ -165,9 +165,7 @@
                     !(garage.posX === garageX && garage.posY === garageY)
                 "
               >
-                teleport units there [{{
-                  garage.amount * selectedUnits.length
-                }}
+                teleport units there [{{ garage.amount * selectedUnits.length }}
                 MWM]
               </div>
             </transition>
@@ -177,7 +175,14 @@
               <div class="garage_coordinates">
                 X:{{ garage.posX }} Y:{{ garage.posY }}
               </div>
-              <div class="garage_count">YOUR UNITS: {{ garage.count }}</div>
+              <div class="garage_count">
+                YOUR UNITS:
+                {{
+                  units.filter(
+                    el => el.posY === garage.posX && el.posX === garage.posY
+                  ).length
+                }}
+              </div>
               <div
                 class="here"
                 v-if="garage.posX == garageX && garage.posY == garageY"
@@ -211,6 +216,7 @@ import loader from "./loader.vue";
 export default {
   props: [
     "tanks",
+    "units",
     "PDT",
     "MDT",
     "CDT",
