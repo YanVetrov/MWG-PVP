@@ -29,7 +29,7 @@ let store = {
   target: null,
   defaultFireTimeout: 30,
   defaultMoveTimeout: 30,
-  defaultMineTimeout: 120,
+  defaultMineTimeout: 600,
   defaultStuffAction: 60,
   defualtCellCost: 900,
   clicked: true,
