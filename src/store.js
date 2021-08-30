@@ -728,7 +728,9 @@ async function mineTransaction({ id, x, y }) {
 }
 async function repair({ count, id }) {
   if (!id) return true;
-  console.log(store.user);
+  let tank = store.unitsFromKeys[id];
+  let currency = "MWM";
+  if (tank.unit.type === "miner") currency = "MECH";
   let account = await store.user.getAccountName();
   let response = await transaction({
     user: store.user,
@@ -738,7 +740,7 @@ async function repair({ count, id }) {
       from: account,
       to: "metalwargame",
       memo: `repair:${id}`,
-      quantity: `${count} MWM`,
+      quantity: `${count} ${currency}`,
     },
   });
   return errorHandler(response);

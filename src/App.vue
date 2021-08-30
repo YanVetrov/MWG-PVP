@@ -810,6 +810,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
+      console.log(target);
       try {
         if (target.blocked) return 0;
         target.blocked = true;
