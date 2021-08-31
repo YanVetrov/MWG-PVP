@@ -368,6 +368,7 @@ export default {
       activeBar: false,
       confirms: {
         unitmove: true,
+        unitmine: true,
         unitattack: true,
         teleport: true,
         collectstuff: true,
