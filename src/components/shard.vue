@@ -20,7 +20,8 @@
     >
       <div
         style="padding:2px;margin:2px"
-        @click="count > 0 ? count-- : ''"
+        @mousedown="minus"
+        @mouseup="clear"
         class="button"
       >
         -
@@ -28,7 +29,8 @@
       <span style="font-size:20px;color:orange;">{{ count }}</span>
       <div
         style="padding:2px;margin:2px;"
-        @click="count < shards ? count++ : ''"
+        @mousedown="plus"
+        @mouseup="clear"
         class="button"
       >
         +
@@ -55,7 +57,33 @@ export default {
   data() {
     return {
       count: 0,
+      interval: "",
+      timeout: "",
     };
+  },
+  methods: {
+    clear() {
+      clearInterval(this.interval);
+      clearTimeout(this.timeout);
+    },
+    plus() {
+      if (this.count < this.shards) this.count++;
+      this.timeout = setTimeout(() => {
+        this.interval = setInterval(() => {
+          if (this.count < this.shards) this.count++;
+          else clearInterval(this.interval);
+        }, 30);
+      }, 300);
+    },
+    minus() {
+      if (this.count > 0) this.count--;
+      this.timeout = setTimeout(() => {
+        this.interval = setInterval(() => {
+          if (this.count > 0) this.count--;
+          else clearInterval(this.interval);
+        }, 30);
+      }, 300);
+    },
   },
   computed: {
     mechFromShards() {

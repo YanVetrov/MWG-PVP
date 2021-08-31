@@ -525,8 +525,8 @@ async function getIngameTanks(
     let posY = parseInt(el.location % 100000);
     objectsOnMap.push(
       createObjectOnMap({
-        name: "geyser5",
-        image: "geyser5",
+        name: "geyser" + el.lvl,
+        image: "geyser" + el.lvl,
         posX,
         posY,
         scaled: 0.5,
@@ -606,10 +606,15 @@ async function getIngameTanks(
           }
           if (el.name === "unitmine") {
             timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
+            let geyser = store.objectsOnMap.find(
+              el => el.posX === ev.x && el.posY === ev.y
+            );
+            if (!geyser) geyser = {};
+            let amount = 60 * (geyser.lvl || 1);
             handlerMine({
               id: ev.asset_id,
               timeout,
-              amount: store.defaultMineTimeout / 10,
+              amount,
             });
           }
           if (el.name === "unitattack") {

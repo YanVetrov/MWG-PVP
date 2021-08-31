@@ -1523,9 +1523,11 @@ export default {
             shardCode: el.shardCode,
             shards: unique[el.shardCode],
             mechShard: el.mechShard,
+            lvl: el.lvl,
           };
         })
         .filter(el => el.shards !== undefined);
+      this.store.shards.sort((a, b) => b.lvl - a.lvl);
     }, 5000);
   },
 };
