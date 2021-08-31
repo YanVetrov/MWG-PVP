@@ -278,7 +278,8 @@ export default {
       let discount = 0;
       if (tank.discountEnabled) discount = 0.03;
       if (tank.discountTypeEnabled) discount = 0.2;
-      return Math.ceil(tank.repair - tank.repair * discount);
+      let repair = Math.ceil(tank.strength - tank.hp) / 2;
+      return Math.ceil(repair - repair * discount);
     },
     getTime(time) {
       let minutes = Math.floor((time - Date.now()) / 60000);
