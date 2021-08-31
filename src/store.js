@@ -726,23 +726,44 @@ async function mineTransaction({ id, x, y }) {
   });
   return errorHandler(response);
 }
-async function repair({ count, id }) {
+async function repair({ count, id, token }) {
+  console.log(token);
   if (!id) return true;
+  let log = {
+    PDT: "discount1",
+    MDT: "discount2",
+    CDT: "discount3",
+  };
   let tank = store.unitsFromKeys[id];
   let currency = "MWM";
   if (tank.unit.type === "miner") currency = "MECH";
   let account = await store.user.getAccountName();
-  let response = await transaction({
-    user: store.user,
-    name: "transfer",
-    account: "metalwarmint",
-    data: {
-      from: account,
-      to: "metalwargame",
-      memo: `repair:${id}`,
-      quantity: `${count} ${currency}`,
+  let actions = [
+    {
+      user: store.user,
+      name: "transfer",
+      account: "metalwarmint",
+      data: {
+        from: account,
+        to: "metalwargame",
+        memo: `repair:${id}`,
+        quantity: `${count} ${currency}`,
+      },
     },
-  });
+  ];
+  if (token)
+    actions.unshift({
+      user: store.user,
+      name: "transfer",
+      account: "metalwarmint",
+      data: {
+        from: account,
+        to: "metalwargame",
+        memo: `${log[token]}:${id}`,
+        quantity: `1 ${token}`,
+      },
+    });
+  let response = await transaction(actions);
   return errorHandler(response);
 }
 async function teleportTransaction({ count, memo }) {

@@ -726,8 +726,8 @@ export default {
         store.user.client.provider.url = link;
       localStorage.setItem("endpoint", link);
     },
-    async repair({ count, id }) {
-      await repair({ count, id });
+    async repair({ count, id, token }) {
+      await repair({ count, id, token });
     },
     deploy(unit) {
       let tank = store.unitsFromKeys[unit.asset_id];

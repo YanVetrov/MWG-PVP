@@ -95,6 +95,13 @@
                 $emit('repair', {
                   count: repair(tank),
                   id: tank.asset_id,
+                  token: tank.discountEnabled
+                    ? 'PDT'
+                    : tank.discountTypeEnabled
+                    ? tank.type === 'battle'
+                      ? 'CDT'
+                      : 'MDT'
+                    : null,
                 })
               "
             >
