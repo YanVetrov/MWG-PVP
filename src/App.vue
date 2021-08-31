@@ -1498,16 +1498,17 @@ export default {
         return acc;
       }, []);
 
-      let unusedUnits = res1.rows.map(el => {
+      let unusedUnits = res1.rows.reduce((acc, el) => {
         let tank = base.find(key => el.template_id === key.id);
-        if (!tank) return 0;
-        return {
+        if (!tank) return acc;
+        acc.push({
           ...tank,
           id: el.asset_id,
           template_id: el.template_id,
           inGame: false,
-        };
-      });
+        });
+        return acc;
+      }, []);
       this.store.unusedUnits = unusedUnits;
       this.store.balance = unique.MWM;
       this.store.unique = unique;

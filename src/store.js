@@ -805,8 +805,9 @@ async function unpack({ id }) {
     data: {
       from: account,
       to: "metalwargame",
-      memo: ["" + id],
-      quantity: `unbox`,
+
+      asset_ids: ["" + id],
+      memo: `unbox`,
     },
   });
   return errorHandler(response);
