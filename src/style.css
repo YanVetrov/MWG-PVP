@@ -739,7 +739,7 @@ button:active {
 }
 
 .shards_point img {
-  width: 80%;
+  width: 40%;
   filter: grayscale(100%);
   transition: all 0.3s ease;
 }

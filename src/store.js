@@ -501,8 +501,8 @@ async function getIngameTanks(
   let end = Date.now();
   let ping = end - started;
   store.ping = ping;
-  let validator = base.find(el => el.type === "validator");
-  let wolf2 = base.find(el => el.name === "wolf2");
+  // let validator = base.find(el => el.type === "validator");
+  // let wolf2 = base.find(el => el.name === "wolf2");
   garages.rows.forEach(el => {
     let posX = parseInt(el.location / 100000);
     let posY = parseInt(el.location % 100000);
@@ -540,9 +540,9 @@ async function getIngameTanks(
     );
   });
 
-  [wolf2, validator].forEach(el => {
-    (el.self = true), (el.owner = store.user.accountName);
-  });
+  // [wolf2, validator].forEach(el => {
+  //   (el.self = true), (el.owner = store.user.accountName);
+  // });
   // store.units = createUnits([...arr, validator, wolf2]);
   // store.unit = store.units[0];
   const ws = new WebSocket("wss://game.metal-war.com/ws/");
@@ -775,6 +775,51 @@ async function rent({ amount, days, stake_amount }) {
   });
   return errorHandler(response);
 }
+async function unpack({ id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "atomicassets",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo: ["" + id],
+      quantity: `unbox`,
+    },
+  });
+  return errorHandler(response);
+}
+async function stakeUnit({ id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "atomicassets",
+    data: {
+      from: account,
+      to: "metalwargame",
+      asset_ids: ["" + id],
+      memo: "stake",
+    },
+  });
+  return errorHandler(response);
+}
+async function exchange({ pdt }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "metalwarmint",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo: `${12}pdt:${1}cdt`,
+      quantity: `${pdt} PDT`,
+    },
+  });
+  return errorHandler(response);
+}
 async function report({ order_id }) {
   let response = await transaction({
     user: store.user,
@@ -782,6 +827,47 @@ async function report({ order_id }) {
     account: "metalwarrent",
     data: {
       order_id,
+    },
+  });
+  return errorHandler(response);
+}
+async function shardsToNft({ shardCode }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "metalwarmint",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo: `craft:${shardCode}`,
+      quantity: `500 ${shardCode}`,
+    },
+  });
+  return errorHandler(response);
+}
+async function craftMech({ count, shardCode }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "transfer",
+    account: "metalwarmint",
+    data: {
+      from: account,
+      to: "metalwargame",
+      memo: `forge:MECH`,
+      quantity: `${count} ${shardCode}`,
+    },
+  });
+  return errorHandler(response);
+}
+async function claimTokens({ id }) {
+  let response = await transaction({
+    user: store.user,
+    name: "claim",
+    account: "metalwargame",
+    data: {
+      asset_id: id,
     },
   });
   return errorHandler(response);
@@ -879,4 +965,10 @@ export {
   claimRent,
   stakeRent,
   closeOrder,
+  shardsToNft,
+  craftMech,
+  exchange,
+  stakeUnit,
+  unpack,
+  claimTokens,
 };

@@ -63,11 +63,8 @@
             <switchbox
               :checked="tank.discountEnabled"
               @change="
-                $emit('enableDiscount', {
-                  value: $event,
-                  id: tank.id,
-                  type: 'all',
-                })
+                tank.discountTypeEnabled = false;
+                tank.discountEnabled = $event;
               "
               :text="PDT || 0"
               :logo="true"
@@ -76,11 +73,8 @@
             />
             <switchbox
               @change="
-                $emit('enableDiscount', {
-                  value: $event,
-                  id: tank.id,
-                  type: tank.type,
-                })
+                tank.discountEnabled = false;
+                tank.discountTypeEnabled = $event;
               "
               :checked="tank.discountTypeEnabled"
               :text="tank.type === 'battle' ? CDT || 0 : MDT || 0"
@@ -99,14 +93,14 @@
               }"
               @click="
                 $emit('repair', {
-                  count: Math.ceil((tank.strength - tank.hp) / 2),
+                  count: repair(tank),
                   id: tank.asset_id,
                 })
               "
             >
               REPAIR[
               <div class="repair_price">
-                {{ Math.ceil((tank.strength - tank.hp) / 2) }}
+                {{ repair(tank) }}
               </div>
               ]
             </div>

@@ -128,6 +128,7 @@
       :tabs="tabs.map(el => el.name)"
       :tab="tab.name"
       :balance="store.balance"
+      :MECH="store.unique.MECH"
       @tabChange="tab = tabs[$event]"
       @open="
         showShards = true;
@@ -139,6 +140,7 @@
         <component
           :is="tab.component"
           :tanks="store.units"
+          :unusedUnits="store.unusedUnits"
           :units="store.selfUnits"
           :garages="store.garages"
           :garageX="store.garageX"
@@ -149,15 +151,15 @@
           :fullscreen="true"
           :user="store.user"
           :shards="store.shards"
-          :unique="[]"
+          :unique="store.collectibles"
           :waxBalance="123"
-          :packs="[]"
+          :packs="store.packs"
           :balance="store.balance"
           :ping="123"
           :block="false"
-          :CDT="0"
-          :PDT="0"
-          :MDT="0"
+          :CDT="store.unique.CDT"
+          :PDT="store.unique.PDT"
+          :MDT="store.unique.MDT"
           @repair="repair"
           @order="orderRent"
           @claimRent="claimRent"
@@ -171,6 +173,12 @@
           @teleport="teleport"
           @clear="signout"
           @logout="signout"
+          @shardsToNft="shardsToNft"
+          @craftMech="craftMech"
+          @exchange="exchange"
+          @stakeUnit="stakeUnit"
+          @unpack="unpack"
+          @claim="claimTokens"
         />
       </transition>
     </mainMenu>
@@ -186,6 +194,7 @@
 // import tanks from "./components/tanks.vue";
 import mainMenu from "./components/menu.vue";
 import shards from "./components/shards.vue";
+import unusedUnits from "./components/unusedUnits.vue";
 import units from "./components/units.vue";
 import unique from "./components/unique.vue";
 import packs from "./components/packs.vue";
@@ -201,7 +210,60 @@ let tabs = [
   { name: "Packs", component: packs },
   { name: "Rent CPU", component: orders },
   { name: "Settings", component: settings },
+  { name: "Stake units", component: unusedUnits },
   // { name: "Game", component: game },
+];
+let packs_templates = [
+  {
+    id: 87581,
+    name: "Metall pack 50",
+    image: "pack50.png",
+    type: "pack",
+    count: 2,
+    value: 50,
+  },
+  {
+    id: 126551,
+    name: "Metall pack 500",
+    image: "pack500.png",
+    type: "pack",
+    count: 2,
+    value: 500,
+  },
+];
+let unique_templates = [
+  {
+    id: 67719,
+    name: "Early commander",
+    locked: false,
+    unlockedTime: 0,
+    image: "CDT.png",
+    shardCode: "CDT",
+    type: "discount",
+    count: 0,
+  },
+  {
+    id: 67718,
+    name: "Early miner",
+    locked: false,
+    unlockedTime: 0,
+    image: "MDT.png",
+    shardCode: "MDT",
+    type: "discount",
+    count: 0,
+    inGame: false,
+  },
+  {
+    id: 67717,
+    name: "Pioneer",
+    locked: false,
+    unlockedTime: 0,
+    image: "PDT.png",
+    shardCode: "PDT",
+    type: "discount",
+    count: 0,
+    inGame: false,
+  },
 ];
 import {
   Application,
@@ -252,6 +314,12 @@ import {
   report,
   stakeRent,
   closeOrder,
+  shardsToNft,
+  craftMech,
+  exchange,
+  stakeUnit,
+  unpack,
+  claimTokens,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -322,6 +390,9 @@ export default {
         shards: {},
         selfUnits: [],
         units: [],
+        unique: {},
+        unusedUnits: [],
+        packs: [],
       },
       show: false,
       errors: [],
@@ -339,14 +410,32 @@ export default {
     closeOrder(data) {
       closeOrder(data);
     },
+    unpack(data) {
+      unpack(data);
+    },
+    claimTokens(data) {
+      claimTokens(data);
+    },
     claimRent(data) {
       claimRent(data);
+    },
+    stakeUnit(data) {
+      stakeUnit(data);
     },
     stakeRent(data) {
       stakeRent(data);
     },
     report(data) {
       report(data);
+    },
+    shardsToNft(data) {
+      shardsToNft(data);
+    },
+    craftMech(data) {
+      craftMech(data);
+    },
+    exchange(data) {
+      exchange(data);
     },
     setConfirms({ key, val }) {
       console.log(key, val);
@@ -447,7 +536,10 @@ export default {
     },
     checkUnitChange(unit) {
       let localTank = store.unitsFromKeys[unit.asset_id];
-      if (!localTank) return 0;
+      if (!localTank) {
+        console.log(`UNKNOWN UNIT NOT EXIST`);
+        return console.log(unit);
+      }
       if (unit.owner === store.user.accountName) {
         let vueTank = this.store.selfUnits.find(
           el => el.asset_id === unit.asset_id
@@ -963,6 +1055,7 @@ export default {
           load,
           repairing,
           stuff,
+          type,
         } = main;
         return {
           posX,
@@ -978,6 +1071,9 @@ export default {
           repairing,
           stuff,
           unlockedTime,
+          type,
+          discountEnabled: false,
+          discountTypeEnabled: false,
           selected: false,
         };
       });
@@ -1355,11 +1451,68 @@ export default {
         limit: 10000,
         reverse: true,
       });
+      let res1 = await store.user.rpc.get_table_rows({
+        json: true,
+        code: "atomicassets",
+        scope: store.user.accountName,
+        table: "assets",
+        limit: 10000,
+        reverse: true,
+      });
+      let res2 = await store.user.rpc.get_table_rows({
+        json: true,
+        code: "metalwargame",
+        scope: "metalwargame",
+        table: "collectibles",
+        limit: 10000,
+        key_type: "i64",
+        lower_bound: store.user.accountName,
+        upper_bound: store.user.accountName,
+        index_position: 2,
+        reverse: true,
+      });
+      let collectibles = res2.rows.reduce((acc, el) => {
+        let tank = unique_templates.find(key => el.template_id === key.id);
+        if (!tank) return acc;
+        acc.push({
+          ...el,
+          ...tank,
+          inGame: true,
+          id: el.asset_id,
+        });
+        return acc;
+      }, []);
+
       let unique = res.rows.reduce((acc, el) => {
         acc[el.balance.split(" ")[1]] = el.balance.split(" ")[0];
         return acc;
       }, {});
+      let packs = res1.rows.reduce((acc, el) => {
+        let tank = packs_templates.find(key => el.template_id === key.id);
+        if (!tank) return acc;
+        acc.push({
+          ...tank,
+          id: el.asset_id,
+          template_id: el.template_id,
+        });
+        return acc;
+      }, []);
+
+      let unusedUnits = res1.rows.map(el => {
+        let tank = base.find(key => el.template_id === key.id);
+        if (!tank) return 0;
+        return {
+          ...tank,
+          id: el.asset_id,
+          template_id: el.template_id,
+          inGame: false,
+        };
+      });
+      this.store.unusedUnits = unusedUnits;
       this.store.balance = unique.MWM;
+      this.store.unique = unique;
+      this.store.packs = packs;
+      this.store.collectibles = collectibles;
       this.store.shards = base
         .map(el => {
           return {
@@ -1368,6 +1521,7 @@ export default {
             image: el.image,
             shardCode: el.shardCode,
             shards: unique[el.shardCode],
+            mechShard: el.mechShard,
           };
         })
         .filter(el => el.shards !== undefined);

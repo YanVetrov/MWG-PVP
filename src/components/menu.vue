@@ -18,6 +18,7 @@
       >
         <div class="shards_count">
           {{ balance }} MWM
+          <span style="margin-left:10px;color:silver">{{ MECH }} MECH</span>
           <div class="tabs">
             <div
               class="tab"
@@ -40,7 +41,7 @@
 </template>
 <script>
 export default {
-  props: ["show", "tanks", "tab", "tabs", "balance"],
+  props: ["show", "tanks", "tab", "tabs", "balance", "MECH"],
   data() {
     return {
       opacity: 0,

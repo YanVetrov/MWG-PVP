@@ -4,6 +4,7 @@
       <shard
         class="shards_point"
         @shardsToNft="$emit('shardsToNft', $event)"
+        @craftMech="$emit('craftMech', $event)"
         v-for="tank in shards"
         :key="tank.id"
         :ident="tank.id"
@@ -11,6 +12,7 @@
         :shards="tank.shards"
         :image="tank.image"
         :code="tank.shardCode"
+        :mechShard="tank.mechShard"
       />
     </div>
     <!-- <div class="shards_line" style="height:9%">
