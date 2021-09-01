@@ -180,7 +180,7 @@
                 YOUR UNITS:
                 {{
                   units.filter(
-                    el => el.posY === garage.posX && el.posX === garage.posY
+                    el => el.posY === garage.posY && el.posX === garage.posX
                   ).length
                 }}
               </div>
@@ -188,7 +188,7 @@
                 class="here"
                 v-if="garage.posX == garageX && garage.posY == garageY"
               >
-                YOU HERE
+                YOU'RE HERE
               </div>
               <div
                 v-else

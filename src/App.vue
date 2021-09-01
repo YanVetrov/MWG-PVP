@@ -139,7 +139,7 @@
       <transition name="fade" mode="out-in" duration="100">
         <component
           :is="tab.component"
-          :tanks="store.units"
+          :tanks="unitsInTeleport"
           :unusedUnits="store.unusedUnits"
           :units="store.selfUnits"
           :garages="store.garages"
@@ -400,6 +400,13 @@ export default {
       ready: false,
       loadings: [],
     };
+  },
+  computed: {
+    unitsInTeleport() {
+      return this.store.selfUnits.filter(
+        el => el.posX === this.store.garageX && el.posY === this.store.garageY
+      );
+    },
   },
   methods: {
     dropStuffTransaction(ev) {
@@ -903,7 +910,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(target);
+      console.log(sound);
       try {
         if (target.blocked) return 0;
         target.blocked = true;
@@ -1202,7 +1209,10 @@ export default {
       y -= unit.y + action.diffY;
       // unit.lockedTime = Date.now() + 5000;
       // unit.unit.alpha = 0.5;
-      Sound.from(`./assets/cards/${unit.unit.name}/fire.mp3`).play();
+      Sound.from({
+        url: `./assets/cards/${unit.unit.name}/fire.mp3`,
+        volume: 0.2,
+      }).play();
       if (unit.unit.poisoning) target.unit.poised = unit.unit.poisoning;
       if (action.throw) {
         let actions = [];
@@ -1227,7 +1237,10 @@ export default {
         });
       }
       try {
-        Sound.from(`./assets/cards/${unit.unit.name}/destroy.mp3`).play();
+        Sound.from({
+          url: `./assets/cards/${unit.unit.name}/destroy.mp3`,
+          volume: 0.2,
+        }).play();
       } catch (e) {}
       window.sound("crash");
       unit.zIndex = 1;
@@ -1279,6 +1292,7 @@ export default {
       sound.add("fire", "./assets/sound/fire.mp3");
       sound.add("go", "./assets/sound/go.mp3");
       sound.add("teleport", "./assets/teleport.mp3");
+      sound.volumeAll = 0.2;
       window.sound = name => sound.play(name || "go");
       initGsap();
       const app = new Application({
