@@ -612,7 +612,7 @@ async function getIngameTanks(
             if (!geyser) geyser = {};
             let amount = 60 * (geyser.lvl || 1);
             let multiply = 1;
-            if (Date.now < new Date("2021-09-04T20:15:00")) multiply = 2;
+            if (Date.now() < new Date("2021-09-04T20:15:00")) multiply = 2;
             amount *= multiply;
             handlerMine({
               id: ev.asset_id,
