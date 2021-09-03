@@ -99,29 +99,80 @@
         </div>
       </div>
     </div>
-    <!-- <div class="right_container">
-      <div class="battlelog_switcher"><</div>
+    <div class="right_container" :class="{ unactive_log: !activeLog }">
+      <div
+        @click="
+          activeLog = !activeLog;
+          events_count = 0;
+        "
+        class="battlelog_switcher"
+      >
+        <img src="./assets/list.svg" />
+        <div v-if="events_count" class="red_dot">{{ events_count }}</div>
+      </div>
       <div class="battlelog_container">
         <div class="battlelog">
-          <div class="battlelog_event">
-            <div class="event_block">
-              <img src="./assets/cards/ant/r.png" />
-              <div class="event_owner">metalwartest</div>
+          <div
+            v-if="Object.keys(events).length === 0"
+            style="color:white;font-size:20px;text-align:center;margin-top:20px"
+          >
+            NO EVENTS ON MAP.
+          </div>
+          <div v-for="(ev, name) in events" :key="name">
+            <div
+              class="battlelog_event"
+              @click="teleportation({ x: sub.x, y: sub.y })"
+              v-for="sub in ev.evs.slice(0, 1)"
+              :key="sub.time"
+            >
+              <div class="event_date">{{ getTime(sub.time) }}</div>
+              <div class="event_block">
+                <img :src="`./assets/cards/${sub.unit}/r.png`" />
+                <div class="event_owner">{{ name }}</div>
+              </div>
+              <div class="event_crash">
+                <img :src="`./assets/${sub.fire}`" />
+                <span>X:{{ sub.x }} Y:{{ sub.y }}</span>
+              </div>
+              <div class="event_block">
+                <img :src="`./assets/cards/${sub.enemyUnit}/l.png`" />
+                <div class="event_owner">{{ sub.enemy }}</div>
+              </div>
             </div>
-            <div class="event_crash">
-              <img/>
+            <div
+              class="battlelog_event"
+              @click="teleportation({ x: sub.x, y: sub.y })"
+              v-for="sub in ev.evs.slice(1, 20)"
+              v-show="ev.more"
+              :key="sub.time"
+            >
+              <div class="event_date">{{ getTime(sub.time) }}</div>
+              <div class="event_block">
+                <img :src="`./assets/cards/${sub.unit}/r.png`" />
+                <div class="event_owner">{{ name }}</div>
+              </div>
+              <div class="event_crash">
+                <img src="./assets/ant_fire/3.png" />
+                <span>X:{{ sub.x }} Y:{{ sub.y }}</span>
+              </div>
+              <div class="event_block">
+                <img :src="`./assets/cards/${sub.enemyUnit}/l.png`" />
+                <div class="event_owner">{{ sub.enemy }}</div>
+              </div>
             </div>
-            <div class="event_block">
-              <img/>
-              <div class="event_owner"></div>
-            </div>
-            <div class="event_date">
-
+            <div
+              @click="ev.more = !ev.more"
+              style="color:white;text-align:center;"
+              v-if="ev.evs.length > 1"
+            >
+              <button>
+                {{ ev.more ? "hide" : `show more(${ev.evs.length - 1})` }}
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
     <mainMenu
       :show="show"
       v-show="show"
@@ -366,6 +417,8 @@ export default {
       showPrivate: false,
       tab: tabs[0],
       activeBar: false,
+      activeLog: false,
+      events_count: 0,
       confirms: {
         unitmove: true,
         unitmine: true,
@@ -399,6 +452,7 @@ export default {
       errors: [],
       ready: false,
       loadings: [],
+      events: {},
     };
   },
   computed: {
@@ -411,6 +465,21 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    teleportation({ x, y }) {
+      x = x - 10;
+      y = y - 10;
+      store.x = x;
+      store.y = y;
+      this.renderMap();
+    },
+    getTime(num) {
+      let d = new Date(num);
+      let h = d.getHours();
+      let m = d.getMinutes();
+      let s = d.getSeconds();
+      let str = [h, m, s].map(el => (el < 10 ? 0 + el : el)).join(":");
+      return str;
     },
     orderRent(data) {
       rent(data);
@@ -805,6 +874,22 @@ export default {
         console.log(
           `action(onUnitAction) - ${tank.name}(${tank.owner.text}) -> ${targetTank.name}(${targetTank.owner.text})`
         );
+        let actionLog = {
+          unit: tank.unit.name,
+          x: tank.posX,
+          y: tank.posY,
+          time: Date.now(),
+          enemy: targetTank.unit.owner,
+          enemyUnit: targetTank.unit.name,
+          fire: tank.unit.action.textures[2],
+        };
+        if (this.events[tank.unit.owner])
+          this.events[tank.unit.owner].evs.unshift(actionLog);
+        else {
+          this.events[tank.unit.owner] = { evs: [actionLog] };
+          this.$set(this.events[tank.unit.owner], "more", false);
+        }
+        this.events_count++;
         tank.lockedTime = timeout;
         if (targetTank.self) tank.agressive = true;
 
