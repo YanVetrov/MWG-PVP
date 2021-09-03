@@ -478,7 +478,7 @@ export default {
       let h = d.getHours();
       let m = d.getMinutes();
       let s = d.getSeconds();
-      let str = [h, m, s].map(el => (el < 10 ? 0 + el : el)).join(":");
+      let str = [h, m, s].map(el => (el < 10 ? "0" + el : el)).join(":");
       return str;
     },
     orderRent(data) {
