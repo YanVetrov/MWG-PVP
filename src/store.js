@@ -231,7 +231,7 @@ function createUnits(arr, handler) {
       fill: el.self ? 0x00ffaa : 0xff3377,
       fontFamily: "metalwar",
       fontSize: 15,
-      stroke: "#efefef",
+      stroke: "#000",
       strokeThickness: 2,
     });
     if (store.admins[el.owner]) container.admin = true;
@@ -293,7 +293,7 @@ function createUnits(arr, handler) {
 
     let outerBar = new Graphics();
     let percent = (el.hp / el.strength) * 100;
-    outerBar.beginFill(percent < 30 ? 0xaa0011 : 0x00ff00);
+    outerBar.beginFill(percent < 30 ? 0x990000 : 0x009900);
     outerBar.drawRoundedRect(0, 0, (el.hp / el.strength) * 100, 8, 30);
     outerBar.endFill();
     healthBar.addChild(outerBar);
@@ -311,7 +311,7 @@ function createUnits(arr, handler) {
     capacityBar.addChild(innerBar1);
 
     let outerBar1 = new Graphics();
-    outerBar1.beginFill(0xede247);
+    outerBar1.beginFill(0xaba134);
     outerBar1.drawRoundedRect(
       0,
       0,
