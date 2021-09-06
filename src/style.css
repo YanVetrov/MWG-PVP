@@ -429,6 +429,7 @@ button:active {
   background: rgba(0, 0, 0, 0.8);
   height: 200px;
   width: 100%;
+  overflow: hidden;
   display: flex;
   align-items: center;
   border: 1px solid rebeccapurple;
@@ -442,9 +443,18 @@ button:active {
   display: flex;
   align-items: center;
   overflow-x: scroll;
-  height: 100%;
+  height: 80%;
   color: white;
+  width: 100%;
+}
+
+.container_bar_units {
   width: 80%;
+  height: 90%;
+}
+
+.container_bar_units button {
+  font-size: 10px;
 }
 
 .bar_unit {
@@ -474,6 +484,12 @@ button:active {
   align-items: center;
   justify-content: space-around;
   height: 90%;
+  color: white;
+}
+
+.user_name {
+  font-size: 23px;
+  text-align: center;
 }
 
 .bar_button {
@@ -481,13 +497,48 @@ button:active {
   color: white;
   border: 1px solid rgb(126, 3, 126);
   border-radius: 5px;
-  width: 67%;
   cursor: pointer;
+}
+
+.bar_button img {
+  width: 20px;
 }
 
 .bar_button:hover {
   background: rgb(126, 3, 126);
   transform: scale(1.05)
+}
+
+.cpu_container {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 300px;
+  height: 30px;
+  position: relative;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.outer_cpu {
+  position: absolute;
+  color: white;
+  font-size: 15px;
+  top: 6px;
+  left: 25%;
+  text-shadow: 1px 1px 1px black;
+}
+
+.outer_cpu img {
+  width: 30px;
+  position: absolute;
+  left: -53px;
+  top: -6px;
+}
+
+.inner_cpu {
+  width: 60%;
+  height: 100%;
+  background: rgba(50, 192, 116, 0.8);
+  border-radius: 10px;
 }
 
 .right_container {

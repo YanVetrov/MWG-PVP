@@ -91,7 +91,7 @@
             <div class="order_who">{{item.owner}}</div>
             <div class="order_percent">
                 <div><timer v-if="item.start_time" :time="item.start_time*1000+item.days*24*60*60*1000" /></div>
-                 <div class="micr">proposed {{item.price.split(' ')[0].split('.')[0]}}wax for {{item.stake_money.split(' ')[0].split('.')[0]}}wax(CPU) ({{item.days}}days)</div>
+                 <div class="micr">proposed {{item.price.split(' ')[0].split('.')[0]}}wax for {{item.stake_money.split(' ')[0].split('.')[0]}}wax(CPU) ({{item.days}}days) <span style="color:yellow">{{item.percent}}%</span></div>
             </div>
             <div>
                     <button
@@ -263,7 +263,17 @@ export default {
 				});
             this.selfRequests = selfRequests.rows;
             this.selfCredits = selfCredits.rows;
-            this.allOrders = allOrders.rows;
+            this.allOrders = allOrders.rows.map(el=>{
+                let price = el.price.split(' ')[0].split('.')[0]
+                let stake_money = el.stake_money.split(' ')[0].split('.')[0]
+                let percent = (price/stake_money*100).toFixed(2);
+                return {...el,percent};
+            });
+            this.allOrders.sort((a,b)=>{
+                if(a.percent>b.percent)return -1;
+                else if(b.percent>a.percent)return 1;
+                else return 0;
+            });
         }
     },
     beforeDestroy(){

@@ -38,53 +38,73 @@
         class="bar_container"
         :class="{ bar_container_unactive: !activeBar }"
       >
-        <div class="bar_units">
-          <div
-            class="bar_unit"
-            @click="uiClick(k)"
-            v-for="k in store.selfUnits"
-            :key="k.asset_id"
-          >
-            <img :src="`./assets/cards/${k.name}/dr.png`" />
-            <div>{{ k.name }}</div>
-            <div style="color:mediumseagreen;font-size:10px">
-              <span :style="{ color: k.hp < 20 ? 'red' : 'mediumseagreen' }">{{
-                k.hp
-              }}</span
-              >/{{ k.strength }}
+        <div class="container_bar_units">
+          <div class="bar_units_switch">
+            <button
+              :class="{ active: !filterGarage }"
+              @click="filterGarage = ''"
+            >
+              ALL
+            </button>
+            <button
+              :class="{ active: filterGarage === 'onmap' }"
+              @click="filterGarage = 'onmap'"
+            >
+              ON MAP
+            </button>
+            <button
+              :class="{ active: filterGarage === 'x1y1' }"
+              @click="filterGarage = 'x1y1'"
+            >
+              IN X1:Y1
+            </button>
+            <button
+              :class="{ active: filterGarage === 'other' }"
+              @click="filterGarage = 'other'"
+            >
+              IN OTHER GARAGES
+            </button>
+          </div>
+          <div class="bar_units" ref="bar_units" @wheel="scrollLeft">
+            <div
+              class="bar_unit"
+              @click="uiClick(k)"
+              v-for="k in filteredUnits"
+              :key="k.asset_id"
+            >
+              <img :src="`./assets/cards/${k.name}/dr.png`" />
+              <div>{{ k.name }}</div>
+              <div style="color:mediumseagreen;font-size:10px">
+                <span
+                  :style="{ color: k.hp < 20 ? 'red' : 'mediumseagreen' }"
+                  >{{ k.hp }}</span
+                >/{{ k.strength }}
+              </div>
+              <div style="font-size:10px">X:{{ k.posX }} Y:{{ k.posY }}</div>
             </div>
-            <div style="font-size:10px">X:{{ k.posX }} Y:{{ k.posY }}</div>
+            <div v-if="!filteredUnits.length" style="margin-left:30px">
+              NO UNITS.
+            </div>
           </div>
         </div>
         <div class="bar_buttons">
-          <div
-            class="bar_button"
-            @click="
-              showGarage({ posX: 1, posY: 1 });
-              activeBar = false;
-            "
-          >
-            DEPLOY POINT
+          <div class="user_name">
+            {{ store.user.accountName }}
+            <span style="color:wheat;">{{ store.waxBalance }} WAX</span>
           </div>
-          <div
-            class="bar_button"
-            @click="
-              show = true;
-              tab = tabs[1];
-              activeBar = false;
-            "
-          >
-            SHARDS
-          </div>
-          <div
-            class="bar_button"
-            @click="
-              show = true;
-              tab = tabs[4];
-              activeBar = false;
-            "
-          >
-            RENT CPU
+          <div class="cpu_container" v-if="store.cpu.max">
+            <div class="outer_cpu">
+              <img src="./assets/cpu.svg" />
+              {{ Math.floor((store.cpu.available / store.cpu.max) * 100) }}% ({{
+                store.cpu.available
+              }}/{{ store.cpu.max }})
+            </div>
+            <div
+              class="inner_cpu"
+              :style="{
+                width: (store.cpu.available / store.cpu.max) * 100 + '%',
+              }"
+            ></div>
           </div>
           <div
             class="bar_button"
@@ -94,11 +114,12 @@
               activeBar = false;
             "
           >
-            SETTINGS
+            <img src="./assets/gear.svg" />
           </div>
         </div>
       </div>
     </div>
+
     <div class="right_container" :class="{ unactive_log: !activeLog }">
       <div
         @click="
@@ -419,6 +440,7 @@ export default {
       activeBar: false,
       activeLog: false,
       events_count: 0,
+      filterGarage: "",
       confirms: {
         unitmove: true,
         unitmine: true,
@@ -447,6 +469,12 @@ export default {
         unique: {},
         unusedUnits: [],
         packs: [],
+        waxBalance: 0,
+        cpu: {
+          max: 0,
+          limit: 0,
+          available: 0,
+        },
       },
       show: false,
       errors: [],
@@ -461,10 +489,37 @@ export default {
         el => el.posX === this.store.garageX && el.posY === this.store.garageY
       );
     },
+    filteredUnits() {
+      let f = this.filterGarage;
+      let garages = store.objectsOnMap.filter(el => el.type === "garage");
+      if (!f) return this.store.selfUnits;
+      else if (f === "x1y1")
+        return this.store.selfUnits.filter(
+          el => el.posX === 1 && el.posY === 1
+        );
+      else if (f === "other")
+        return this.store.selfUnits.filter(
+          el =>
+            el.posX !== 1 &&
+            el.posY !== 1 &&
+            garages.some(g => g.posX === el.posX && g.posY === el.posY)
+        );
+      else if (f === "onmap")
+        return this.store.selfUnits.filter(
+          el => !garages.some(g => g.posX === el.posX && g.posY === el.posY)
+        );
+      else return this.store.selfUnits;
+    },
   },
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    scrollLeft(e) {
+      if (e.deltaY) {
+        e.preventDefault();
+        this.$refs.bar_units.scrollLeft += e.deltaY;
+      }
     },
     teleportation({ x, y }) {
       x = x - 10;
@@ -536,6 +591,7 @@ export default {
         el => el.posX === tank.posX && el.posY === tank.posY
       );
       if (inGarage) {
+        this.tab = this.tabs[0];
         this.showGarage({ posX: tank.posX, posY: tank.posY }, true);
       } else {
         this.show = false;
@@ -995,7 +1051,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(sound);
+      console.log(this.store.user);
       try {
         if (target.blocked) return 0;
         target.blocked = true;
@@ -1571,6 +1627,11 @@ export default {
         index_position: 2,
         reverse: true,
       });
+      let cpu = await store.user.rpc.get_account(store.user.accountName);
+      this.store.cpu = cpu.cpu_limit;
+      this.store.waxBalance = Number(
+        cpu.core_liquid_balance.split(" ")[0]
+      ).toFixed(2);
       let collectibles = res2.rows.reduce((acc, el) => {
         let tank = unique_templates.find(key => el.template_id === key.id);
         if (!tank) return acc;
