@@ -443,7 +443,7 @@ button:active {
   display: flex;
   align-items: center;
   overflow-x: scroll;
-  height: 80%;
+  height: 100%;
   color: white;
   width: 100%;
 }
@@ -466,6 +466,12 @@ button:active {
   margin: 5px;
   border-radius: 2px;
   cursor: pointer;
+  height: 77%;
+  justify-content: space-around;
+}
+
+.bar_unit button {
+  width: 100%;
 }
 
 .bar_unit:hover {
@@ -474,7 +480,7 @@ button:active {
 }
 
 .bar_unit img {
-  width: 80px;
+  width: 50px;
 }
 
 .bar_buttons {
@@ -490,14 +496,20 @@ button:active {
 .user_name {
   font-size: 23px;
   text-align: center;
+  border: 1px solid wheat;
+  border-radius: 5px;
+  padding: 22px;
 }
 
 .bar_button {
   padding: 10px;
+  position: absolute;
   color: white;
   border: 1px solid rgb(126, 3, 126);
   border-radius: 5px;
   cursor: pointer;
+  top: -20px;
+  background: rgba(0, 0, 0, 0.6)
 }
 
 .bar_button img {
@@ -1020,6 +1032,18 @@ button:active {
   .container_content {
     width: 650px;
     height: 357px;
+  }
+
+  .user_name {
+    transform: scale(0.7)
+  }
+
+  .outer_cpu {
+    font-size: 10px;
+  }
+
+  .bar_button {
+    top: 180px
   }
 
   .money {

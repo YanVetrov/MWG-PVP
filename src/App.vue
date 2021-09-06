@@ -64,15 +64,46 @@
             >
               IN OTHER GARAGES
             </button>
+            |||||
+            <button
+              :class="{
+                active: store.selfUnits
+                  .filter(el => el.type === 'battle')
+                  .every(el => el.discountTypeEnabled),
+              }"
+              @click="
+                store.selfUnits
+                  .filter(el => el.type === 'battle')
+                  .forEach(
+                    el => (el.discountTypeEnabled = !el.discountTypeEnabled)
+                  )
+              "
+            >
+              ACTIVATE CDT
+            </button>
+            <button
+              :class="{
+                active: store.selfUnits
+                  .filter(el => el.type === 'miner')
+                  .every(el => el.discountTypeEnabled),
+              }"
+              @click="
+                store.selfUnits
+                  .filter(el => el.type === 'miner')
+                  .forEach(
+                    el => (el.discountTypeEnabled = !el.discountTypeEnabled)
+                  )
+              "
+            >
+              ACTIVATE MDT
+            </button>
           </div>
           <div class="bar_units" ref="bar_units" @wheel="scrollLeft">
-            <div
-              class="bar_unit"
-              @click="uiClick(k)"
-              v-for="k in filteredUnits"
-              :key="k.asset_id"
-            >
-              <img :src="`./assets/cards/${k.name}/dr.png`" />
+            <div class="bar_unit" v-for="k in filteredUnits" :key="k.asset_id">
+              <img
+                @click="uiClick(k)"
+                :src="`./assets/cards/${k.name}/dr.png`"
+              />
               <div>{{ k.name }}</div>
               <div style="color:mediumseagreen;font-size:10px">
                 <span
@@ -81,6 +112,45 @@
                 >/{{ k.strength }}
               </div>
               <div style="font-size:10px">X:{{ k.posX }} Y:{{ k.posY }}</div>
+              <button
+                v-if="
+                  garages.some(el => el.posX === k.posX && el.posY === k.posY)
+                "
+                @click="
+                  repair({
+                    count: howToRepair(k),
+                    id: k.asset_id,
+                    token: k.discountEnabled
+                      ? 'PDT'
+                      : k.discountTypeEnabled
+                      ? k.type === 'battle'
+                        ? 'CDT'
+                        : 'MDT'
+                      : null,
+                  })
+                "
+              >
+                <img src="./assets/gear.svg" style="width:10px" />
+                {{ howToRepair(k) }}
+              </button>
+              <button
+                v-if="
+                  garages.some(el => el.posX === k.posX && el.posY === k.posY)
+                "
+                @click="deploy(k, true)"
+              >
+                <img src="./assets/deploy.svg" style="width:10px" />
+                DEPLOY
+              </button>
+              <button
+                v-if="
+                  !garages.some(el => el.posX === k.posX && el.posY === k.posY)
+                "
+                @click="teleportation({ x: k.posX, y: k.posY, id: k.asset_id })"
+              >
+                <img src="./assets/select.svg" style="width:10px" />
+                SELECT
+              </button>
             </div>
             <div v-if="!filteredUnits.length" style="margin-left:30px">
               NO UNITS.
@@ -89,20 +159,37 @@
         </div>
         <div class="bar_buttons">
           <div class="user_name">
-            {{ store.user.accountName }}
-            <span style="color:wheat;">{{ store.waxBalance }} WAX</span>
+            <div>{{ store.user.accountName }}</div>
+            <div style="color:yellowgreen;font-size:15px">
+              {{ store.waxBalance }} WAX
+            </div>
+            <div
+              style="color:wheat;font-size:15px;display:flex;justify-content:space-around;"
+            >
+              <span>{{ store.unique.MWM }} MWM</span>
+              |
+              <span> {{ store.unique.MECH }} MECH </span>
+            </div>
+
+            <div
+              style="color:silver;font-size:12px;justify-content:space-around;"
+            >
+              <span>{{ store.unique.CDT }} CDT</span>
+              |
+              <span> {{ store.unique.MDT }} MDT</span>
+            </div>
           </div>
           <div class="cpu_container" v-if="store.cpu.max">
             <div class="outer_cpu">
               <img src="./assets/cpu.svg" />
-              {{ Math.floor((store.cpu.available / store.cpu.max) * 100) }}% ({{
-                store.cpu.available
-              }}/{{ store.cpu.max }})
+              {{
+                100 - Math.floor((store.cpu.available / store.cpu.max) * 100)
+              }}% ({{ store.cpu.used }}/{{ store.cpu.max }})
             </div>
             <div
               class="inner_cpu"
               :style="{
-                width: (store.cpu.available / store.cpu.max) * 100 + '%',
+                width: 100 - (store.cpu.available / store.cpu.max) * 100 + '%',
               }"
             ></div>
           </div>
@@ -489,6 +576,9 @@ export default {
         el => el.posX === this.store.garageX && el.posY === this.store.garageY
       );
     },
+    garages() {
+      return store.objectsOnMap.filter(el => el.type === "garage");
+    },
     filteredUnits() {
       let f = this.filterGarage;
       let garages = store.objectsOnMap.filter(el => el.type === "garage");
@@ -515,18 +605,29 @@ export default {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
     },
+    howToRepair(tank) {
+      let discount = 0;
+      if (tank.discountEnabled) discount = 0.03;
+      if (tank.discountTypeEnabled) discount = 0.2;
+      let repair = Math.ceil(tank.strength - tank.hp) / 2;
+      return Math.ceil(repair - repair * discount);
+    },
     scrollLeft(e) {
       if (e.deltaY) {
         e.preventDefault();
         this.$refs.bar_units.scrollLeft += e.deltaY;
       }
     },
-    teleportation({ x, y }) {
+    async teleportation({ x, y, id }) {
       x = x - 10;
       y = y - 10;
       store.x = x;
       store.y = y;
-      this.renderMap();
+      await this.renderMap();
+      if (id) {
+        let tank = store.unitsFromKeys[id];
+        store.unit = tank;
+      }
     },
     getTime(num) {
       let d = new Date(num);
@@ -862,8 +963,11 @@ export default {
     async repair({ count, id, token }) {
       await repair({ count, id, token });
     },
-    deploy(unit) {
+    async deploy(unit, teleport) {
       let tank = store.unitsFromKeys[unit.asset_id];
+      if (teleport) {
+        await this.teleportation({ x: tank.posX, y: tank.posY });
+      }
       store.unit = tank;
       setColorAround(tank.ground, true);
       this.show = false;
