@@ -1,9 +1,9 @@
 <template>
-  <span>{{ getTime }}</span>
+  <span>{{ getTime || text }}</span>
 </template>
 <script>
 export default {
-  props: ["time"],
+  props: ["time", "text"],
   data() {
     return {
       tmp: "",
@@ -32,11 +32,22 @@ export default {
           (seconds < 10 ? "0" : "") +
           seconds
         );
-      } else return "time is up";
+      } else return null;
     },
   },
   created() {
-    this.intevral = setInterval(() => (this.tmp = Date.now()), 1000);
+    this.intevral = setInterval(() => {
+      this.tmp = Date.now();
+      if (Date.now() > this.time) clearInterval(this.interval);
+    }, 1000);
+  },
+  watch: {
+    time() {
+      this.intevral = setInterval(() => {
+        this.tmp = Date.now();
+        if (Date.now() > this.time) clearInterval(this.interval);
+      }, 1000);
+    },
   },
   beforeDestroy() {
     clearInterval(this.intevral);

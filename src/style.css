@@ -468,6 +468,7 @@ button:active {
   cursor: pointer;
   height: 77%;
   justify-content: space-around;
+  position: relative;
 }
 
 .bar_unit button {

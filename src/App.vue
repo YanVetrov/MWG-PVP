@@ -104,7 +104,13 @@
                 @click="uiClick(k)"
                 :src="`./assets/cards/${k.name}/dr.png`"
               />
-              <div>{{ k.name }}</div>
+              <timer
+                style="position:absolute;top:0;color:gray"
+                :time="k.unlockedTime"
+              />
+              <div>
+                {{ k.name }}
+              </div>
               <div style="color:mediumseagreen;font-size:10px">
                 <span
                   :style="{ color: k.hp < 20 ? 'red' : 'mediumseagreen' }"
@@ -353,6 +359,7 @@
 // import tanks from "./components/tanks.vue";
 import mainMenu from "./components/menu.vue";
 import shards from "./components/shards.vue";
+import timer from "./components/timer.vue";
 import unusedUnits from "./components/unusedUnits.vue";
 import units from "./components/units.vue";
 import unique from "./components/unique.vue";
@@ -507,7 +514,7 @@ export default {
     // info,
     // buttons,
     // tanks,
-
+    timer,
     mainMenu,
     // login,
     shards,
@@ -619,8 +626,8 @@ export default {
       }
     },
     async teleportation({ x, y, id }) {
-      x = x - 10;
-      y = y - 10;
+      x = x - store.cellsInLine / 2;
+      y = y - store.cellsInLine / 2;
       store.x = x;
       store.y = y;
       await this.renderMap();
@@ -696,13 +703,7 @@ export default {
         this.showGarage({ posX: tank.posX, posY: tank.posY }, true);
       } else {
         this.show = false;
-        let unit = store.unitsFromKeys[tank.asset_id];
-        let x = tank.posX - 6;
-        let y = tank.posY - 6;
-        store.x = x;
-        store.y = y;
-        store.unit = unit;
-        this.renderMap();
+        this.teleportation({ x: tank.posX, y: tank.posY, id: tank.asset_id });
       }
     },
     async renderStuff(objStuff) {
@@ -782,6 +783,7 @@ export default {
           vueTank.hp = unit.hp;
           vueTank.unlockedTime = unit.next_availability * 1000;
           console.log((vueTank.unlockedTime - Date.now()) / 1000);
+          console.log("update TIMER");
           vueTank.posX = unit.x;
           vueTank.posY = unit.y;
         }
@@ -947,11 +949,7 @@ export default {
       );
       this.show = true;
       if (teleport) {
-        let x = posX - 6;
-        let y = posY - 6;
-        store.x = x;
-        store.y = y;
-        this.renderMap();
+        this.teleportation({ x: posX, y: posY });
       }
     },
     changeEndpoint(link) {
@@ -1132,16 +1130,15 @@ export default {
         else if (target.unit && target.unit.self) color = 0xff69;
         else if (!target.unit && isAvailableMove(store.unit, target))
           color = 0xff69;
-        target.filters = [
-          new BevelFilter({
-            lightColor: color,
-            thickness: 15,
-            rotation: 0,
-            shadowColor: color,
-            lightAlpha: 0.5,
-            shadowAlpha: 0.5,
-          }),
-        ];
+        let filter = new BevelFilter({
+          lightColor: color,
+          thickness: 15,
+          rotation: 0,
+          shadowColor: color,
+          lightAlpha: 0.5,
+          shadowAlpha: 0.5,
+        });
+        target.filters = [filter];
       });
       target.on("pointerout", e => {
         target.alpha = 1;
