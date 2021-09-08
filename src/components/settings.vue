@@ -6,7 +6,8 @@
     <div style="display:flex;">
       <div style="width:50%">
     <div> <input type="checkbox" id="sound" @change="$emit('update:soundEnabled',$event.target.checked)" :checked="soundEnabled"></input> <label for="sound">Sound enabled</label> </div>
-    <div style="margin-bottom:15px;"> <input type="checkbox" id="music" @change="$emit('update:musicEnabled',$event.target.checked)" :checked="musicEnabled"></input> <label for="music">Music enabled</label> </div>
+    <div style="margin-bottom:15px;"> 
+      <input type="checkbox" id="music" @change="$emit('musicEnabled',$event.target.checked)" :checked="musicEnabled"></input> <label for="music">Music enabled</label> </div>
     RPC ENDPOINT:
     <select @change="$emit('changeEndpoint',$event.target.value)" style="margin-top:20px">
       <option v-for="link in endpoints" :selected="user.rpc.endpoint===link" :key="link">{{link}}</option>

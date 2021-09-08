@@ -1,6 +1,10 @@
 <template>
   <div class="main_view">
     <div id="login" v-show="!store.user || !ready">
+      <audio
+        ref="radio"
+        src="https://dl1.dlmate34.xyz/?file=M3R4SUNiN3JsOHJ6WWQ2a3NQS1Y5ZGlxVlZIOCtyZ0duY1l1akNNc0Q2eGY3YUlwbk5Db0pvSWVkLzVmM3NIcE1zeFI5RE9UVmRHRk13ckNucEV5VVRpTzhaMWs2U3lFdUtjdUV0MTVVMTNWa3Y3dG15RWx6d0g4Y3QzeUJibENaU28rOFdaNjNET0gyZlBSL0VmZXZtMys0aCtsTzJGWWxDSlpNUFRFOU5GTDJtU0FJcnptMW9NUmtqV1E3SjFhNWYrYml4WCt4bzF2NFlVbFRYdDNZWlZjMUtYeDN2N1BvSGdSaVkwUDVVS2lscnYyRmFFOEVwcUtjVEpQTXlzUjFzdmtiQXNMbWljcy8wMlB1S0kxdlNZTWFiQjgrbWVnOFAvc08yN09MWk9uSE1EWGM3ajd0Y3pqNTZRMzZoT1Q5cmVYek54VGdGVzBYcHV1"
+      ></audio>
       <img src="./assets/tumbler.png" />
       <div v-if="!showPrivate" style="display:flex;justify-content:center">
         <button @click="showPrivateField">
@@ -352,7 +356,7 @@
           :garageY="store.garageY"
           :confirms="confirms"
           :soundEnabled="true"
-          :musicEnabled="true"
+          :musicEnabled="musicEnabled"
           :fullscreen="true"
           :user="store.user"
           :shards="store.shards"
@@ -365,6 +369,7 @@
           :CDT="store.unique.CDT"
           :PDT="store.unique.PDT"
           :MDT="store.unique.MDT"
+          @musicEnabled="changeMusic"
           @repair="repair"
           @order="orderRent"
           @claimRent="claimRent"
@@ -575,6 +580,7 @@ export default {
       activeLog: false,
       events_count: 0,
       filterGarage: "",
+      musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
       confirms: {
         unitmove: true,
         unitmine: true,
@@ -1380,9 +1386,28 @@ export default {
       this.renderMap();
       this.loadings.push("map rendered");
       this.loadings.push("ready.");
-      setTimeout(() => (this.ready = true), 2000);
+      if (localStorage.getItem("musicEnabled")) {
+        this.$refs.radio.volume = 0;
+        this.$refs.radio.play();
+        setTimeout(() => {
+          this.$refs.radio.volume = 0.2;
+          this.$refs.radio.currentTime = Math.floor(
+            Math.random() * (this.$refs.radio.duration / 2)
+          );
+        }, 1000);
+      }
+      setTimeout(() => {
+        this.ready = true;
+      }, 2000);
     },
-
+    changeMusic(val, unplay) {
+      localStorage.setItem("musicEnabled", val);
+      this.musicEnabled = val;
+      if (!unplay) {
+        if (val) this.$refs.radio.play();
+        else this.$refs.radio.pause();
+      }
+    },
     async onUnitCollect({ id, x, y }) {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
@@ -1747,6 +1772,9 @@ export default {
     store.vue = this;
     this.initPixi();
     this.setConfirms({});
+    if (JSON.parse(localStorage.getItem("musicEnabled")) === null) {
+      this.changeMusic(true, true);
+    }
     setInterval(async () => {
       if (!store.user.rpc) return 0;
       let res = await store.user.rpc.get_table_rows({
