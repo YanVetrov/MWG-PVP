@@ -19,6 +19,9 @@ let store = {
   admins: {
     metalwartest: true,
   },
+  npc: {
+    metalwarevil: true,
+  },
   stuffGetted: false,
   unitsGetted: false,
   id: null,
@@ -227,13 +230,18 @@ function createUnits(arr, handler) {
       stroke: "#454545",
       strokeThickness: 2,
     });
-    container.owner = new Text(`${el.owner || "Enemy"}`, {
-      fill: el.self ? 0x00ffaa : 0xff3377,
-      fontFamily: "metalwar",
-      fontSize: 15,
-      stroke: "#000",
-      strokeThickness: 2,
-    });
+    let color = el.self ? 0x00ffaa : 0xff3377;
+    if (store.npc[el.owner]) color = 0xc3c507;
+    container.owner = new Text(
+      `${el.owner || "Enemy"}${store.npc[el.owner] ? "[NPC]" : ""}`,
+      {
+        fill: color,
+        fontFamily: "metalwar",
+        fontSize: 15,
+        stroke: "#000",
+        strokeThickness: 2,
+      }
+    );
     if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
       let node = new Text(text, {
