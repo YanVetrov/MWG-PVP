@@ -199,15 +199,79 @@
               }"
             ></div>
           </div>
-          <div
-            class="bar_button"
-            @click="
-              show = true;
-              tab = tabs[5];
-              activeBar = false;
-            "
-          >
-            <img src="./assets/gear.svg" />
+          <div class="ui_bar_buttons">
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[1] && show }"
+              @click="
+                show = true;
+                tab = tabs[1];
+                activeBar = false;
+              "
+            >
+              <div>SHARDS</div>
+              <img src="./assets/shards.svg" />
+            </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[2] && show }"
+              @click="
+                show = true;
+                tab = tabs[2];
+                activeBar = false;
+              "
+            >
+              <div>UNIQUE</div>
+              <img src="./assets/discount.svg" />
+            </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[3] && show }"
+              @click="
+                show = true;
+                tab = tabs[3];
+                activeBar = false;
+              "
+            >
+              <div>BOXES</div>
+              <img src="./assets/box.svg" />
+            </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[4] && show }"
+              @click="
+                show = true;
+                tab = tabs[4];
+                activeBar = false;
+              "
+            >
+              <div>RENT CPU</div>
+              <img src="./assets/cpu.svg" />
+            </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[5] && show }"
+              @click="
+                show = true;
+                tab = tabs[5];
+                activeBar = false;
+              "
+            >
+              <div>SETTINGS</div>
+              <img src="./assets/gear.svg" />
+            </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[6] && show }"
+              @click="
+                show = true;
+                tab = tabs[6];
+                activeBar = false;
+              "
+            >
+              <div>STAKE UNITS</div>
+              <img src="./assets/transfer.svg" />
+            </div>
           </div>
         </div>
       </div>
@@ -948,6 +1012,7 @@ export default {
         el => el.posX === posX && el.posY === posY
       );
       this.show = true;
+      this.tab = this.tabs[0];
       if (teleport) {
         this.teleportation({ x: posX, y: posY });
       }

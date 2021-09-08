@@ -95,6 +95,6 @@ export default {
 <style scoped>
 .button {
   font-size: 12px;
-  padding: 5px 0;
+  padding: 25px 0;
 }
 </style>

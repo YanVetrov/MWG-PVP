@@ -13,13 +13,16 @@
         :style="{
           transform: show ? `scale(${scale})` : 'scale(0)',
           transition: 'all .3s ease',
-          backgroundImage: 'url(' + require('~/assets/podlojka_menu.png') + ')',
+          position: 'relative',
         }"
       >
+        <div class="close" @click="$emit('missclick')">
+          <img src="../assets/close.svg" />
+        </div>
         <div class="shards_count">
           {{ balance }} MWM
           <span style="margin-left:10px;color:silver">{{ MECH }} MECH</span>
-          <div class="tabs">
+          <!-- <div class="tabs">
             <div
               class="tab"
               @click="$emit('tabChange', i)"
@@ -30,7 +33,7 @@
             >
               {{ t }}
             </div>
-          </div>
+          </div> -->
         </div>
         <div class="menu_container">
           <slot />

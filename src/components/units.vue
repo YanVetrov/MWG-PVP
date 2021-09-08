@@ -119,41 +119,31 @@
         </div>
 
         <div v-if="tanks && tanks.length === 0" key="no_data" class="no_data">
-          No units found. You can buy units on
-          <a
-            target="_blank"
-            href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=unit&sort=created&symbol=WAX"
-            >this link</a
-          >
-          or units packs on
-          <a
-            target="_blank"
-            href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=packs&sort=created&symbol=WAX"
-            >this link.</a
-          >
-          <br />
-          <!-- <img src="~/assets/hamster.png" />
-        <img src="~/assets/wolf.png" />
-        <img src="~/assets/hamster_pack.png" />
-        <img src="~/assets/mega_pack.png" /> -->
-          <br />
-          if you have units but they are not displayed in this window, try
-          changing the rpc endpoint in
-          <button @click="$emit('tab', 4)">settings</button> or check the ban
-          status of your wallet.
+          No units found.
         </div>
       </transition-group>
     </scroll>
     <scroll :ops="ops">
       <div class="garage_column">
         <div style="display:flex;">
-          <div class="button raid" @click="filterGarage = ''">all</div>
-          <div class="button raid" @click="filterGarage = 'count'">
+          <button
+            :class="{ active: filterGarage === '' }"
+            @click="filterGarage = ''"
+          >
+            all
+          </button>
+          <button
+            :class="{ active: filterGarage === 'count' }"
+            @click="filterGarage = 'count'"
+          >
             with units
-          </div>
-          <div class="button raid" @click="filterGarage = 'empties'">
+          </button>
+          <button
+            :class="{ active: filterGarage === 'empties' }"
+            @click="filterGarage = 'empties'"
+          >
             empties
-          </div>
+          </button>
         </div>
         <div class="garage_container">
           <div class="garage" v-for="(garage, i) in filteredGarages" :key="i">
@@ -170,9 +160,9 @@
                 MWM]
               </div>
             </transition>
-            <img src="../assets/teleport.png" />
+
             <div class="garage_info">
-              <div class="garage_name">TELEPORT</div>
+              <img src="../assets/teleport.png" />
               <div class="garage_coordinates">
                 X:{{ garage.posX }} Y:{{ garage.posY }}
               </div>
@@ -314,12 +304,17 @@ export default {
   flex-wrap: wrap;
 }
 .units_line {
-  width: 50%;
+  width: 25%;
 }
 
 .garage_column {
   padding: 20px;
   width: 90%;
+}
+.garage_info {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
 }
 .garage_column .button {
   margin: 10px;
@@ -329,9 +324,10 @@ export default {
   display: flex;
   flex-wrap: wrap;
   padding: 20px 0;
+  justify-content: space-around;
 }
 .garage {
-  width: 100%;
+  width: 40%;
   display: flex;
   align-items: center;
   color: white;
@@ -350,7 +346,7 @@ export default {
   cursor: pointer;
 }
 .garage img {
-  width: 47%;
+  width: 25%;
 }
 .garage_name {
   color: wheat;

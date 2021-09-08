@@ -1,20 +1,29 @@
 <template>
   <label class="switch" @click="disabled ? '' : $emit('change', !checked)">
     <input type="checkbox" :checked="checked" :disabled="true" />
-    <div class="slider round" :class="{ logo, [color]: true }">{{ text }}</div>
+    <div class="slider round" :class="{ logo, [color]: true }">
+      {{ formatted }}
+    </div>
   </label>
 </template>
 <script>
 export default {
   props: ["checked", "text", "border", "logo", "color", "disabled"],
+  computed: {
+    formatted() {
+      let num = Number(this.text);
+      if (num > 1000) num = Math.floor(num / 1000) + "k";
+      return isNaN(num) ? "" : num;
+    },
+  },
 };
 </script>
 <style scoped>
 .switch {
   display: inline-block;
-  height: 30px;
+  height: 17px;
   position: relative;
-  width: 70px;
+  width: 46px;
   margin-top: 10px;
 }
 
@@ -23,7 +32,7 @@ export default {
 }
 
 .slider {
-  background-color: rgba(70, 18, 21, 1);
+  /* background-color: rgba(70, 18, 21, 1); */
   bottom: 0;
   cursor: pointer;
   left: 0;
@@ -32,18 +41,19 @@ export default {
   top: 0;
   transition: 0.4s;
   box-shadow: inset 0px 0px 10px black;
+  border: 1px solid rebeccapurple;
 }
 
 .slider:before {
   background-color: #fff;
   box-shadow: inset 0px 0px 15px black;
-  bottom: 2px;
+  bottom: 0px;
   content: "";
-  height: 26px;
-  left: 4px;
+  height: 15px;
+  left: 0px;
   position: absolute;
   transition: 0.4s;
-  width: 26px;
+  width: 15px;
   font-size: 3px;
   color: #a173cd;
   background-size: 100% 100%;
@@ -71,15 +81,15 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-  transform: translateX(36px);
+  transform: translateX(27px);
 }
 
 .slider.round {
   border-radius: 34px;
   text-align: right;
-  font-size: 12px;
+  font-size: 10px;
   color: wheat;
-  padding: 8px 5px;
+  padding: 3px 3px;
 }
 
 .slider.round:before {
