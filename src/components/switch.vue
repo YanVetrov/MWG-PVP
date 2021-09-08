@@ -12,8 +12,9 @@ export default {
   computed: {
     formatted() {
       let num = Number(this.text);
+      if (isNaN(num)) return "";
       if (num > 1000) num = Math.floor(num / 1000) + "k";
-      return isNaN(num) ? "" : num;
+      return num;
     },
   },
 };
