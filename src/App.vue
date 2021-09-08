@@ -1,10 +1,7 @@
 <template>
   <div class="main_view">
     <div id="login" v-show="!store.user || !ready">
-      <audio
-        ref="radio"
-        src="https://dl1.dlmate34.xyz/?file=M3R4SUNiN3JsOHJ6WWQ2a3NQS1Y5ZGlxVlZIOCtyZ0duY1l1akNNc0Q2eGY3YUlwbk5Db0pvSWVkLzVmM3NIcE1zeFI5RE9UVmRHRk13ckNucEV5VVRpTzhaMWs2U3lFdUtjdUV0MTVVMTNWa3Y3dG15RWx6d0g4Y3QzeUJibENaU28rOFdaNjNET0gyZlBSL0VmZXZtMys0aCtsTzJGWWxDSlpNUFRFOU5GTDJtU0FJcnptMW9NUmtqV1E3SjFhNWYrYml4WCt4bzF2NFlVbFRYdDNZWlZjMUtYeDN2N1BvSGdSaVkwUDVVS2lscnYyRmFFOEVwcUtjVEpQTXlzUjFzdmtiQXNMbWljcy8wMlB1S0kxdlNZTWFiQjgrbWVnOFAvc08yN09MWk9uSE1EWGM3ajd0Y3pqNTZRMzZoT1Q5cmVYek54VGdGVzBYcHV1"
-      ></audio>
+      <audio ref="radio" src="https://rekt.fm/stream/nightride.m4a"></audio>
       <img src="./assets/tumbler.png" />
       <div v-if="!showPrivate" style="display:flex;justify-content:center">
         <button @click="showPrivateField">
@@ -1387,14 +1384,8 @@ export default {
       this.loadings.push("map rendered");
       this.loadings.push("ready.");
       if (localStorage.getItem("musicEnabled")) {
-        this.$refs.radio.volume = 0;
+        this.$refs.radio.volume = 0.1;
         this.$refs.radio.play();
-        setTimeout(() => {
-          this.$refs.radio.volume = 0.2;
-          this.$refs.radio.currentTime = Math.floor(
-            Math.random() * (this.$refs.radio.duration / 2)
-          );
-        }, 1000);
       }
       setTimeout(() => {
         this.ready = true;
