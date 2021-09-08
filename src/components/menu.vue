@@ -11,7 +11,7 @@
       <div
         class="shards_container"
         :style="{
-          transform: show ? `scale(${scale})` : 'scale(0)',
+          transform: show ? `scale(${1})` : 'scale(0)',
           transition: 'all .3s ease',
           position: 'relative',
         }"
