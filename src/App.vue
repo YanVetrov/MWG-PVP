@@ -653,7 +653,7 @@ export default {
       return dropStuffTransaction(ev);
     },
     changeTab(num) {
-      if (this.tab === this.tabs[num]) this.show = false;
+      if (this.tab === this.tabs[num] && this.show) this.show = false;
       else {
         this.tab = this.tabs[num];
         this.show = true;
