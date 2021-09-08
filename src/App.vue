@@ -203,11 +203,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[1] && show }"
-              @click="
-                show = true;
-                tab = tabs[1];
-                activeBar = false;
-              "
+              @click="changeTab(1)"
             >
               <div>SHARDS</div>
               <img src="./assets/shards.svg" />
@@ -215,11 +211,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[2] && show }"
-              @click="
-                show = true;
-                tab = tabs[2];
-                activeBar = false;
-              "
+              @click="changeTab(2)"
             >
               <div>UNIQUE</div>
               <img src="./assets/discount.svg" />
@@ -227,11 +219,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[3] && show }"
-              @click="
-                show = true;
-                tab = tabs[3];
-                activeBar = false;
-              "
+              @click="changeTab(3)"
             >
               <div>BOXES</div>
               <img src="./assets/box.svg" />
@@ -239,11 +227,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[4] && show }"
-              @click="
-                show = true;
-                tab = tabs[4];
-                activeBar = false;
-              "
+              @click="changeTab(4)"
             >
               <div>RENT CPU</div>
               <img src="./assets/cpu.svg" />
@@ -251,11 +235,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[5] && show }"
-              @click="
-                show = true;
-                tab = tabs[5];
-                activeBar = false;
-              "
+              @click="changeTab(5)"
             >
               <div>SETTINGS</div>
               <img src="./assets/gear.svg" />
@@ -263,11 +243,7 @@
             <div
               class="bar_button"
               :class="{ active_bar_button: tab === tabs[6] && show }"
-              @click="
-                show = true;
-                tab = tabs[6];
-                activeBar = false;
-              "
+              @click="changeTab(6)"
             >
               <div>STAKE UNITS</div>
               <img src="./assets/transfer.svg" />
@@ -675,6 +651,14 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    changeTab(num) {
+      if (this.tab === this.tabs[num]) this.show = false;
+      else {
+        this.tab = this.tabs[num];
+        this.show = true;
+        this.activeBar = false;
+      }
     },
     howToRepair(tank) {
       let discount = 0;
