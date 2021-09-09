@@ -1,6 +1,27 @@
 <template>
   <div class="main_view">
     <tracks v-if="musicEnabled" :title="musicTitle" @tap="$refs.radio.play()" />
+    <div
+      class="teleport"
+      style="position: fixed;
+    color: silver;left:40%"
+    >
+      X:
+      <input
+        style="    width: 33px;
+    background: rgba(0,0,0,0.5);"
+        type="number"
+        v-model="posX"
+      />
+      Y:
+      <input
+        style="    width: 33px;
+    background: rgba(0,0,0,0.5);"
+        type="number"
+        v-model="posY"
+      />
+      <button @click="teleportation({ x: posX, y: posY })">look</button>
+    </div>
     <div id="login" v-show="!store.user || !ready">
       <audio ref="radio" src="https://rekt.fm/stream/nightride.m4a"></audio>
       <img src="./assets/tumbler.png" />
@@ -580,6 +601,8 @@ export default {
       activeLog: false,
       events_count: 0,
       filterGarage: "",
+      posX: 1,
+      posY: 1,
       musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
       musicTitle: "MWG Radio - vol.1",
       confirms: {
