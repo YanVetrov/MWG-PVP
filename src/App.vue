@@ -5,10 +5,11 @@
       class="teleport"
       style="position: fixed;
     color: silver;left:40%"
+      v-if="store.user"
     >
       X:
       <input
-        style="    width: 33px;
+        style="    width: 50px;
     background: rgba(0,0,0,0.5);"
         type="number"
         v-model="posX"
