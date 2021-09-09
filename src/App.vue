@@ -16,7 +16,7 @@
       />
       Y:
       <input
-        style="    width: 33px;
+        style="    width: 50px;
     background: rgba(0,0,0,0.5);"
         type="number"
         v-model="posY"
