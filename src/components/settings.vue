@@ -6,6 +6,7 @@
     <div style="display:flex;">
       <div style="width:50%">
     <div> <input type="checkbox" id="sound" @change="$emit('update:soundEnabled',$event.target.checked)" :checked="soundEnabled"></input> <label for="sound">Sound enabled</label> </div>
+    <div> <input type="checkbox" id="scan" @change="$emit('scanlines',$event.target.checked)" :checked="scanlines"></input> <label for="scan">Scanlines effect</label> </div>
     <div style="margin-bottom:15px;"> 
       <input type="checkbox" id="music" @change="$emit('musicEnabled',$event.target.checked)" :checked="musicEnabled"></input> <label for="music">Music enabled</label> </div>
     RPC ENDPOINT:
@@ -32,7 +33,7 @@
 import endpoints from '~/static/endpoints.js'
 
 export default {
-    props:['soundEnabled','musicEnabled','fullscreen','user','waxBalance','ping','confirms'],
+    props:['soundEnabled','musicEnabled','fullscreen','user','waxBalance','ping','confirms','scanlines'],
     data(){
       return{
         endpoints

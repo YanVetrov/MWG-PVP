@@ -389,6 +389,7 @@
           :CDT="store.unique.CDT"
           :PDT="store.unique.PDT"
           :MDT="store.unique.MDT"
+          :scanlines="scanlines"
           @musicEnabled="changeMusic"
           @repair="repair"
           @order="orderRent"
@@ -409,11 +410,14 @@
           @stakeUnit="stakeUnit"
           @unpack="unpack"
           @claim="claimTokens"
+          @scanlines="changeScanlines"
         />
       </transition>
     </mainMenu>
     <transition name="fade">
-      <canvas v-show="store.user && ready" id="canvas1"></canvas>
+      <div :class="{ scanlines }">
+        <canvas v-show="store.user && ready" id="canvas1"></canvas>
+      </div>
     </transition>
   </div>
 </template>
@@ -602,6 +606,7 @@ export default {
       activeLog: false,
       events_count: 0,
       filterGarage: "",
+      scanlines: JSON.parse(localStorage.getItem("scanlines")) ?? true,
       posX: 1,
       posY: 1,
       musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
@@ -682,6 +687,10 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    changeScanlines(val) {
+      this.scanlines = val;
+      localStorage.setItem("scanlines", val);
     },
     changeTab(num) {
       if (this.tab === this.tabs[num] && this.show) this.show = false;
