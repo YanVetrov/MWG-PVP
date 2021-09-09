@@ -1,5 +1,6 @@
 <template>
   <div class="main_view">
+    <tracks v-if="musicEnabled" :title="musicTitle" @tap="$refs.radio.play()" />
     <div id="login" v-show="!store.user || !ready">
       <audio ref="radio" src="https://rekt.fm/stream/nightride.m4a"></audio>
       <img src="./assets/tumbler.png" />
@@ -402,6 +403,7 @@
 import mainMenu from "./components/menu.vue";
 import shards from "./components/shards.vue";
 import timer from "./components/timer.vue";
+import tracks from "./components/track.vue";
 import unusedUnits from "./components/unusedUnits.vue";
 import units from "./components/units.vue";
 import unique from "./components/unique.vue";
@@ -558,6 +560,7 @@ export default {
     // tanks,
     timer,
     mainMenu,
+    tracks,
     // login,
     shards,
     unique,
@@ -578,6 +581,7 @@ export default {
       events_count: 0,
       filterGarage: "",
       musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
+      musicTitle: "MWG Radio - vol.1",
       confirms: {
         unitmove: true,
         unitmine: true,
@@ -1389,6 +1393,15 @@ export default {
       }
       setTimeout(() => {
         this.ready = true;
+        const evtSource = new EventSource("https://rekt.fm/meta", {
+          withCredentials: false,
+        });
+        evtSource.onmessage = event => {
+          console.log(event, event.data);
+          let arr = JSON.parse(event.data);
+          let station = arr.find(el => el.station === "nightride");
+          this.musicTitle = station.title;
+        };
       }, 2000);
     },
     changeMusic(val, unplay) {
@@ -1766,6 +1779,7 @@ export default {
     if (JSON.parse(localStorage.getItem("musicEnabled")) === null) {
       this.changeMusic(true, true);
     }
+
     setInterval(async () => {
       if (!store.user.rpc) return 0;
       let res = await store.user.rpc.get_table_rows({
