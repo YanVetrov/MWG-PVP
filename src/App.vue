@@ -1669,6 +1669,13 @@ export default {
           },
           true
         );
+        document.addEventListener("keyup", e => {
+          if (e.key === "Escape") {
+            vm.show = false;
+            vm.activeBar = false;
+            vm.activeLog = false;
+          }
+        });
         store.coordinates = new Text(``, {
           fontSize: 30,
           fontFamily: "metalwar",
