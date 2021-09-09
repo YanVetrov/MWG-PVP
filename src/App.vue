@@ -1,10 +1,15 @@
 <template>
   <div class="main_view">
-    <tracks v-if="musicEnabled" :title="musicTitle" @tap="$refs.radio.play()" />
+    <tracks
+      style="z-index:1;"
+      v-if="musicEnabled"
+      :title="musicTitle"
+      @tap="$refs.radio.play()"
+    />
     <div
       class="teleport"
       style="position: fixed;
-    color: silver;left:40%"
+    color: silver;left:40%;z-index:1;"
       v-if="store.user"
     >
       X:
@@ -277,7 +282,11 @@
       </div>
     </div>
 
-    <div class="right_container" :class="{ unactive_log: !activeLog }">
+    <div
+      class="right_container"
+      style="z-index:1;"
+      :class="{ unactive_log: !activeLog }"
+    >
       <div
         @click="
           activeLog = !activeLog;
@@ -1419,10 +1428,9 @@ export default {
           withCredentials: false,
         });
         evtSource.onmessage = event => {
-          console.log(event, event.data);
           let arr = JSON.parse(event.data);
-          let station = arr.find(el => el.station === "nightride");
-          this.musicTitle = station.title;
+          if(arr)let station = arr.find(el => el.station === "nightride");
+          if(station)this.musicTitle = station.title;
         };
       }, 2000);
     },
