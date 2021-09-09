@@ -1,197 +1,180 @@
 <template>
   <div class="units_container">
-    <scroll :ops="ops">
-      <transition-group
-        name="fade"
-        tag="div"
-        mode="out-in"
-        class="units_column"
-      >
-        <div class="units_line" v-for="tank in tanks" :key="tank.asset_id">
-          <div class="units_image">
+    <transition-group name="fade" tag="div" mode="out-in" class="units_column">
+      <div class="units_line" v-for="tank in tanks" :key="tank.asset_id">
+        <div class="units_image">
+          <div
+            class="crash"
+            style="font-size:14px;width:auto"
+            v-if="calcHP(tank) == 0"
+          >
+            NEED REPAIR
+          </div>
+          <div
+            v-if="tank.stuff.reduce((acc, el) => (acc += el.amount), 0) > 0"
+            style="display:flex;position:absolute;align-items:center;color:wheat;width:80%;"
+          >
+            {{
+              tank.stuff.reduce((acc, el) => (acc += el.weight * el.amount), 0)
+            }}/{{ tank.capacity }}
             <div
-              class="crash"
-              style="font-size:14px;width:auto"
-              v-if="calcHP(tank) == 0"
+              @click="$emit('dropStuff', { id: tank.asset_id })"
+              class="button"
+              style="padding:5px;margin:10px;"
             >
-              NEED REPAIR
-            </div>
-            <div
-              v-if="tank.stuff.reduce((acc, el) => (acc += el.amount), 0) > 0"
-              style="display:flex;position:absolute;align-items:center;color:wheat;width:80%;"
-            >
-              {{
-                tank.stuff.reduce(
-                  (acc, el) => (acc += el.weight * el.amount),
-                  0
-                )
-              }}/{{ tank.capacity }}
-              <div
-                @click="$emit('dropStuff', { id: tank.asset_id })"
-                class="button"
-                style="padding:5px;margin:10px;"
-              >
-                drop[{{
-                  tank.stuff.reduce((acc, el) => (acc += el.amount), 0)
-                }}]
-              </div>
-            </div>
-            <div
-              @click="
-                selectedUnits.length < 10
-                  ? (tank.selected = !tank.selected)
-                  : ''
-              "
-              style="display:flex;position:absolute;align-items:center;color:wheat;width:30%;"
-            >
-              <div
-                class="button"
-                :class="{ raid: !tank.selected }"
-                style="padding:5px;margin:10px;"
-              >
-                {{ tank.selected ? "-" : "+" }}
-              </div>
-            </div>
-            <img
-              :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
-              :src="require(`~/assets/cards/${tank.name}/dr.png`)"
-            />
-            <div class="hp_bar" v-if="!isNaN(tank.hp)">
-              <div class="hp_line" :style="{ width: calcHP(tank) + '%' }"></div>
-              <div class="hp_text">{{ tank.hp }}/{{ tank.strength }}</div>
-            </div>
-            <switchbox
-              :checked="tank.discountEnabled"
-              @change="
-                tank.discountTypeEnabled = false;
-                tank.discountEnabled = $event;
-              "
-              :text="PDT || 0"
-              :logo="true"
-              :disabled="PDT === 0"
-              color="purple"
-            />
-            <switchbox
-              @change="
-                tank.discountEnabled = false;
-                tank.discountTypeEnabled = $event;
-              "
-              :checked="tank.discountTypeEnabled"
-              :text="tank.type === 'battle' ? CDT || 0 : MDT || 0"
-              :color="tank.type === 'battle' ? 'red' : 'green'"
-              :logo="true"
-              :disabled="
-                (tank.type === 'battle' && CDT === 0) ||
-                  (tank.type === 'miner' && MDT === 0)
-              "
-            />
-            <div
-              class="button raid"
-              :style="{
-                opacity:
-                  Math.ceil((tank.strength - tank.hp) / 2) == 0 ? 0.5 : 1,
-              }"
-              @click="
-                $emit('repair', {
-                  count: repair(tank),
-                  id: tank.asset_id,
-                  token: tank.discountEnabled
-                    ? 'PDT'
-                    : tank.discountTypeEnabled
-                    ? tank.type === 'battle'
-                      ? 'CDT'
-                      : 'MDT'
-                    : null,
-                })
-              "
-            >
-              REPAIR[
-              <div class="repair_price">
-                {{ repair(tank) }}
-              </div>
-              ]
-            </div>
-            <div class="button raid" @click="$emit('deploy', tank)" key="2">
-              <span v-if="tank.unlockedTime < Date.now()">DEPLOY</span>
-              <timer v-else :time="tank.unlockedTime" />
+              drop[{{ tank.stuff.reduce((acc, el) => (acc += el.amount), 0) }}]
             </div>
           </div>
+          <div
+            @click="
+              selectedUnits.length < 10 ? (tank.selected = !tank.selected) : ''
+            "
+            style="display:flex;position:absolute;align-items:center;color:wheat;width:30%;"
+          >
+            <div
+              class="button"
+              :class="{ raid: !tank.selected }"
+              style="padding:5px;margin:10px;"
+            >
+              {{ tank.selected ? "-" : "+" }}
+            </div>
+          </div>
+          <img
+            :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
+            :src="require(`~/assets/cards/${tank.name}/dr.png`)"
+          />
+          <div class="hp_bar" v-if="!isNaN(tank.hp)">
+            <div class="hp_line" :style="{ width: calcHP(tank) + '%' }"></div>
+            <div class="hp_text">{{ tank.hp }}/{{ tank.strength }}</div>
+          </div>
+          <switchbox
+            :checked="tank.discountEnabled"
+            @change="
+              tank.discountTypeEnabled = false;
+              tank.discountEnabled = $event;
+            "
+            :text="PDT || 0"
+            :logo="true"
+            :disabled="PDT === 0"
+            color="purple"
+          />
+          <switchbox
+            @change="
+              tank.discountEnabled = false;
+              tank.discountTypeEnabled = $event;
+            "
+            :checked="tank.discountTypeEnabled"
+            :text="tank.type === 'battle' ? CDT || 0 : MDT || 0"
+            :color="tank.type === 'battle' ? 'red' : 'green'"
+            :logo="true"
+            :disabled="
+              (tank.type === 'battle' && CDT === 0) ||
+                (tank.type === 'miner' && MDT === 0)
+            "
+          />
+          <div
+            class="button raid"
+            :style="{
+              opacity: Math.ceil((tank.strength - tank.hp) / 2) == 0 ? 0.5 : 1,
+            }"
+            @click="
+              $emit('repair', {
+                count: repair(tank),
+                id: tank.asset_id,
+                token: tank.discountEnabled
+                  ? 'PDT'
+                  : tank.discountTypeEnabled
+                  ? tank.type === 'battle'
+                    ? 'CDT'
+                    : 'MDT'
+                  : null,
+              })
+            "
+          >
+            REPAIR[
+            <div class="repair_price">
+              {{ repair(tank) }}
+            </div>
+            ]
+          </div>
+          <div class="button raid" @click="$emit('deploy', tank)" key="2">
+            <span v-if="tank.unlockedTime < Date.now()">DEPLOY</span>
+            <timer v-else :time="tank.unlockedTime" />
+          </div>
         </div>
+      </div>
 
-        <div v-if="tanks && tanks.length === 0" key="no_data" class="no_data">
-          No units found.
-        </div>
-      </transition-group>
-    </scroll>
-    <scroll :ops="ops">
-      <div class="garage_column">
-        <div style="display:flex;">
-          <button
-            :class="{ active: filterGarage === '' }"
-            @click="filterGarage = ''"
-          >
-            all
-          </button>
-          <button
-            :class="{ active: filterGarage === 'count' }"
-            @click="filterGarage = 'count'"
-          >
-            with units
-          </button>
-          <button
-            :class="{ active: filterGarage === 'empties' }"
-            @click="filterGarage = 'empties'"
-          >
-            empties
-          </button>
-        </div>
-        <div class="garage_container">
-          <div class="garage" v-for="(garage, i) in filteredGarages" :key="i">
-            <transition name="fade">
-              <div
-                @click="$emit('teleport', { units: selectedUnits, garage })"
-                class="teleport_selected"
-                v-if="
-                  selectedUnits.length &&
-                    !(garage.posX === garageX && garage.posY === garageY)
-                "
-              >
-                teleport units there [{{ garage.amount * selectedUnits.length }}
-                MWM]
-              </div>
-            </transition>
+      <div v-if="tanks && tanks.length === 0" key="no_data" class="no_data">
+        No units found.
+      </div>
+    </transition-group>
+    <div class="garage_column">
+      <div style="display:flex;">
+        <button
+          :class="{ active: filterGarage === '' }"
+          @click="filterGarage = ''"
+        >
+          all
+        </button>
+        <button
+          :class="{ active: filterGarage === 'count' }"
+          @click="filterGarage = 'count'"
+        >
+          with units
+        </button>
+        <button
+          :class="{ active: filterGarage === 'empties' }"
+          @click="filterGarage = 'empties'"
+        >
+          empties
+        </button>
+      </div>
+      <div class="garage_container">
+        <div class="garage" v-for="(garage, i) in filteredGarages" :key="i">
+          <transition name="fade">
+            <div
+              @click="$emit('teleport', { units: selectedUnits, garage })"
+              class="teleport_selected"
+              v-if="
+                selectedUnits.length &&
+                  !(garage.posX === garageX && garage.posY === garageY)
+              "
+            >
+              teleport units there [{{ garage.amount * selectedUnits.length }}
+              MWM]
+            </div>
+          </transition>
 
-            <div class="garage_info">
-              <img src="../assets/teleport.png" />
-              <div class="garage_coordinates">
-                X:{{ garage.posX }} Y:{{ garage.posY }}
-              </div>
-              <div class="garage_count">
-                YOUR UNITS:
-                {{
-                  units.filter(
-                    el => el.posY === garage.posY && el.posX === garage.posX
-                  ).length
-                }}
-              </div>
-              <div
-                class="here"
-                v-if="garage.posX == garageX && garage.posY == garageY"
-              >
-                YOU'RE HERE
-              </div>
-              <div
-                v-else
-                @click="$emit('enterGarage', garage)"
-                class="button raid"
-              >
-                ENTER GARAGE
-              </div>
+          <div class="garage_info">
+            <img src="../assets/teleport.png" />
+            <div class="garage_coordinates">
+              X:{{ garage.posX }} Y:{{ garage.posY }}
+            </div>
+            <div class="garage_count">
+              YOUR UNITS:
+              {{
+                units.filter(
+                  el => el.posY === garage.posY && el.posX === garage.posX
+                ).length
+              }}
+            </div>
+            <div
+              class="here"
+              v-if="garage.posX == garageX && garage.posY == garageY"
+            >
+              YOU'RE HERE
+            </div>
+            <div
+              v-else
+              @click="$emit('enterGarage', garage)"
+              class="button raid"
+            >
+              ENTER GARAGE
             </div>
           </div>
         </div>
       </div>
-    </scroll>
+    </div>
     <!-- <div class="selected_units">
       <div class="selected_unit" v-for="tank in selectedUnits" :key="tank.id">
         <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
@@ -302,6 +285,8 @@ export default {
   width: 96%;
   display: flex;
   flex-wrap: wrap;
+  overflow-y: scroll;
+  height: 100%;
 }
 .units_line {
   width: 25%;
@@ -310,6 +295,8 @@ export default {
 .garage_column {
   padding: 20px;
   width: 90%;
+  overflow-y: scroll;
+  height: 100%;
 }
 .garage_info {
   align-items: center;
@@ -364,5 +351,10 @@ export default {
 .garage_coordinates,
 .garage_count {
   font-size: 12px;
+}
+@media screen and (max-width: 813px) {
+  .units_line {
+    width: 50%;
+  }
 }
 </style>

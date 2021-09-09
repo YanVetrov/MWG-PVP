@@ -584,7 +584,7 @@ async function getIngameTanks(
           }
         });
         store.units = createUnits([...arr], unitOnClickHandler);
-        store.unit = store.units[0];
+        // store.unit = store.units[0];
         store.unitsGetted = true;
         handler();
       } else {

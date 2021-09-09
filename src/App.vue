@@ -1251,22 +1251,11 @@ export default {
         }
         if (target.type === "garage") {
           if (event.type === "touchend") {
-            console.log(target.touch);
-            isNaN(target.touch) ? (target.touch = 1) : target.touch++;
-            clearTimeout(target.timeout);
-            target.timeout = setTimeout(() => {
-              target.touch = 0;
-              this.clickUnitMove(store.unit, target);
-            }, 1000);
-            if (target.touch === 2) {
-              target.touch = 0;
-              clearTimeout(target.timeout);
-
-              this.showGarage(
-                store.getGaragesUnits({ x: target.posX, y: target.posY })
-              );
+            console.log("touch");
+            if (!store.unit || !store.unit.unit) {
+              this.showGarage({ posX: target.posX, posY: target.posY });
+              return (target.blocked = false);
             }
-            return (target.blocked = false);
           }
           if (event.button === 2) {
             this.showGarage({ posX: target.posX, posY: target.posY });
