@@ -1429,8 +1429,8 @@ export default {
         });
         evtSource.onmessage = event => {
           let arr = JSON.parse(event.data);
-          if(arr)let station = arr.find(el => el.station === "nightride");
-          if(station)this.musicTitle = station.title;
+          let station = arr.find(el => el.station === "nightride");
+          if (station) this.musicTitle = station.title;
         };
       }, 2000);
     },
