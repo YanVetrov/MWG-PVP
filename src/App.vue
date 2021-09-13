@@ -1075,11 +1075,6 @@ export default {
       );
       tank.posX = x;
       tank.posY = y;
-      if (tank.poised) {
-        tank.health -= 10;
-        tank.poised--;
-        this.checkDestroy(tank);
-      }
       if (tank.self) {
         let vueUnit = this.store.selfUnits.find(el => el.asset_id === id);
         vueUnit.posX = x;
@@ -1599,11 +1594,11 @@ export default {
       crash.animationSpeed = 0.2;
       crash.x = 35;
       crash.y = 30;
-      let damage = unit.unit.attack * 3;
-      if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
-      if (damage < 0) damage = 0;
-      target.unit.health -= damage;
-      target.unit.alphaCounter(`-${damage}`, 0xff1111);
+      // let damage = unit.unit.attack * 3;
+      // if (unit.unit.armor_piercing !== 1) damage -= target.unit.unit.armor;
+      // if (damage < 0) damage = 0;
+      // target.unit.health -= damage;
+      // target.unit.alphaCounter(`-${damage}`, 0xff1111);
       if (target.unit.health <= 0) {
         target.unit.health = 0;
         crash.scale.x = 1.5;

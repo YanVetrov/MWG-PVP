@@ -609,8 +609,8 @@ async function getIngameTanks(
           let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
           let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
           if (el.name === "unitmove") {
-            timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
-            handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
+            // timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
+            // handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
           }
           if (el.name === "unitmine") {
             timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
