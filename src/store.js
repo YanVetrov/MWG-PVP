@@ -643,9 +643,9 @@ async function getIngameTanks(
             });
           }
           if (el.name === "dropstuff") {
-            handlerDropStuff({
-              id: ev.asset_id,
-            });
+            // handlerDropStuff({
+            //   id: ev.asset_id,
+            // });
           }
           if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
             data.data

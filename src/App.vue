@@ -883,8 +883,11 @@ export default {
           console.log("update TIMER");
           vueTank.posX = unit.x;
           vueTank.posY = unit.y;
+          vueTank.stuff = unit.stuff;
         }
       }
+      localTank.unit.stuff = unit.stuff;
+      localTank.stuffCount = localTank.stuffCount;
       let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
@@ -1167,13 +1170,13 @@ export default {
       let tank = store.unitsInVisibleZone.find(el => el.unit.asset_id === id);
       if (!tank) return 0;
       else {
-        let freeSpace = tank.unit.capacity - tank.stuffCount;
-        if (amount > freeSpace) amount = freeSpace;
-        tank.unit.stuff.push({ amount, weight: 1 });
+        // let freeSpace = tank.unit.capacity - tank.stuffCount;
+        // if (amount > freeSpace) amount = freeSpace;
+        // tank.unit.stuff.push({ amount, weight: 1 });
         tank.miningAnimation();
         await shuffleUnit(tank);
         await shuffleUnit(tank);
-        tank.stuffCount = tank.stuffCount;
+        // tank.stuffCount = tank.stuffCount;
         await tank.alphaCounter(`+${amount}`, 0xffee00);
         tank.lockedTime = timeout;
       }
@@ -1441,20 +1444,20 @@ export default {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
       let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
-      let index = store.objectsOnMap.findIndex(
-        el => el.posX === x && el.posY === y
-      );
-      tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
-      if (!stuff) return 0;
-      let { amount, weight } = stuff;
-      let freeSpace = tank.unit.capacity - tank.stuffCount;
-      if (amount > freeSpace) {
-        amount = freeSpace;
-        tank.unit.stuff.push({ amount, weight });
-        tank.stuffCount = tank.stuffCount;
-        stuff.amount -= amount;
-        return tank.alphaCounter(`+${amount}`);
-      }
+      // let index = store.objectsOnMap.findIndex(
+      //   el => el.posX === x && el.posY === y
+      // );
+      // tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
+      // if (!stuff) return 0;
+      // let { amount, weight } = stuff;
+      // let freeSpace = tank.unit.capacity - tank.stuffCount;
+      // if (amount > freeSpace) {
+      //   amount = freeSpace;
+      //   tank.unit.stuff.push({ amount, weight });
+      //   tank.stuffCount = tank.stuffCount;
+      //   stuff.amount -= amount;
+      //   return tank.alphaCounter(`+${amount}`);
+      // }
       gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
       await gsap.to(stuff, {
         x: tank.x + 50,
@@ -1462,10 +1465,10 @@ export default {
         alpha: 0,
         duration: 1.5,
       });
-      tank.unit.stuff.push({ amount, weight });
-      tank.stuffCount = tank.stuffCount;
-      store.gameScene.removeChild(stuff);
-      store.objectsOnMap.splice(index, 1);
+      // tank.unit.stuff.push({ amount, weight });
+      // tank.stuffCount = tank.stuffCount;
+      // store.gameScene.removeChild(stuff);
+      // store.objectsOnMap.splice(index, 1);
     },
     checkUnits() {
       setInterval(() => {
