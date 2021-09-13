@@ -116,6 +116,7 @@
             </h1>
 
 <p>
+    
     Borrowers: Players will be able to create rental orders to have WAX staked to their CPU for a certain time period
 </p>
 
@@ -140,7 +141,8 @@
     - Renter’s account informs metalwarrent to send reward for completed order
     - Renter’s account takes back the WAX that was staked for borrower’s CPU 
 </p>
-
+<p style="color:yellow;">
+for claim Wax charges a fee in the amount of 5% of the reward amount</p>
 <p>
     Protection for borrowers:
 </p>
@@ -183,6 +185,8 @@
 <p>
     - 1 ваш акаунт сообщает контракту  'metalwarrent'  о том что он желает получить вознаграждения за завершенный  заказ тогда контракт отправит вам вознаграждение указаное в данном заказе<br>
     - 2 ваш акаунт отзывает делегированные  ранее  соответствующее заказу количество WAX в CPU для акаунта заказчика<br>
+    <span style="color:yellow;">
+за claim, wax взимает комиссию в размере 5% от суммы награды</span>
 </p>
 
 <p>
