@@ -70,7 +70,7 @@
             <div>
                     <button
                      @click="$emit('claimRent',{order_id:item.id,amount:item.stake_money,receiver:item.owner})">
-                     claim
+                     claim {{Number(item.price.split(' ')[0].split('.')[0])-Number(item.price.split(' ')[0].split('.')[0])*0.05}}WAX({{item.price.split(' ')[0].split('.')[0]}}WAX-5%)
                      </button>
             </div>
         </div>
