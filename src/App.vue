@@ -1338,6 +1338,8 @@ export default {
                 target
               );
               let clone = store.unit;
+              if (target.unit.unit.type === "validator")
+                return (target.blocked = false);
               if (clone.proccess) return (target.blocked = false);
               clone.proccess = true;
               let res = await fireTransaction({
