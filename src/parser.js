@@ -54,7 +54,7 @@ const uint64_keys_mut = ["asset_id", "location", "next_availability"];
 const uint32_keys_mut = ["x", "y"];
 const uint16_keys_mut = ["hp"];
 const uint8_keys_mut = ["poised_value", "poised_cnt"];
-const string_keys_mut = ["owner"];
+const string_keys_mut = ["owner", "action_data", "action_name"];
 
 const unpack_units = array => {
   const dataView = new DataView(array.buffer);
