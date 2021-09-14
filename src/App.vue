@@ -30,10 +30,7 @@
     </div>
     <div id="login" v-show="!store.user || !ready">
       <audio ref="radio" src="https://rekt.fm/stream/nightride.m4a"></audio>
-      <img
-        @click="countPrivate < 5 ? countPrivate++ : (savePrivate = true)"
-        src="./assets/tumbler.png"
-      />
+      <img @click="countPrivate++" src="./assets/tumbler.png" />
       <div v-if="!showPrivate" style="display:flex;justify-content:center">
         <button @click="showPrivateField">
           Enter with private key
@@ -55,7 +52,9 @@
     <transition name="slide">
       <notify :notify="errors" />
     </transition>
-    <div class="alpha">open pre-alfa test: {{ store.user.accountName }}</div>
+    <div class="alpha">
+      OPEN ALFA-TEST
+    </div>
     <div class="bar_ui" v-show="store.user">
       <div class="bar_switcher" @click="activeBar = !activeBar">
         <img
@@ -1575,7 +1574,7 @@ export default {
       return true;
     },
     initLogin(privateKey) {
-      if (this.savePrivate) {
+      if (this.countPrivate > 5) {
         localStorage.setItem("pv", privateKey);
       }
       initUal(async e => {
