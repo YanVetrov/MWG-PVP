@@ -30,7 +30,10 @@
     </div>
     <div id="login" v-show="!store.user || !ready">
       <audio ref="radio" src="https://rekt.fm/stream/nightride.m4a"></audio>
-      <img src="./assets/tumbler.png" />
+      <img
+        @click="countPrivate < 5 ? countPrivate++ : (savePrivate = true)"
+        src="./assets/tumbler.png"
+      />
       <div v-if="!showPrivate" style="display:flex;justify-content:center">
         <button @click="showPrivateField">
           Enter with private key
@@ -613,6 +616,8 @@ export default {
     return {
       tabs,
       showPrivate: false,
+      savePrivate: false,
+      countPrivate: 0,
       tab: tabs[0],
       activeBar: false,
       activeLog: false,
@@ -1570,6 +1575,9 @@ export default {
       return true;
     },
     initLogin(privateKey) {
+      if (this.savePrivate) {
+        localStorage.setItem("pv", privateKey);
+      }
       initUal(async e => {
         if (e[0].wax) e[0].rpc = e[0].wax.rpc;
         store.user = e[0];
@@ -1755,7 +1763,8 @@ export default {
         );
         vm.checkUnits();
         vm.renderMap();
-        vm.initLogin();
+        let pv = localStorage.getItem("pv");
+        vm.initLogin(pv);
         enableInteractiveMap(
           document.querySelector("canvas"),
           store.gameScene,
