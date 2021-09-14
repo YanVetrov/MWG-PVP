@@ -1,43 +1,40 @@
 <template>
   <div class="units_container">
-    <scroll :ops="ops">
-      <div class="units_line" v-for="tank in unusedUnits" :key="tank.id">
-        <div class="units_image" @click="$emit('stakeUnit', { id: tank.id })">
-          <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
-          Click to use in game
-        </div>
+    <div class="units_line" v-for="tank in unusedUnits" :key="tank.id">
+      <div class="units_image" @click="$emit('stakeUnit', { id: tank.id })">
+        <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
+        Click to use in game
       </div>
+    </div>
 
-      <div
-        v-if="unusedUnits && unusedUnits.length === 0"
-        key="no_data"
-        class="no_data"
+    <div
+      v-if="unusedUnits && unusedUnits.length === 0"
+      key="no_data"
+      class="no_data"
+    >
+      No units found. You can buy units on
+      <a
+        target="_blank"
+        href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=unit&sort=created&symbol=WAX"
+        >this link</a
       >
-        No units found. You can buy units on
-        <a
-          target="_blank"
-          href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=unit&sort=created&symbol=WAX"
-          >this link</a
-        >
-        or units packs on
-        <a
-          target="_blank"
-          href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=packs&sort=created&symbol=WAX"
-          >this link.</a
-        >
-        <br />
-        <!-- <img src="~/assets/hamster.png" />
+      or units packs on
+      <a
+        target="_blank"
+        href="https://wax.atomichub.io/market?collection_name=metalwargame&order=desc&schema_name=packs&sort=created&symbol=WAX"
+        >this link.</a
+      >
+      <br />
+      <!-- <img src="~/assets/hamster.png" />
         <img src="~/assets/wolf.png" />
         <img src="~/assets/hamster_pack.png" />
         <img src="~/assets/mega_pack.png" /> -->
-        <br />
-        if you have units but they are not displayed in this window, try
-        changing the rpc endpoint in
-        <button @click="$emit('tab', 4)">settings</button> or check the ban
-        status of your wallet.
-      </div>
-    </scroll>
-
+      <br />
+      if you have units but they are not displayed in this window, try changing
+      the rpc endpoint in
+      <button @click="$emit('tab', 4)">settings</button> or check the ban status
+      of your wallet.
+    </div>
     <!-- <div class="selected_units">
       <div class="selected_unit" v-for="tank in selectedUnits" :key="tank.id">
         <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
@@ -97,13 +94,14 @@ export default {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 .units_image {
   color: rgb(150, 150, 150);
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 12%;
+  width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 5px;
   margin: 5px;
@@ -122,7 +120,7 @@ export default {
   flex-wrap: wrap;
 }
 .units_line {
-  width: 100%;
+  width: 200px;
   padding-top: 10px;
   flex-wrap: wrap;
   justify-content: space-around;
