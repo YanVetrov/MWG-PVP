@@ -565,6 +565,7 @@ import {
   stakeUnit,
   unpack,
   claimTokens,
+  createUnits,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -870,7 +871,7 @@ export default {
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
         console.log(`UNKNOWN UNIT NOT EXIST`);
-        return console.log(unit);
+        return this.addUnit(unit);
       }
       if (unit.owner === store.user.accountName) {
         let vueTank = this.store.selfUnits.find(
@@ -913,6 +914,65 @@ export default {
       if (tank.self) {
         let unit = this.store.selfUnits.find(el => el.asset_id === id);
         if (unit) unit.hp = unit.strength;
+      }
+    },
+    async addUnit(unit) {
+      let tank = base.find(key => unit.template_id === key.id);
+      if (tank) {
+        let locked = unit.next_availability * 1000 > Date.now();
+        let lockedTime = unit.next_availability * 1000;
+        unit.capacity *= 10;
+        tank = {
+          ...unit,
+          ...tank,
+          inGame: true,
+          id: unit.asset_id,
+          repair: Math.ceil((unit.strength - unit.hp) / 2),
+          locked,
+          lockedTime,
+          self: unit.owner === store.user.accountName,
+        };
+      }
+      let newTank = createUnits([tank], this.rightUnitClick)[0];
+      store.units.push(newTank);
+      this.setUnits([newTank]);
+      if (newTank.self) {
+        let { posX, posY } = newTank;
+        let main = newTank.unit;
+        let unlockedTime = newTank.lockedTime;
+        let {
+          name,
+          image,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+          type,
+        } = main;
+        let vueTank = {
+          posX,
+          name,
+          image,
+          posY,
+          hp,
+          strength,
+          capacity,
+          asset_id,
+          repair,
+          load,
+          repairing,
+          stuff,
+          unlockedTime,
+          type,
+          discountEnabled: false,
+          discountTypeEnabled: false,
+          selected: false,
+        };
+        this.store.selfUnits.push(vueTank);
       }
     },
     setObjectOnMap(el) {
