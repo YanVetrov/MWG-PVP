@@ -458,16 +458,12 @@ function createUnits(arr, handler) {
       if (!this.unit.type === "validator")
         return console.log("not validator =" + this.unit.type);
       this.unit.direction = "stake_" + this.unit.direction;
-      window.sound("teleport");
+      window.sound("validator");
       this.locked = true;
     };
     if (el.type === "validator") {
-      container.scale.x = 1.7;
-      container.scale.y = 1.7;
-      container.on("pointerup", e => {
-        if (!container.active) return true;
-        container.stakeValidator();
-      });
+      container.scale.x = 1.3;
+      container.scale.y = 1.3;
     }
     container.health = el.hp;
     return container;
@@ -583,6 +579,7 @@ async function getIngameTanks(
             arr.push(tank);
           }
         });
+        console.log(arr.filter(el => el.owner === store.user.accountName));
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
         store.unitsGetted = true;

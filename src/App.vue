@@ -1516,14 +1516,18 @@ export default {
           this.onUnitDrop,
           this.onUnitRepair,
           this.checkUnitChange,
-          e =>
-            e.data.button === 2
-              ? dropStuffTransaction({ id: e.target.unit.asset_id })
-              : (store.unit = {}),
+          this.rightUnitClick,
           this.onTeleport,
           this.renderStuff
         );
       }, privateKey);
+    },
+    async rightUnitClick(e) {
+      if (e.data.button === 2) {
+        if (e.target.unit.type === "validator") {
+          e.target.stakeValidator();
+        } else dropStuffTransaction({ id: e.target.unit.asset_id });
+      } else store.unit = {};
     },
     async unitAction(unit, target) {
       unit.unit.direction = getDirection(unit.ground, target);
@@ -1640,6 +1644,7 @@ export default {
       sound.add("fire", "./assets/sound/fire.mp3");
       sound.add("go", "./assets/sound/go.mp3");
       sound.add("teleport", "./assets/teleport.mp3");
+      sound.add("validator", "./assets/sound/teleport.mp3");
       sound.volumeAll = 0.2;
       window.sound = name => sound.play(name || "go");
       initGsap();
