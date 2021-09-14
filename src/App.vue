@@ -872,11 +872,11 @@ export default {
       localStorage.clear();
       location.reload();
     },
-    checkUnitChange(unit) {
+    async checkUnitChange(unit) {
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
         console.log(`UNKNOWN UNIT NOT EXIST`);
-        return this.addUnit(unit);
+        localTank = await this.addUnit(unit);
       }
       if (unit.owner === store.user.accountName) {
         let vueTank = this.store.selfUnits.find(
@@ -940,7 +940,7 @@ export default {
       }
       let newTank = createUnits([tank], this.rightUnitClick)[0];
       store.units.push(newTank);
-      this.setUnits([newTank]);
+      await this.setUnits([newTank]);
       if (newTank.self) {
         let { posX, posY } = newTank;
         let main = newTank.unit;
@@ -979,6 +979,7 @@ export default {
         };
         this.store.selfUnits.push(vueTank);
       }
+      return newTank;
     },
     setObjectOnMap(el) {
       let randomY = Math.floor(Math.random() * (199 - 170)) + 170;
@@ -1560,12 +1561,13 @@ export default {
       });
     },
 
-    setUnits(units) {
+    async setUnits(units) {
       units.forEach((el, i) => {
         if (isNaN(el.posX) || isNaN(el.posY)) return 0;
         store.gameScene.addChild(el);
         setUnit(el, store.map[el.posY - 1][el.posX - 1], false, "unit");
       });
+      return true;
     },
     initLogin(privateKey) {
       initUal(async e => {

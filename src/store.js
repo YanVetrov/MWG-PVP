@@ -558,34 +558,33 @@ async function getIngameTanks(
       if (Object.keys(units).length > 1000) {
         store.vue.loadings.push("units ready");
         let allTanks = Object.values(units);
+
         let arr = [];
         allTanks.forEach(el => {
-          let tank = base.find(key => el.template_id === key.id);
-          if (!tank) {
-          } else {
-            let locked = el.next_availability * 1000 > Date.now();
-            let lockedTime = el.next_availability * 1000;
-            el.capacity *= 10;
-            tank = {
-              ...el,
-              ...tank,
-              inGame: true,
-              id: el.asset_id,
-              repair: Math.ceil((el.strength - el.hp) / 2),
-              locked,
-              lockedTime,
-              self: el.owner === store.user.accountName,
-            };
-            arr.push(tank);
-          }
+          let tank = parseUnit(el);
+          if (tank) arr.push(tank);
         });
+        store.cashUnits = allTanks;
+        console.log(arr);
+        arr = arr.filter(el => {
+          if (
+            !store.garages.some(
+              ground => ground.posX === el.x && ground.posY === el.y
+            ) ||
+            el.self
+          )
+            return true;
+        });
+        console.log(arr.length);
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
         store.unitsGetted = true;
         handler();
       } else {
         let allTanks = Object.values(units);
-        allTanks.forEach(el => unitChanges(el));
+        allTanks.forEach(async el => {
+          unitChanges(el);
+        });
       }
     } else {
       let data = JSON.parse(message.data);
@@ -675,6 +674,24 @@ async function getIngameTanks(
 function inlog(obj) {
   console.log(obj);
   store.logs.push(obj);
+}
+function parseUnit(el) {
+  let tank = base.find(key => el.template_id === key.id);
+  if (!tank) return null;
+  let locked = el.next_availability * 1000 > Date.now();
+  let lockedTime = el.next_availability * 1000;
+  el.capacity *= 10;
+  tank = {
+    ...el,
+    ...tank,
+    inGame: true,
+    id: el.asset_id,
+    repair: Math.ceil((el.strength - el.hp) / 2),
+    locked,
+    lockedTime,
+    self: el.owner === store.user.accountName,
+  };
+  return tank;
 }
 async function moveTransaction({ id, x, y }) {
   if (!id) return true;
