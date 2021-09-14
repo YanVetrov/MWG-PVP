@@ -417,6 +417,7 @@
           @craftMech="craftMech"
           @exchange="exchange"
           @stakeUnit="stakeUnit"
+          @unstake="unstakeUnit"
           @unpack="unpack"
           @claim="claimTokens"
           @scanlines="changeScanlines"
@@ -566,6 +567,7 @@ import {
   unpack,
   claimTokens,
   createUnits,
+  unstakeUnit,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -750,6 +752,9 @@ export default {
     },
     unpack(data) {
       unpack(data);
+    },
+    unstakeUnit(data) {
+      unstakeUnit(data);
     },
     claimTokens(data) {
       claimTokens(data);
@@ -1676,7 +1681,6 @@ export default {
         crash.x = -20;
         crash.y = -90;
         crash.play();
-        this.checkDestroy(target.unit);
         setTimeout(async () => {
           target.unit.unit.texture =
             target.unit.unit.broken[target.unit.unit.direction];

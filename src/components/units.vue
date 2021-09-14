@@ -43,6 +43,13 @@
             :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
             :src="require(`~/assets/cards/${tank.name}/dr.png`)"
           />
+          <button
+            @click="$emit('unstake', { id: tank.asset_id })"
+            class="unstake"
+            v-if="garageY === 1 && garageX === 1"
+          >
+            unstake
+          </button>
           <div class="hp_bar" v-if="!isNaN(tank.hp)">
             <div class="hp_line" :style="{ width: calcHP(tank) + '%' }"></div>
             <div class="hp_text">{{ tank.hp }}/{{ tank.strength }}</div>

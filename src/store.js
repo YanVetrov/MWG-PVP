@@ -579,7 +579,6 @@ async function getIngameTanks(
             arr.push(tank);
           }
         });
-        console.log(arr.filter(el => el.owner === store.user.accountName));
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
         store.unitsGetted = true;
@@ -896,6 +895,19 @@ async function craftMech({ count, shardCode }) {
   });
   return errorHandler(response);
 }
+async function unstakeUnit({ id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "unstake",
+    account: "metalwargame",
+    data: {
+      to: account,
+      asset_ids: [id],
+    },
+  });
+  return errorHandler(response);
+}
 async function claimTokens({ id }) {
   let response = await transaction({
     user: store.user,
@@ -1006,4 +1018,5 @@ export {
   stakeUnit,
   unpack,
   claimTokens,
+  unstakeUnit,
 };
