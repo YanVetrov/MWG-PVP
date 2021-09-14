@@ -1221,7 +1221,7 @@ export default {
 
         if (tank.visible && targetTank.visible) {
           let ground = targetTank.ground;
-          await this.unitAction(tank, ground);
+          if (tank && ground) await this.unitAction(tank, ground);
           this.checkDestroy(tank);
         }
         if (targetTank.self) {
