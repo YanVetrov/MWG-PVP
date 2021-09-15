@@ -564,8 +564,6 @@ async function getIngameTanks(
           let tank = parseUnit(el);
           if (tank) arr.push(tank);
         });
-        store.cashUnits = allTanks;
-        console.log(arr);
         arr = arr.filter(el => {
           if (
             !store.garages.some(
@@ -582,89 +580,90 @@ async function getIngameTanks(
         handler();
       } else {
         let allTanks = Object.values(units);
+        console.log(allTanks);
         allTanks.forEach(async el => {
           unitChanges(el);
         });
       }
     } else {
       let data = JSON.parse(message.data);
-      console.log(data);
       if (data.type === "units" && data.data) {
+        console.log(data);
         let allTanks = Object.values(units);
         allTanks.forEach(el => unitChanges(el));
       }
-      if (
-        data.type === "actions" &&
-        data.data &&
-        typeof data.data.forEach === "function"
-      ) {
-        data.data.forEach(el => {
-          let info = el;
-          let ev = info.data;
-          let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
-          let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
-          if (el.name === "unitmove") {
-            // timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
-            // handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
-          }
-          if (el.name === "unitmine") {
-            timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
-            let geyser = store.objectsOnMap.find(
-              el => el.posX === ev.x && el.posY === ev.y
-            );
-            if (!geyser) geyser = {};
-            let amount = 60 * (geyser.lvl || 1);
-            let multiply = 1;
-            if (Date.now() < new Date("2021-09-04T20:15:00")) multiply = 2;
-            amount *= multiply;
-            handlerMine({
-              id: ev.asset_id,
-              timeout,
-              amount,
-            });
-          }
-          if (el.name === "unitattack") {
-            handlerAttack({
-              id: ev.asset_id,
-              target_id: ev.target_id,
-              timeout,
-            });
-          }
-          if (el.name === "collectstuff") {
-            handlerCollect({
-              id: ev.asset_id,
-              x: ev.x,
-              y: ev.y,
-            });
-          }
-          if (el.name === "dropstuff") {
-            // handlerDropStuff({
-            //   id: ev.asset_id,
-            // });
-          }
-          if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
-            data.data
-              .filter(
-                el => el.data && el.data.memo && el.data.memo.match("repair")
-              )
-              .forEach(el => {
-                let id = el.data.memo.split(":")[1];
-                handlerRepair({ id });
-              });
-            data.data
-              .filter(
-                el => el.data && el.data.memo && el.data.memo.match("tp:")
-              )
-              .forEach(el => {
-                let str = el.data.memo.split(":");
-                let location = str[1];
-                let ids = str.slice(2, 99);
-                let self = el.data.from === account;
-                handlerTeleport({ location, ids, self });
-              });
-          }
-        });
-      }
+      // if (
+      //   data.type === "actions" &&
+      //   data.data &&
+      //   typeof data.data.forEach === "function"
+      // ) {
+      //   data.data.forEach(el => {
+      //     let info = el;
+      //     let ev = info.data;
+      //     let ago = Math.ceil((Date.now() - info.ts * 1000) / 1000);
+      //     let timeout = Date.now() + (store.defaultFireTimeout - ago) * 1000;
+      //     if (el.name === "unitmove") {
+      //       // timeout = Date.now() + (store.defaultMoveTimeout - ago) * 1000;
+      //       // handlerMove({ id: ev.asset_id, x: ev.x, y: ev.y, timeout });
+      //     }
+      //     if (el.name === "unitmine") {
+      //       timeout = Date.now() + (store.defaultMineTimeout - ago) * 1000;
+      //       let geyser = store.objectsOnMap.find(
+      //         el => el.posX === ev.x && el.posY === ev.y
+      //       );
+      //       if (!geyser) geyser = {};
+      //       let amount = 60 * (geyser.lvl || 1);
+      //       let multiply = 1;
+      //       if (Date.now() < new Date("2021-09-04T20:15:00")) multiply = 2;
+      //       amount *= multiply;
+      //       handlerMine({
+      //         id: ev.asset_id,
+      //         timeout,
+      //         amount,
+      //       });
+      //     }
+      //     if (el.name === "unitattack") {
+      //       handlerAttack({
+      //         id: ev.asset_id,
+      //         target_id: ev.target_id,
+      //         timeout,
+      //       });
+      //     }
+      //     if (el.name === "collectstuff") {
+      //       handlerCollect({
+      //         id: ev.asset_id,
+      //         x: ev.x,
+      //         y: ev.y,
+      //       });
+      //     }
+      //     if (el.name === "dropstuff") {
+      //       // handlerDropStuff({
+      //       //   id: ev.asset_id,
+      //       // });
+      //     }
+      //     if (el.name === "transfer" && data.data.some(el => el.data.memo)) {
+      //       data.data
+      //         .filter(
+      //           el => el.data && el.data.memo && el.data.memo.match("repair")
+      //         )
+      //         .forEach(el => {
+      //           let id = el.data.memo.split(":")[1];
+      //           handlerRepair({ id });
+      //         });
+      //       data.data
+      //         .filter(
+      //           el => el.data && el.data.memo && el.data.memo.match("tp:")
+      //         )
+      //         .forEach(el => {
+      //           let str = el.data.memo.split(":");
+      //           let location = str[1];
+      //           let ids = str.slice(2, 99);
+      //           let self = el.data.from === account;
+      //           handlerTeleport({ location, ids, self });
+      //         });
+      //     }
+      //   });
+      // }
       if (data.type === "stuff") {
         handlerStuff(data.data);
       }

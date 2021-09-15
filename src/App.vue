@@ -829,7 +829,6 @@ export default {
           return el.stuff;
         })
         .reduce((acc, el) => acc.concat(el), []);
-      console.log(stuffs);
       stuffs.forEach(el => {
         let stuff = createObjectOnMap({
           name: "stuff",
@@ -902,6 +901,43 @@ export default {
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
+      }
+      if (
+        unit.action_data !== localTank.unit.action_data ||
+        unit.action_name !== localTank.unit.action_name
+      ) {
+        localTank.action_data = unit.action_data;
+        localTank.action_name = unit.action_name;
+        let action = unit.action_data;
+        let data = unit.action_name.split(":");
+        console.log(action, data, localTank.unit);
+        if (action === "unitmine") {
+          let timeout = Date.now() + store.defaultMineTimeout * 1000;
+          let x = parseInt(data[1] / 100000);
+          let y = parseInt(data[1] % 100000);
+          let geyser = store.objectsOnMap.find(
+            el => el.posX === x && el.posY === y
+          );
+          if (!geyser) geyser = {};
+          let amount = 60 * (geyser.lvl || 1);
+          this.onUnitMine({ id: data[0], amount, timeout });
+        }
+        if (action === "unitattack") {
+          let timeout = Date.now() + store.defaultFireTimeout * 1000;
+          this.onUnitAttack({
+            id: data[0],
+            target_id: data[1],
+            timeout,
+          });
+        }
+        if (action === "repair") {
+          this.onUnitRepair({ id: data[0] });
+        }
+        if (action === "collectstuff") {
+          let x = parseInt(data[1] / 100000);
+          let y = parseInt(data[1] % 100000);
+          this.onUnitCollect({ id: data[0], x, y });
+        }
       }
       if (unit.x != localTank.posX || unit.y != localTank.posY) {
         console.log(template + `X:${unit.x} -> Y:${unit.y}`);
@@ -1228,12 +1264,6 @@ export default {
           if (tank && ground) await this.unitAction(tank, ground);
           this.checkDestroy(tank);
         }
-        if (targetTank.self) {
-          let vueTank = this.store.selfUnits.find(
-            el => el.asset_id === unit.asset_id
-          );
-          if (vueTank) vueTank.hp = targetTank.health;
-        }
       }
     },
     async onUnitMine({ id, timeout, amount }) {
@@ -1318,7 +1348,7 @@ export default {
       target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(this.store.user);
+      console.log(target.unit);
       try {
         if (target.blocked) return 0;
         target.blocked = true;
