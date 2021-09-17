@@ -570,6 +570,7 @@ import {
   claimTokens,
   createUnits,
   unstakeUnit,
+  placegarage,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -879,7 +880,7 @@ export default {
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
         console.log(`UNKNOWN UNIT NOT EXIST`);
-        localTank = await this.addUnit(unit);
+        return this.addUnit(unit);
       }
       if (unit.owner === store.user.accountName) {
         let vueTank = this.store.selfUnits.find(
@@ -901,6 +902,18 @@ export default {
       if (unit.hp != localTank.health) {
         console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
+      }
+
+      if (unit.x != localTank.posX || unit.y != localTank.posY) {
+        console.log(template + `X:${unit.x} -> Y:${unit.y}`);
+        this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
+      }
+      if (localTank.lockedTime !== unit.next_availability * 1000) {
+        console.log(
+          template +
+            `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
+        );
+        localTank.lockedTime = unit.next_availability * 1000;
       }
       if (
         unit.action_data !== localTank.unit.action_data ||
@@ -938,17 +951,6 @@ export default {
           let y = parseInt(data[1] % 100000);
           this.onUnitCollect({ id: data[0], x, y });
         }
-      }
-      if (unit.x != localTank.posX || unit.y != localTank.posY) {
-        console.log(template + `X:${unit.x} -> Y:${unit.y}`);
-        this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
-      }
-      if (localTank.lockedTime !== unit.next_availability * 1000) {
-        console.log(
-          template +
-            `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
-        );
-        localTank.lockedTime = unit.next_availability * 1000;
       }
     },
     async onUnitRepair({ id }) {
@@ -1632,6 +1634,8 @@ export default {
       if (e.data.button === 2) {
         if (e.target.unit.type === "validator") {
           e.target.stakeValidator();
+          let id = e.target.unit.asset_id;
+          placegarage({ id });
         } else dropStuffTransaction({ id: e.target.unit.asset_id });
       } else store.unit = {};
     },

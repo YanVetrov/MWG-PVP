@@ -924,6 +924,18 @@ async function unstakeUnit({ id }) {
   });
   return errorHandler(response);
 }
+async function placegarage({ id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "placegarage",
+    account: "metalwargame",
+    data: {
+      asset_id: id,
+    },
+  });
+  return errorHandler(response);
+}
 async function claimTokens({ id }) {
   let response = await transaction({
     user: store.user,
@@ -1035,4 +1047,5 @@ export {
   unpack,
   claimTokens,
   unstakeUnit,
+  placegarage,
 };
