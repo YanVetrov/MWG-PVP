@@ -138,12 +138,27 @@ Object.defineProperty(store, "unitsFromKeys", {
   },
 });
 function createObjectOnMap(el) {
+  let container = new Container();
   let sprite = Sprite.from(`./assets/${el.image}.png`);
   sprite.zIndex = 1;
   sprite.interactive = false;
   sprite.buttonMode = false;
   Object.keys(el).forEach(key => (sprite[key] = el[key]));
-  return sprite;
+  Object.keys(el).forEach(key => (container[key] = el[key]));
+  let text = new Text(`${el.owner || "LVL: " + el.lvl}`, {
+    fill: "#A009B4",
+    fontFamily: "metalwar",
+    fontSize: 20,
+    stroke: "#000",
+    strokeThickness: 4,
+    align: "center",
+  });
+  text.anchor.set(-0.2, 0);
+  text.scale.x = 1 + (1 - el.scaled);
+  text.scale.y = 1 + (1 - el.scaled);
+  container.addChild(sprite);
+  container.addChild(text);
+  return container;
 }
 function createUnits(arr, handler) {
   return arr.map((el, i) => {
@@ -512,13 +527,14 @@ async function getIngameTanks(
     let posY = parseInt(el.location % 100000);
     objectsOnMap.push(
       createObjectOnMap({
+        ...el,
         name: "garage mini",
-        image: "teleport",
+        image: el.asset_id ? "cards/validator/stake_l" : "teleport",
         posX,
         posY,
-        scaled: 0.7,
-        diffX: 15,
-        diffY: -20,
+        scaled: el.asset_id ? 0.3 : 0.7,
+        diffX: el.asset_id ? 10 : 15,
+        diffY: el.asset_id ? -90 : -20,
         amount: el.price,
         type: "garage",
       })
@@ -936,6 +952,18 @@ async function placegarage({ id }) {
   });
   return errorHandler(response);
 }
+async function pickgarage({ id }) {
+  let account = await store.user.getAccountName();
+  let response = await transaction({
+    user: store.user,
+    name: "pickgarage",
+    account: "metalwargame",
+    data: {
+      asset_id: id,
+    },
+  });
+  return errorHandler(response);
+}
 async function claimTokens({ id }) {
   let response = await transaction({
     user: store.user,
@@ -1048,4 +1076,5 @@ export {
   claimTokens,
   unstakeUnit,
   placegarage,
+  pickgarage,
 };

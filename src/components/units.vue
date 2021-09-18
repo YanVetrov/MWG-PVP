@@ -29,6 +29,7 @@
             @click="
               selectedUnits.length < 10 ? (tank.selected = !tank.selected) : ''
             "
+            v-if="garageId !== tank.asset_id"
             style="display:flex;position:absolute;align-items:center;color:wheat;width:30%;"
           >
             <div
@@ -50,11 +51,15 @@
           >
             unstake
           </button>
-          <div class="hp_bar" v-if="!isNaN(tank.hp)">
+          <div
+            class="hp_bar"
+            v-if="!isNaN(tank.hp) && garageId !== tank.asset_id"
+          >
             <div class="hp_line" :style="{ width: calcHP(tank) + '%' }"></div>
             <div class="hp_text">{{ tank.hp }}/{{ tank.strength }}</div>
           </div>
           <switchbox
+            v-if="garageId !== tank.asset_id"
             :checked="tank.discountEnabled"
             @change="
               tank.discountTypeEnabled = false;
@@ -66,6 +71,7 @@
             color="purple"
           />
           <switchbox
+            v-if="garageId !== tank.asset_id"
             @change="
               tank.discountEnabled = false;
               tank.discountTypeEnabled = $event;
@@ -80,6 +86,7 @@
             "
           />
           <div
+            v-if="garageId !== tank.asset_id"
             class="button raid"
             :style="{
               opacity: Math.ceil((tank.strength - tank.hp) / 2) == 0 ? 0.5 : 1,
@@ -104,9 +111,30 @@
             </div>
             ]
           </div>
-          <div class="button raid" @click="$emit('deploy', tank)" key="2">
+          <div
+            v-if="garageId !== tank.asset_id"
+            class="button raid"
+            @click="$emit('deploy', tank)"
+            key="2"
+          >
             <span v-if="tank.unlockedTime < Date.now()">DEPLOY</span>
             <timer v-else :time="tank.unlockedTime" />
+          </div>
+          <div
+            v-if="garageId === tank.asset_id"
+            class="button raid"
+            @click="$emit('attack', tank)"
+            key="2"
+          >
+            ATTACK
+          </div>
+          <div
+            v-if="garageId === tank.asset_id"
+            class="button raid"
+            @click="$emit('pick', { id: tank.asset_id })"
+            key="2"
+          >
+            PICK
           </div>
         </div>
       </div>
@@ -205,6 +233,8 @@ export default {
     "garages",
     "garageX",
     "garageY",
+    "garageId",
+    "garageOwner",
   ],
   components: { switchbox, timer, loader },
   data() {

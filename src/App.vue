@@ -385,6 +385,8 @@
           :garages="store.garages"
           :garageX="store.garageX"
           :garageY="store.garageY"
+          :garageId="store.garageId"
+          :garageOwner="store.garageOwner"
           :confirms="confirms"
           :soundEnabled="true"
           :musicEnabled="musicEnabled"
@@ -423,6 +425,7 @@
           @unpack="unpack"
           @claim="claimTokens"
           @scanlines="changeScanlines"
+          @pick="pickgarage"
         />
       </transition>
     </mainMenu>
@@ -571,6 +574,7 @@ import {
   createUnits,
   unstakeUnit,
   placegarage,
+  pickgarage,
 } from "./store";
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
@@ -647,6 +651,8 @@ export default {
       store: {
         garageX: 0,
         garageY: 0,
+        garageId: "",
+        garageOwner: "",
         user: false,
         privateKey: "",
         balance: 0,
@@ -754,6 +760,9 @@ export default {
     },
     closeOrder(data) {
       closeOrder(data);
+    },
+    pickgarage(data) {
+      pickgarage(data);
     },
     unpack(data) {
       unpack(data);
@@ -1151,7 +1160,11 @@ export default {
     async showGarage({ posX, posY }, teleport) {
       this.store.garageX = posX;
       this.store.garageY = posY;
-
+      let garage = store.garages.find(
+        el => el.posX === posX && el.posY === posY
+      );
+      this.store.garageId = garage.asset_id;
+      this.store.garageOwner = garage.owner;
       this.store.units = this.store.selfUnits.filter(
         el => el.posX === posX && el.posY === posY
       );
@@ -1361,10 +1374,10 @@ export default {
         }
         if (target.unit && target.type !== "garage") {
           if (target.unit.self) {
-            if (target.unit.unit.type === "validator" && target.unit.locked) {
-              moveUnit(store.unit, target);
-              await gsap.to(store.unit, { alpha: 0, duration: 2 });
-            }
+            // if (target.unit.unit.type === "validator" && target.unit.locked) {
+            //   moveUnit(store.unit, target);
+            //   await gsap.to(store.unit, { alpha: 0, duration: 2 });
+            // }
             store.unit = target.unit;
           } else {
             if (store.unit !== target.unit) {
