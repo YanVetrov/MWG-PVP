@@ -960,7 +960,64 @@ export default {
           let y = parseInt(data[1] % 100000);
           this.onUnitCollect({ id: data[0], x, y });
         }
+        if (action === "placegarage") {
+          let validator = store.unitsFromKeys[data[0]];
+          validator.stakeValidator();
+          let { posX, posY } = validator;
+          let { owner, asset_id } = validator.unit;
+          store.unit = null;
+          store.gameScene.removeChild(validator);
+          this.addTeleport({ posX, posY, owner, asset_id, type: "garage" });
+          store.gameScene.removeChild(validator);
+        }
+        if (action === "pickgarage") {
+          console.log("PICKED................................");
+          let validator = store.unitsFromKeys[data[0]];
+          let garage = store.objectsOnMap.find(el => el.asset_id === data[0]);
+          let index = store.objectsOnMap.findIndex(
+            el => el.asset_id === data[0]
+          );
+          store.gameScene.removeChild(garage);
+          garage.ground.type = null;
+          store.objectsOnMap.splice(index, 1);
+          setTimeout(() => {
+            store.gameScene.removeChild(garage);
+            sortUnit(validator, store.unit, store.visibleZone, store.gameScene);
+            if (validator.self) {
+              this.show = false;
+              store.unit = validator;
+            }
+          }, 100);
+        }
       }
+    },
+    async addTeleport(data) {
+      let obj = createObjectOnMap({
+        ...data,
+        name: "garage mini",
+        image: "cards/validator/stake_l",
+        scaled: 0.3,
+        diffX: 10,
+        diffY: -90,
+        amount: data.price,
+        type: "garage",
+      });
+      store.objectsOnMap.push(obj);
+      this.setObjectOnMap(obj);
+    },
+    async removeTeleport(data) {
+      let obj = createObjectOnMap({
+        ...data,
+        name: "garage mini",
+        image: "cards/validator/stake_l",
+        scaled: 0.3,
+        diffX: 10,
+        diffY: -90,
+        amount: data.price,
+        type: "garage",
+      });
+      store.objectsOnMap.push(obj);
+      this.setObjectOnMap(obj);
     },
     async onUnitRepair({ id }) {
       let tank = store.unitsFromKeys[id];
@@ -1070,6 +1127,7 @@ export default {
       if (!store.map.length) return 0;
       setUnit(el, store.map[y][x], true, el.type);
       store.gameScene.addChild(el);
+      sortUnit(el, store.unit, store.visibleZone, store.gameScene);
     },
     async renderMap() {
       store.visibleZone.forEach(el => store.gameScene.removeChild(el));
@@ -1648,7 +1706,6 @@ export default {
         if (e.target.unit.type === "validator") {
           let id = e.target.unit.asset_id;
           let res = placegarage({ id });
-          if (res) e.target.stakeValidator();
         } else dropStuffTransaction({ id: e.target.unit.asset_id });
       } else store.unit = {};
     },
