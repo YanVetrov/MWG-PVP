@@ -1646,9 +1646,9 @@ export default {
     async rightUnitClick(e) {
       if (e.data.button === 2) {
         if (e.target.unit.type === "validator") {
-          e.target.stakeValidator();
           let id = e.target.unit.asset_id;
-          placegarage({ id });
+          let res = placegarage({ id });
+          if (res) e.target.stakeValidator();
         } else dropStuffTransaction({ id: e.target.unit.asset_id });
       } else store.unit = {};
     },
