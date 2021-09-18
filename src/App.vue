@@ -426,6 +426,7 @@
           @claim="claimTokens"
           @scanlines="changeScanlines"
           @pick="pickgarage"
+          @attack="attackFromGarage"
         />
       </transition>
     </mainMenu>
@@ -579,24 +580,6 @@ import {
 import { gsap } from "gsap";
 import { initGsap } from "./utils";
 import { ColorMatrixFilter } from "@pixi/filter-color-matrix";
-function setColorAround(ground, enable) {
-  let x = ground.posX;
-  let y = ground.posY;
-  let available = 4;
-  let around = store.visibleZone
-    .filter(ground => !ground.unit)
-    .filter(ground => {
-      let gx = ground.posX;
-      let gy = ground.posY;
-      let diffX = Math.abs(x - gx);
-      let diffY = Math.abs(y - gy);
-      if (diffX < available && diffY < available) return true;
-      else return false;
-    });
-  let filters = [];
-  if (enable) filters = [new ColorOverlayFilter(0x33ef99, 0.2)];
-  around.forEach(ground => (ground.filters = filters));
-}
 
 export default {
   components: {
@@ -710,6 +693,31 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    attackFromGarage(tank) {
+      let unit = store.unitsFromKeys[tank.asset_id];
+      this.setColorAround(unit, true, 3, true);
+      store.unit = unit;
+      this.show = false;
+    },
+    setColorAround(ground, enable, available = 4, fire = false) {
+      let x = ground.posX;
+      let y = ground.posY;
+      let around = store.visibleZone;
+      if (enable)
+        around = around.filter(ground => (fire ? ground.unit : !ground.unit));
+      around = around.filter(ground => {
+        let gx = ground.posX;
+        let gy = ground.posY;
+        let diffX = Math.abs(x - gx);
+        let diffY = Math.abs(y - gy);
+        if (diffX < available && diffY < available) return true;
+        else return false;
+      });
+      let filters = [];
+      if (enable)
+        filters = [new ColorOverlayFilter(fire ? 0xef3333 : 0x33ef99, 0.2)];
+      around.forEach(ground => (ground.filters = filters));
     },
     changeScanlines(val) {
       this.scanlines = val;
@@ -886,6 +894,11 @@ export default {
       location.reload();
     },
     async checkUnitChange(unit) {
+      if (unit.owner === "metalwartest") {
+        console.log(unit);
+        let localTank = store.unitsFromKeys[unit.asset_id];
+        console.log(localTank);
+      }
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
         console.log(`UNKNOWN UNIT NOT EXIST`);
@@ -928,8 +941,8 @@ export default {
         unit.action_data !== localTank.unit.action_data ||
         unit.action_name !== localTank.unit.action_name
       ) {
-        localTank.action_data = unit.action_data;
-        localTank.action_name = unit.action_name;
+        localTank.unit.action_data = unit.action_data;
+        localTank.unit.action_name = unit.action_name;
         let action = unit.action_data;
         let data = unit.action_name.split(":");
         console.log(action, data, localTank.unit);
@@ -969,6 +982,7 @@ export default {
           store.gameScene.removeChild(validator);
           this.addTeleport({ posX, posY, owner, asset_id, type: "garage" });
           store.gameScene.removeChild(validator);
+          validator.alpha = 0;
         }
         if (action === "pickgarage") {
           console.log("PICKED................................");
@@ -983,6 +997,7 @@ export default {
           setTimeout(() => {
             store.gameScene.removeChild(garage);
             sortUnit(validator, store.unit, store.visibleZone, store.gameScene);
+            validator.alpha = 1;
             if (validator.self) {
               this.show = false;
               store.unit = validator;
@@ -1247,7 +1262,7 @@ export default {
         await this.teleportation({ x: tank.posX, y: tank.posY });
       }
       store.unit = tank;
-      setColorAround(tank.ground, true);
+      this.setColorAround(tank.ground, true);
       this.show = false;
     },
     async onUnitMove({ id, x, y }) {
@@ -1325,7 +1340,6 @@ export default {
         this.events_count++;
         tank.lockedTime = timeout;
         if (targetTank.self) tank.agressive = true;
-
         if (tank.poised) {
           tank.health -= 10;
           tank.poised--;
@@ -1334,7 +1348,12 @@ export default {
 
         if (tank.visible && targetTank.visible) {
           let ground = targetTank.ground;
-          if (tank && ground) await this.unitAction(tank, ground);
+          let garage = null;
+          if (tank.unit.type === "validator")
+            garage = store.garages.find(
+              el => el.posX === tank.posX && el.posY === tank.posY
+            );
+          if (tank && ground) await this.unitAction(tank, ground, garage);
           this.checkDestroy(tank);
         }
       }
@@ -1428,7 +1447,7 @@ export default {
         if (target.unclickable) return (target.blocked = false);
         if (store.gameScene.blockedUI) return (target.blocked = false);
         if (store.unit) {
-          setColorAround(store.unit, false);
+          this.setColorAround(store.unit, false);
         }
         if (target.unit && target.type !== "garage") {
           if (target.unit.self) {
@@ -1440,10 +1459,7 @@ export default {
           } else {
             if (store.unit !== target.unit) {
               if (store.unit.locked) return (target.blocked = false);
-              if (
-                !isAvailableAttack(store.unit, target) ||
-                store.unit.unit.type !== "battle"
-              )
+              if (!isAvailableAttack(store.unit, target))
                 return (target.blocked = false);
 
               store.unit.unit.direction = getDirection(
@@ -1451,8 +1467,6 @@ export default {
                 target
               );
               let clone = store.unit;
-              if (target.unit.unit.type === "validator")
-                return (target.blocked = false);
               if (clone.proccess) return (target.blocked = false);
               clone.proccess = true;
               let res = await fireTransaction({
@@ -1709,7 +1723,8 @@ export default {
         } else dropStuffTransaction({ id: e.target.unit.asset_id });
       } else store.unit = {};
     },
-    async unitAction(unit, target) {
+    async unitAction(unit, target, ground) {
+      console.log(ground);
       unit.unit.direction = getDirection(unit.ground, target);
       let action = unit.unit.action;
       let crash = new AnimatedSprite(
@@ -1723,8 +1738,9 @@ export default {
             action.textures.map(el => Texture.from(`./assets/${el}`))
           );
           fire.animationSpeed = action.speed;
-          fire.scale.x = action.scale;
-          fire.scale.y = action.scale;
+          let multiply = ground ? 6 : 1;
+          fire.scale.x = action.scale * multiply;
+          fire.scale.y = action.scale * multiply;
           fire.x = action[getDirection(unit.ground, target)].x;
           fire.y = action[getDirection(unit.ground, target)].y;
           fire.angle = action[getDirection(unit.ground, target)].angle;
@@ -1735,7 +1751,8 @@ export default {
         return arr;
       })();
       unit.zIndex = 10;
-      fires.forEach(fire => unit.addChild(fire));
+      if (!ground) fires.forEach(fire => unit.addChild(fire));
+      else fires.forEach(fire => ground.addChild(fire));
       let { x, y } = target;
       x -= unit.x + action.diffX;
       y -= unit.y + action.diffY;
@@ -1776,7 +1793,8 @@ export default {
       } catch (e) {}
       window.sound("crash");
       unit.zIndex = 1;
-      fires.forEach(fire => unit.removeChild(fire));
+      if (!ground) fires.forEach(fire => unit.removeChild(fire));
+      else fires.forEach(fire => ground.removeChild(fire));
       target.unit.addChild(crash);
       crash.animationSpeed = 0.2;
       crash.x = 35;

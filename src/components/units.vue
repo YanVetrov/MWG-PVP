@@ -124,15 +124,16 @@
             v-if="garageId === tank.asset_id"
             class="button raid"
             @click="$emit('attack', tank)"
-            key="2"
+            key="4"
           >
-            ATTACK
+            <span v-if="tank.unlockedTime < Date.now()">FIRE MODE</span>
+            <timer v-else :time="tank.unlockedTime" />
           </div>
           <div
             v-if="garageId === tank.asset_id"
             class="button raid"
             @click="$emit('pick', { location: garageX * 100000 + garageY })"
-            key="2"
+            key="3"
           >
             PICK
           </div>
