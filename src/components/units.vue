@@ -131,7 +131,7 @@
           <div
             v-if="garageId === tank.asset_id"
             class="button raid"
-            @click="$emit('pick', { id: tank.asset_id })"
+            @click="$emit('pick', { location: garageX * 100000 + garageY })"
             key="2"
           >
             PICK

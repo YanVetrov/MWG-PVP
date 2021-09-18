@@ -952,14 +952,14 @@ async function placegarage({ id }) {
   });
   return errorHandler(response);
 }
-async function pickgarage({ id }) {
+async function pickgarage({ location }) {
   let account = await store.user.getAccountName();
   let response = await transaction({
     user: store.user,
     name: "pickgarage",
     account: "metalwargame",
     data: {
-      asset_id: id,
+      location,
     },
   });
   return errorHandler(response);
