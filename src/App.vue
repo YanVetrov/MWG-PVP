@@ -362,6 +362,61 @@
         </div>
       </div>
     </div>
+    <div
+      class="left_container"
+      style="z-index:1;"
+      :class="{ unactive_info: !activeInfo }"
+    >
+      <div class="info_container">
+        <div class="info_main">
+          <div class="info_title" style="margin-top:0">UNITS:</div>
+          <div class="info_players">
+            <div class="players_block">
+              <div>IN GAME</div>
+              <div>{{ store.players.all }}</div>
+            </div>
+            <div class="players_block">
+              <div>
+                ON MAP
+                <span
+                  style="display:inline-block;width:7px;height:7px;background:green;border-radius:7px"
+                ></span>
+              </div>
+              <div>{{ store.players.onmap }}</div>
+            </div>
+          </div>
+          <div class="info_title">GEYSERS:</div>
+          <div class="info_geysers">
+            <div
+              class="geysers_block"
+              v-for="k in store.geysers"
+              :key="JSON.stringify(k)"
+              @click="teleportation({ x: k.posX, y: k.posY })"
+            >
+              <img src="./assets/geyser4.png" />
+              <div :class="'lvl' + k.lvl">LVL: {{ k.lvl }}</div>
+              <div>AMOUNT: {{ k.lvl * 60 }}</div>
+              <div>X:{{ k.posX }} Y:{{ k.posY }}</div>
+            </div>
+          </div>
+          <div class="info_title">STUFF:</div>
+          <div class="info_geysers">
+            <div
+              class="geysers_block"
+              v-for="k in store.stuff"
+              :key="JSON.stringify(k)"
+              @click="teleportation({ x: k.posX, y: k.posY })"
+            >
+              <img src="./assets/metal/6.png" />
+              <div>X:{{ k.posX }} Y:{{ k.posY }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div @click="activeInfo = !activeInfo" class="info_switcher">
+        <img src="./assets/map.svg" />
+      </div>
+    </div>
     <mainMenu
       :show="show"
       v-show="show"
@@ -610,6 +665,7 @@ export default {
       activeLog: false,
       events_count: 0,
       filterGarage: "",
+      activeInfo: false,
       scanlines: JSON.parse(localStorage.getItem("scanlines")) ?? true,
       posX: 1,
       posY: 1,
@@ -646,6 +702,9 @@ export default {
         unusedUnits: [],
         packs: [],
         waxBalance: 0,
+        geysers: [],
+        stuff: [],
+        players: { all: 0, onmap: 0 },
         cpu: {
           max: 0,
           limit: 0,
@@ -866,6 +925,10 @@ export default {
         store.objectsOnMap.push(stuff);
         this.setObjectOnMap(stuff);
         sortUnit(stuff, store.unit, store.visibleZone, store.gameScene);
+      });
+      this.store.stuff = stuffs.map(el => {
+        let { posX, posY } = el;
+        return { posX, posY };
       });
     },
     async teleport({ units, garage }) {
@@ -1193,6 +1256,9 @@ export default {
       let date = Date.now();
       console.log("map ready " + (Date.now() - date));
       console.log("map rendered " + (Date.now() - date));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.visibleZone.forEach((el, i) => this.addSprite(el, i));
       store.unitsInVisibleZone.forEach(el =>
@@ -2020,6 +2086,12 @@ export default {
 
     setInterval(async () => {
       if (!store.user.rpc) return 0;
+      this.store.players.onmap = store.units.filter(el => {
+        let inGarage = store.garages.some(
+          g => g.posX === el.posX && g.posY === el.posY
+        );
+        return !inGarage;
+      }).length;
       let res = await store.user.rpc.get_table_rows({
         json: true,
         code: "metalwarmint",

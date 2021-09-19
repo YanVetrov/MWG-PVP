@@ -145,8 +145,12 @@ function createObjectOnMap(el) {
   sprite.buttonMode = false;
   Object.keys(el).forEach(key => (sprite[key] = el[key]));
   Object.keys(el).forEach(key => (container[key] = el[key]));
-  let text = new Text(`${el.owner || "LVL: " + el.lvl}`, {
-    fill: "#A009B4",
+  let str = "";
+  if (el.lvl) str = `${"LVL: " + el.lvl}`;
+  if (el.owner) str = `${el.owner}`;
+  if (el.type === "stuff") str = el.amount;
+  let text = new Text(str, {
+    fill: "#009534",
     fontFamily: "metalwar",
     fontSize: 20,
     stroke: "#000",
@@ -156,6 +160,10 @@ function createObjectOnMap(el) {
   text.anchor.set(-0.2, 0);
   text.scale.x = 1 + (1 - el.scaled);
   text.scale.y = 1 + (1 - el.scaled);
+  if (el.asset_id) {
+    text.scale.x = 4;
+    text.scale.y = 4;
+  }
   container.addChild(sprite);
   container.addChild(text);
   return container;
@@ -560,6 +568,14 @@ async function getIngameTanks(
     );
   });
 
+  store.vue.store.geysers = anuses.rows.map(el => {
+    let { lvl } = el;
+    let posX = parseInt(el.location / 100000);
+    let posY = parseInt(el.location % 100000);
+    return { posX, posY, lvl };
+  });
+  store.vue.store.geysers.sort((a, b) => a.lvl - b.lvl);
+
   // [wolf2, validator].forEach(el => {
   //   (el.self = true), (el.owner = store.user.accountName);
   // });
@@ -574,12 +590,13 @@ async function getIngameTanks(
       if (Object.keys(units).length > 1000) {
         store.vue.loadings.push("units ready");
         let allTanks = Object.values(units);
-
+        store.vue.store.players.all = allTanks.length;
         let arr = [];
         allTanks.forEach(el => {
           let tank = parseUnit(el);
           if (tank) arr.push(tank);
         });
+
         arr = arr.filter(el => {
           if (
             !store.garages.some(
@@ -589,6 +606,7 @@ async function getIngameTanks(
           )
             return true;
         });
+        store.vue.store.players.onmap = arr.length;
         console.log(arr.length);
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
