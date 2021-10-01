@@ -14,6 +14,11 @@ import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 import { transaction } from "./auth.js";
 const objectsOnMap = [];
+let friends = JSON.parse(localStorage.getItem("friends"));
+if (!friends) {
+  friends = {};
+  localStorage.setItem("friends", {});
+}
 let store = {
   state: null,
   admins: {
@@ -254,6 +259,7 @@ function createUnits(arr, handler) {
       strokeThickness: 2,
     });
     let color = el.self ? 0x00ffaa : 0xff3377;
+    if (friends[el.owner]) color = 0x0033ce;
     if (store.npc[el.owner]) color = 0xc3c507;
     container.owner = new Text(
       `${el.owner || "Enemy"}${store.npc[el.owner] ? "[NPC]" : ""}`,
