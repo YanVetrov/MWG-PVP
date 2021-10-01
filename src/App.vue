@@ -1816,7 +1816,7 @@ export default {
         }
         return arr;
       })();
-      unit.zIndex = 10;
+      unit.zIndex = unit.posX + unit.posY;
       if (!ground) fires.forEach(fire => unit.addChild(fire));
       else fires.forEach(fire => ground.addChild(fire));
       let { x, y } = target;
