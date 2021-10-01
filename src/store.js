@@ -14,7 +14,7 @@ import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 import { transaction } from "./auth.js";
 const objectsOnMap = [];
-let friends = JSON.parse(localStorage.getItem("friends"));
+let friends = {};
 if (!friends) {
   friends = {};
   localStorage.setItem("friends", {});
