@@ -279,6 +279,53 @@
               <div>STAKE UNITS</div>
               <img src="./assets/transfer.svg" />
             </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[7] && show }"
+              @click="changeTab(7)"
+            >
+              <div>PLAYERS</div>
+              <img src="./assets/transfer.svg" />
+            </div>
+          </div>
+        </div>
+        <div class="chat_container">
+          <div class="chat_block" ref="chat_block">
+            <div
+              class="message"
+              :class="{
+                friend_message: store.friends[mes.owner],
+                self_message: mes.owner === store.user.accountName,
+              }"
+              v-for="mes in store.messages"
+              :key="mes.text"
+            >
+              <div class="message_owner">{{ mes.owner }}</div>
+              <div class="message_text">{{ mes.text }}</div>
+            </div>
+          </div>
+          <div class="chat_input">
+            <input
+              @keyup.enter="
+                sendMessage({
+                  text: store.message,
+                  owner: store.user.accountName,
+                });
+                store.message = '';
+              "
+              v-model="store.message"
+              placeholder="Message..."
+            /><button
+              @click="
+                sendMessage({
+                  text: store.message,
+                  owner: store.user.accountName,
+                });
+                store.message = '';
+              "
+            >
+              send
+            </button>
           </div>
         </div>
       </div>
@@ -458,6 +505,8 @@
           :PDT="store.unique.PDT"
           :MDT="store.unique.MDT"
           :scanlines="scanlines"
+          :players="store.allUnits"
+          @friends="store.friends = friends"
           @musicEnabled="changeMusic"
           @repair="repair"
           @order="orderRent"
@@ -508,6 +557,7 @@ import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
 import orders from "./components/orders.vue";
 import notify from "./components/notify.vue";
+import players from "./components/players.vue";
 import base from "./units_templates.js";
 // import game from "./components/game.vue";
 let tabs = [
@@ -518,6 +568,7 @@ let tabs = [
   { name: "Rent CPU", component: orders },
   { name: "Settings", component: settings },
   { name: "Stake units", component: unusedUnits },
+  { name: "Players", component: players },
   // { name: "Game", component: game },
 ];
 let packs_templates = [
@@ -644,6 +695,7 @@ export default {
     timer,
     mainMenu,
     tracks,
+    players,
     // login,
     shards,
     unique,
@@ -699,6 +751,8 @@ export default {
         selfUnits: [],
         units: [],
         unique: {},
+        messages: [],
+        message: "",
         unusedUnits: [],
         packs: [],
         waxBalance: 0,
@@ -716,6 +770,8 @@ export default {
       ready: false,
       loadings: [],
       events: {},
+      allUnits: {},
+      friends: {},
     };
   },
   computed: {
@@ -752,6 +808,25 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    onChatMessage(message) {
+      message = JSON.parse(message.data);
+      this.store.messages.push(message);
+      setTimeout(
+        () =>
+          this.$refs.chat_block.scrollTo(0, this.$refs.chat_block.scrollHeight),
+        100
+      );
+      if (message.id) {
+        let tank = store.unitsFromKeys[message.id];
+        if (!tank) return 0;
+        tank.alphaCounter(message.text, 0xffffff, 5);
+      }
+    },
+    sendMessage(message) {
+      let id = undefined;
+      if (store.unit && store.unit.unit) id = store.unit.unit.asset_id;
+      this.store.chatWs.send(JSON.stringify({ ...message, id }));
     },
     attackFromGarage(tank) {
       let unit = store.unitsFromKeys[tank.asset_id];
@@ -957,6 +1032,7 @@ export default {
       location.reload();
     },
     async checkUnitChange(unit) {
+      this.store.allUnits[unit.asset_id] = unit;
       if (unit.owner === "metalwartest") {
         console.log(unit);
         let localTank = store.unitsFromKeys[unit.asset_id];
@@ -2083,7 +2159,9 @@ export default {
     if (JSON.parse(localStorage.getItem("musicEnabled")) === null) {
       this.changeMusic(true, true);
     }
-
+    const ws = new WebSocket("ws://localhost:9000");
+    this.store.chatWs = ws;
+    ws.onmessage = message => this.onChatMessage(message);
     setInterval(async () => {
       if (!store.user.rpc) return 0;
       this.store.players.onmap = store.units.filter(el => {

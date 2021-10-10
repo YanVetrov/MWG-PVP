@@ -510,6 +510,53 @@ button:active {
   right: 0;
 }
 
+.chat_container {
+  position: absolute;
+  top: -280px;
+  display: flex;
+  left: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rebeccapurple;
+  border-radius: 12px;
+  padding: 20px 20px 0px 20px;
+  flex-direction: column;
+  font-weight: 300;
+  font-family: monospace;
+  width: 268px;
+}
+
+.message {
+  padding: 10px;
+  background: #333;
+  color: white;
+  border-radius: 15px 15px 15px 0px;
+  font-size: 12px;
+  margin-bottom: 20px;
+  width: 80%;
+  word-wrap: break-word;
+}
+
+.self_message {
+  align-self: flex-end;
+  border-radius: 15px 15px 0px 15px;
+  background: #009933;
+}
+
+.friend_message {
+  background: #003399;
+}
+
+.chat_block {
+  height: 200px;
+  width: 100%;
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+}
+
+.message_owner {
+  color: #aaa;
+}
 
 
 .bar_button {

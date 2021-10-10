@@ -14,11 +14,7 @@ import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 import { transaction } from "./auth.js";
 const objectsOnMap = [];
-let friends = {};
-if (!friends) {
-  friends = {};
-  localStorage.setItem("friends", {});
-}
+
 let store = {
   state: null,
   admins: {
@@ -27,6 +23,7 @@ let store = {
   npc: {
     metalwarevil: true,
   },
+  friends: JSON.parse(localStorage.getItem("friends")) || {},
   stuffGetted: false,
   unitsGetted: false,
   id: null,
@@ -259,7 +256,7 @@ function createUnits(arr, handler) {
       strokeThickness: 2,
     });
     let color = el.self ? 0x00ffaa : 0xff3377;
-    if (friends[el.owner]) color = 0x0033ce;
+    if (store.friends[el.owner]) color = 0x3377ff;
     if (store.npc[el.owner]) color = 0xc3c507;
     container.owner = new Text(
       `${el.owner || "Enemy"}${store.npc[el.owner] ? "[NPC]" : ""}`,
@@ -272,16 +269,40 @@ function createUnits(arr, handler) {
       }
     );
     if (store.admins[el.owner]) container.admin = true;
-    container.alphaCounter = async function(text = "+1", color = 0xeeeeee) {
-      let node = new Text(text, {
+    container.alphaCounter = async function(
+      text = "+1",
+      color = 0xeeeeee,
+      delay = 0
+    ) {
+      let options = {
         fill: color,
         fontFamily: "metalwar",
         fontSize: 25,
-      });
+      };
+      if (delay) {
+        options = {
+          ...options,
+          ...{
+            align: "center",
+            breakWords: true,
+            padding: 16,
+            trim: true,
+            fontSize: 25 - text.length / 5,
+            wordWrapWidth: 100,
+            stroke: "#333",
+            strokeThickness: 4,
+          },
+        };
+      }
+      let node = new Text(text, options);
+      node.zIndex = 12;
       this.addChild(node);
       node.x = 40;
+      if (delay) {
+        node.x = 40 - text.length * 1.5;
+      }
       node.y = 40;
-      await gsap.to(node, { y: 0, alpha: 0, duration: 2 });
+      await gsap.to(node, { y: 0, alpha: 0, duration: 2, delay });
       this.removeChild(node);
     };
     container.miningAnimation = function() {
@@ -596,13 +617,13 @@ async function getIngameTanks(
       if (Object.keys(units).length > 1000) {
         store.vue.loadings.push("units ready");
         let allTanks = Object.values(units);
+        store.vue.store.allUnits = units;
         store.vue.store.players.all = allTanks.length;
         let arr = [];
         allTanks.forEach(el => {
           let tank = parseUnit(el);
           if (tank) arr.push(tank);
         });
-
         arr = arr.filter(el => {
           if (
             !store.garages.some(
