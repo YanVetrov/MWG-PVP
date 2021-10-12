@@ -16,7 +16,7 @@ import { transaction } from "./auth.js";
 const objectsOnMap = [];
 let friends = localStorage.getItem("friends");
 if (!friends) {
-  localStorage.setItem("friends", {});
+  localStorage.setItem("friends", JSON.stringify({}));
   friends = {};
 } else {
   friends = JSON.parse(friends);
