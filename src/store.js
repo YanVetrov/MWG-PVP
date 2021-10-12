@@ -14,7 +14,13 @@ import unpack_units from "./parser";
 import { BevelFilter } from "@pixi/filter-bevel";
 import { transaction } from "./auth.js";
 const objectsOnMap = [];
-
+let friends = localStorage.getItem("friends");
+if (!friends) {
+  localStorage.setItem("friends", {});
+  friends = {};
+} else {
+  friends = JSON.parse(friends);
+}
 let store = {
   state: null,
   admins: {
@@ -23,7 +29,7 @@ let store = {
   npc: {
     metalwarevil: true,
   },
-  friends: JSON.parse(localStorage.getItem("friends")) || {},
+  friends,
   stuffGetted: false,
   unitsGetted: false,
   id: null,
@@ -655,6 +661,7 @@ async function getIngameTanks(
         allTanks.forEach(el => unitChanges(el));
       }
       if (data.text && data.owner) {
+        data = JSON.parse(message);
         store.vue.onChatMessage(data);
       }
       // if (
