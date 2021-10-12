@@ -506,7 +506,7 @@
           :MDT="store.unique.MDT"
           :scanlines="scanlines"
           :players="store.allUnits"
-          @friends="store.friends = friends"
+          @friends="store.friends = $event"
           @musicEnabled="changeMusic"
           @repair="repair"
           @order="orderRent"
