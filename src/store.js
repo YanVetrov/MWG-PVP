@@ -609,6 +609,7 @@ async function getIngameTanks(
   // store.units = createUnits([...arr, validator, wolf2]);
   // store.unit = store.units[0];
   const ws = new WebSocket("wss://game.metal-war.com/ws/");
+  store.vue.store.chatWs = ws;
   ws.onopen = () => store.vue.loadings.push("websocket connected");
   ws.onmessage = async message => {
     if (typeof message.data === "object") {
@@ -652,6 +653,9 @@ async function getIngameTanks(
         console.log(data);
         let allTanks = Object.values(units);
         allTanks.forEach(el => unitChanges(el));
+      }
+      if (data.text && data.owner) {
+        store.vue.onChatMessage(data);
       }
       // if (
       //   data.type === "actions" &&

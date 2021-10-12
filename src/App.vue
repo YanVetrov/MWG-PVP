@@ -285,11 +285,11 @@
               @click="changeTab(7)"
             >
               <div>PLAYERS</div>
-              <img src="./assets/transfer.svg" />
+              <img src="./assets/users.svg" />
             </div>
           </div>
         </div>
-        <div class="chat_container">
+        <div class="chat_container" v-show="!show">
           <div class="chat_block" ref="chat_block">
             <div
               class="message"
@@ -764,6 +764,7 @@ export default {
           limit: 0,
           available: 0,
         },
+        friends: {},
       },
       show: false,
       errors: [],
@@ -771,7 +772,6 @@ export default {
       loadings: [],
       events: {},
       allUnits: {},
-      friends: {},
     };
   },
   computed: {
@@ -810,7 +810,6 @@ export default {
       return dropStuffTransaction(ev);
     },
     onChatMessage(message) {
-      message = JSON.parse(message.data);
       this.store.messages.push(message);
       setTimeout(
         () =>
@@ -2159,9 +2158,6 @@ export default {
     if (JSON.parse(localStorage.getItem("musicEnabled")) === null) {
       this.changeMusic(true, true);
     }
-    const ws = new WebSocket("ws://localhost:9000");
-    this.store.chatWs = ws;
-    ws.onmessage = message => this.onChatMessage(message);
     setInterval(async () => {
       if (!store.user.rpc) return 0;
       this.store.players.onmap = store.units.filter(el => {
