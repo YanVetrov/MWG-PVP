@@ -661,7 +661,6 @@ async function getIngameTanks(
         allTanks.forEach(el => unitChanges(el));
       }
       if (data.text && data.owner) {
-        data = JSON.parse(message);
         store.vue.onChatMessage(data);
       }
       // if (
