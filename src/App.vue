@@ -2175,6 +2175,10 @@ export default {
   },
   mounted() {
     store.vue = this;
+    let friends = localStorage.getItem("friends");
+    if (friends) {
+      this.store.friends = JSON.parse(friends);
+    }
     this.initPixi();
     this.setConfirms({});
     if (JSON.parse(localStorage.getItem("musicEnabled")) === null) {
