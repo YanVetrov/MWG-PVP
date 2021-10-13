@@ -5,22 +5,23 @@ import { Api, ApiInterfaces, JsonRpc, RpcError } from "eosjs";
 import { JsSignatureProvider } from "eosjs/dist/eosjs-jssig";
 window.Buffer = window.Buffer || require("buffer").Buffer;
 const myAppName = "Metal war game PVP";
+let endpoint = localStorage.getItem("endpoint");
+if (!endpoint) endpoint = "https://wax.pink.gg";
 const myChain = {
   chainId: "1064487b3cd1a897ce03ae5b6a865651747e2e152090f99c1d19d44e01aea5a4",
   rpcEndpoints: [
     {
-      protocol: "https",
-      host: "wax.pink.gg",
+      protocol: endpoint.split(":")[0],
+      host: endpoint.split(":")[1].slice(2, 99),
       port: Number(443),
     },
   ],
 };
-
 const anchor = new Anchor([myChain], { appName: myAppName });
 const wax = new Wax([myChain], { appName: myAppName });
 async function initUal(handler, privateKey) {
   if (privateKey) {
-    const rpc = new JsonRpc("https://wax.pink.gg");
+    const rpc = new JsonRpc(endpoint);
     const signatureProvider = new JsSignatureProvider([privateKey]);
     const api = new Api({ rpc, signatureProvider });
     localStorage.setItem("ual-session-authenticator", "private");

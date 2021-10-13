@@ -547,6 +547,7 @@
           @scanlines="changeScanlines"
           @pick="pickgarage"
           @attack="attackFromGarage"
+          @changeEndpoint="changeEndpoint"
         />
       </transition>
     </mainMenu>
@@ -732,7 +733,7 @@ export default {
       activeBar: false,
       activeLog: false,
       events_count: 0,
-      chat_hidden: false,
+      chat_hidden: true,
       filterGarage: "",
       activeInfo: false,
       chat_count: 0,
