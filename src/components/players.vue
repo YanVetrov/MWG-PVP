@@ -1,7 +1,9 @@
 <template>
   <div style="padding-top:30px;height:93%;overflow-y:scroll;color:white;">
     <button :class="{ active: tab === 1 }" @click="tab = 1">players</button>
-    <button :class="{ active: tab === 2 }" @click="tab = 2">units</button>
+    <button :class="{ active: tab === 2 }" @click="tab = 2">
+      units on map
+    </button>
     <transition name="fade" mode="out-in">
       <div v-if="tab === 1" :key="1">
         <span>SEARCH:</span> <input v-model="searchPlayers" />
@@ -36,7 +38,27 @@
           </div>
         </div>
       </div>
-      <div v-if="tab === 2" class="list_orders" :key="2"></div>
+      <div v-if="tab === 2" class="list_orders" :key="2">
+        <div style="width:100%">
+          <span>SEARCH:</span> <input v-model="searchUnits" />
+          <span>(COUNT:{{ Object.keys(unitsOnMap).length }})</span>
+        </div>
+        <div
+          class="player_line w20"
+          v-for="el in unitsOnMap"
+          :key="el.asset_id"
+        >
+          <div class="player_owner">
+            <img :src="`./assets/cards/${el.name.toLowerCase()}/l.png`" />
+            <div>{{ el.hp }}/{{ el.strength }}</div>
+          </div>
+          <div class="player_owner yellow">{{ el.owner }}</div>
+          <div class="player_owner">X:{{ el.x }} Y:{{ el.y }}</div>
+          <button @click="$emit('look', { x: el.x, y: el.y })">
+            look at map
+          </button>
+        </div>
+      </div>
     </transition>
   </div>
 </template>
@@ -52,6 +74,7 @@ export default {
       searchPlayers: "",
       friends: store.friends,
       onlyFriends: false,
+      searchUnits: "",
     };
   },
   computed: {
@@ -82,6 +105,18 @@ export default {
       }
       return obj;
     },
+    unitsOnMap() {
+      let arr = Object.values(this.players).filter(el => {
+        let inGarage = store.garages.some(
+          g => g.posX === el.x && g.posY === el.y
+        );
+        return !inGarage;
+      });
+      if (this.searchUnits) {
+        arr = arr.filter(el => el.owner.match(this.searchUnits));
+      }
+      return arr;
+    },
   },
   methods: {
     switchFriend(owner, val) {
@@ -111,12 +146,29 @@ export default {
   border-radius: 5px;
   text-align: center;
   font-size: 12px;
+  align-items: center;
+}
+.w20 {
+  width: 20%;
+  flex-direction: column;
+  margin: 5px;
 }
 .yellow {
   color: burlywood;
 }
 .player_owner {
   width: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.list_orders {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+.player_owner img {
+  width: 80px;
 }
 .player_count {
   width: 10%;

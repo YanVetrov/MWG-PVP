@@ -289,7 +289,19 @@
             </div>
           </div>
         </div>
-        <div class="chat_container" v-show="!show">
+        <div class="chat_container" :class="{ chat_hidden }" v-show="!show">
+          <div
+            class="chat_switcher"
+            @click="
+              chat_hidden = !chat_hidden;
+              chat_count = 0;
+            "
+          >
+            <img src="./assets/chat.svg" />
+            <div class="red_dot" v-if="chat_count" style="right:3px;top:3px">
+              {{ chat_count }}
+            </div>
+          </div>
           <div class="chat_block" ref="chat_block">
             <div
               class="message"
@@ -516,6 +528,10 @@
           @report="report"
           @closeOrder="closeOrder"
           @deploy="deploy"
+          @look="
+            teleportation($event);
+            show = false;
+          "
           @enterGarage="showGarage($event, true)"
           @dropStuff="dropStuffTransaction"
           @teleport="teleport"
@@ -716,8 +732,10 @@ export default {
       activeBar: false,
       activeLog: false,
       events_count: 0,
+      chat_hidden: false,
       filterGarage: "",
       activeInfo: false,
+      chat_count: 0,
       scanlines: JSON.parse(localStorage.getItem("scanlines")) ?? true,
       posX: 1,
       posY: 1,
@@ -816,6 +834,9 @@ export default {
           this.$refs.chat_block.scrollTo(0, this.$refs.chat_block.scrollHeight),
         100
       );
+      if (this.chat_hidden) {
+        this.chat_count++;
+      }
       if (message.id) {
         let tank = store.unitsFromKeys[message.id];
         if (!tank) return 0;
