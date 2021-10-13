@@ -317,6 +317,28 @@
             </div>
           </div>
           <div class="chat_input">
+            <div class="emoji" style="display:flex;flex-wrap:wrap">
+              <div
+                class="emoji_block"
+                @click="sendMessage({ text: k, owner: store.user.accountName })"
+                v-for="k in [
+                  '😏',
+                  '🙄',
+                  '😎',
+                  '😭',
+                  '🤪',
+                  '😡',
+                  '😈',
+                  '💩',
+                  '👍',
+                  '👎',
+                  '👊',
+                ]"
+                :key="k"
+              >
+                {{ k }}
+              </div>
+            </div>
             <input
               @keyup.enter="
                 sendMessage({
