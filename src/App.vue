@@ -852,11 +852,11 @@ export default {
     },
     onChatMessage(message) {
       this.store.messages.push(message);
-      setTimeout(
-        () =>
-          this.$refs.chat_block.scrollTo(0, this.$refs.chat_block.scrollHeight),
-        100
-      );
+      let chat = this.$refs.chat_block;
+      setTimeout(() => {
+        if (!(chat.offsetHeight + chat.scrollTop < chat.scrollHeight - 20))
+          chat.scrollTo(0, chat.scrollHeight);
+      }, 100);
       if (this.chat_hidden) {
         this.chat_count++;
       }
