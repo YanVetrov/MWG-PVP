@@ -1977,7 +1977,7 @@ export default {
         }).play();
       } catch (e) {}
       window.sound("crash");
-      unit.zIndex = 1;
+      unit.zIndex = unit.posX + unit.posY;
       if (!ground) fires.forEach(fire => unit.removeChild(fire));
       else fires.forEach(fire => ground.removeChild(fire));
       target.unit.addChild(crash);

@@ -206,8 +206,8 @@ function createUnits(arr, handler) {
     let container = new Container();
     container.sortableChildren = true;
     generateSpinner(container);
-    sprite.width = 120;
-    sprite.height = 120;
+    sprite.width = el.size || 120;
+    sprite.height = el.size || 120;
     sprite.dir = "ul";
     container.posX = parseInt(el.location / 100000);
     container.posY = parseInt(el.location % 100000);
@@ -221,8 +221,11 @@ function createUnits(arr, handler) {
       },
       set(val) {
         if (!val) return "invalid";
+        let scale = this.scale.x;
         this.dir = val;
         this.texture = this[val];
+        this.scale.x = scale;
+        this.scale.y = scale;
       },
     });
     container.name = el.name;
@@ -274,6 +277,7 @@ function createUnits(arr, handler) {
         strokeThickness: 2,
       }
     );
+    container.owner.zIndex = 4;
     if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(
       text = "+1",
@@ -395,10 +399,8 @@ function createUnits(arr, handler) {
     container.owner.x = 50;
     container.self = el.self;
     container.unit = sprite;
-    container.unit.scale.x = el.size / 2.2 || 1;
-    container.unit.scale.y = el.size / 2.2 || 1;
-    container.unit.x = -(el.size * 10);
-    container.unit.y = -(el.size * 10);
+    container.unit.x = -(el.size / 10);
+    // container.unit.y = -(el.size/10)
     container.agr = { value: false, timeout: "" };
     container.spinner.scale.set(0.2);
     container.spinner.y = -20;

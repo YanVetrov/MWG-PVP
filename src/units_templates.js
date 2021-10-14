@@ -38,7 +38,7 @@ let base = [
     diffX: 50,
     diffY: -30,
     mechShard: 7,
-    size: 1.3,
+    size: 150,
     action: {
       ur: { x: 200, y: -140, angle: 50 },
       r: { x: 320, y: 25, angle: 100 },
@@ -78,7 +78,7 @@ let base = [
     diffX: 50,
     diffY: -30,
     mechShard: 10,
-    size: 1.5,
+    size: 150,
     action: {
       ur: { x: 80, y: 25, angle: 50 },
       r: { x: 90, y: 45, angle: 100 },
@@ -119,7 +119,7 @@ let base = [
     diffX: 50,
     diffY: -30,
     mechShard: 15,
-    size: 1.8,
+    size: 180,
   },
   {
     id: 258790,
@@ -141,7 +141,7 @@ let base = [
     diffX: 35,
     diffY: -60,
     mechShard: 0,
-    size: 1.5,
+    size: 180,
     action: {
       ur: { x: 180, y: 125, angle: 50 },
       r: { x: 190, y: 145, angle: 100 },
@@ -182,7 +182,7 @@ let base = [
     diffX: 60,
     diffY: -30,
     mechShard: 6,
-    size: 1.3,
+    size: 130,
     action: {
       ur: { x: 150, y: -120, angle: 50 },
       r: { x: 250, y: 15, angle: 100 },
@@ -223,7 +223,7 @@ let base = [
     diffX: 50,
     diffY: -30,
     mechShard: 14,
-    size: 1.8,
+    size: 180,
     action: {
       ur: { x: 80, y: 25, angle: 50 },
       r: { x: 90, y: 45, angle: 100 },
@@ -262,7 +262,7 @@ let base = [
     lvl: 6,
     repairing: false,
     mechShard: 4,
-    size: 1,
+    size: 120,
     action: defaultAction,
   },
   // {
