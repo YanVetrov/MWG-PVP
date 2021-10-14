@@ -395,8 +395,10 @@ function createUnits(arr, handler) {
     container.owner.x = 50;
     container.self = el.self;
     container.unit = sprite;
-    container.unit.y = 20;
-    container.unit.x = 1;
+    container.unit.scale.x = el.size / 2.2 || 1;
+    container.unit.scale.y = el.size / 2.2 || 1;
+    container.unit.x = -(el.size * 10);
+    container.unit.y = -(el.size * 10);
     container.agr = { value: false, timeout: "" };
     container.spinner.scale.set(0.2);
     container.spinner.y = -20;
