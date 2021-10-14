@@ -854,8 +854,7 @@ export default {
       this.store.messages.push(message);
       let chat = this.$refs.chat_block;
       setTimeout(() => {
-        if (!(chat.offsetHeight + chat.scrollTop < chat.scrollHeight - 20))
-          chat.scrollTo(0, chat.scrollHeight);
+        chat.scrollTo(0, chat.scrollHeight);
       }, 100);
       if (this.chat_hidden) {
         this.chat_count++;
