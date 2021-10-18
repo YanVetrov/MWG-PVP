@@ -367,9 +367,15 @@
                   });
                   store.message = '';
                 "
-                v-model="store.message"
+                :value="store.message"
+                @input="
+                  $event.target.value.length <= 50
+                    ? (store.message = $event.target.value)
+                    : ($event.target.value = $event.target.value.slice(0, 50))
+                "
                 placeholder="Message..."
-              /><button
+              /><span style="color:silver">{{ store.message.length }}/50</span
+              ><button
                 @click="
                   sendMessage({
                     text: store.message,
