@@ -660,15 +660,23 @@ async function getIngameTanks(
         });
       }
     } else {
-      let data = JSON.parse(message.data);
-      if (data.type === "units" && data.data) {
-        console.log(data);
-        let allTanks = Object.values(units);
-        allTanks.forEach(el => unitChanges(el));
+      try {
+        let data = JSON.parse(message.data);
+        if (data.type === "units" && data.data) {
+          console.log(data);
+          let allTanks = Object.values(units);
+          allTanks.forEach(el => unitChanges(el));
+        }
+        if (data.text && data.owner) {
+          store.vue.onChatMessage(data);
+        }
+        if (data.type === "stuff") {
+          handlerStuff(data.data);
+        }
+      } catch (e) {
+        console.log("ok");
       }
-      if (data.text && data.owner) {
-        store.vue.onChatMessage(data);
-      }
+
       // if (
       //   data.type === "actions" &&
       //   data.data &&
@@ -741,9 +749,6 @@ async function getIngameTanks(
       //     }
       //   });
       // }
-      if (data.type === "stuff") {
-        handlerStuff(data.data);
-      }
     }
   };
 }

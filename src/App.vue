@@ -497,7 +497,7 @@
             <div
               class="geysers_block"
               v-for="k in store.geysers"
-              :key="k.posX + k.posY"
+              :key="k.posX + k.posY + Math.random()"
               @click="teleportation({ x: k.posX, y: k.posY })"
             >
               <img src="./assets/geyser4.png" />
@@ -511,7 +511,7 @@
             <div
               class="geysers_block"
               v-for="k in store.stuff"
-              :key="k.posX + k.posY"
+              :key="k.posX + k.posY + Math.random()"
               @click="teleportation({ x: k.posX, y: k.posY })"
             >
               <img src="./assets/metal/6.png" />
@@ -881,7 +881,6 @@ export default {
     },
     findUnit(id) {
       let tank = store.unitsFromKeys[id];
-      console.log(tank);
       if (tank) {
         this.teleportation({ x: tank.posX, y: tank.posY });
       }
@@ -1029,7 +1028,6 @@ export default {
       exchange(data);
     },
     setConfirms({ key, val }) {
-      console.log(key, val);
       let confirms = JSON.parse(localStorage.getItem("confirms"));
       if (confirms) {
         Object.keys(confirms).forEach(
@@ -1063,7 +1061,7 @@ export default {
         .forEach(el => store.gameScene.removeChild(el));
       store.objectsOnMap = store.objectsOnMap.filter(el => el.type !== "stuff");
       let stuffs = Object.values(objStuff)
-        .filter(el => el.location)
+        .filter(el => el && el.location)
         .map(el => {
           let posX = parseInt(el.location / 100000);
           let posY = parseInt(el.location % 100000);
@@ -1127,13 +1125,10 @@ export default {
     async checkUnitChange(unit) {
       this.store.allUnits[unit.asset_id] = unit;
       if (unit.owner === "metalwartest") {
-        console.log(unit);
         let localTank = store.unitsFromKeys[unit.asset_id];
-        console.log(localTank);
       }
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
-        console.log(`UNKNOWN UNIT NOT EXIST`);
         return this.addUnit(unit);
       }
       if (unit.owner === store.user.accountName) {
@@ -1143,8 +1138,6 @@ export default {
         if (vueTank) {
           vueTank.hp = unit.hp;
           vueTank.unlockedTime = unit.next_availability * 1000;
-          console.log((vueTank.unlockedTime - Date.now()) / 1000);
-          console.log("update TIMER");
           vueTank.posX = unit.x;
           vueTank.posY = unit.y;
           vueTank.stuff = unit.stuff;
@@ -1154,19 +1147,13 @@ export default {
       localTank.stuffCount = localTank.stuffCount;
       let template = `${localTank.name}(${localTank.owner.text}) X:${localTank.posX} Y:${localTank.posY} UPDATE: `;
       if (unit.hp != localTank.health) {
-        console.log(template + `${localTank.health} hp -> ${unit.hp} hp`);
         localTank.health = unit.hp;
       }
 
       if (unit.x != localTank.posX || unit.y != localTank.posY) {
-        console.log(template + `X:${unit.x} -> Y:${unit.y}`);
         this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
       }
       if (localTank.lockedTime !== unit.next_availability * 1000) {
-        console.log(
-          template +
-            `cd ${localTank.lockedTime} -> cd:${unit.next_availability * 1000}`
-        );
         localTank.lockedTime = unit.next_availability * 1000;
       }
       if (
@@ -1177,7 +1164,6 @@ export default {
         localTank.unit.action_name = unit.action_name;
         let action = unit.action_data;
         let data = unit.action_name.split(":");
-        console.log(action, data, localTank.unit);
         if (action === "unitmine") {
           let timeout = Date.now() + store.defaultMineTimeout * 1000;
           let x = parseInt(data[1] / 100000);
@@ -1217,7 +1203,6 @@ export default {
           validator.alpha = 0;
         }
         if (action === "pickgarage") {
-          console.log("PICKED................................");
           let validator = store.unitsFromKeys[data[0]];
           let garage = store.objectsOnMap.find(el => el.asset_id === data[0]);
           let index = store.objectsOnMap.findIndex(
@@ -1502,9 +1487,6 @@ export default {
     },
     async onUnitMove({ id, x, y }) {
       let tank = store.unitsFromKeys[id];
-      console.log(
-        `action(onUnitMove) - ${tank.name}(${tank.owner.text}) posX:${tank.posX} posY:${tank.posY} -> posX:${x} posY:${y}`
-      );
       tank.posX = x;
       tank.posY = y;
       if (tank.self) {
@@ -1557,9 +1539,6 @@ export default {
       if (!tank || !targetTank) {
         return 0;
       } else {
-        console.log(
-          `action(onUnitAction) - ${tank.name}(${tank.owner.text}) -> ${targetTank.name}(${targetTank.owner.text})`
-        );
         let actionLog = {
           unit: tank.unit.name,
           x: tank.posX,
@@ -1871,31 +1850,15 @@ export default {
       let tank = store.unitsFromKeys[id];
       if (!tank) return 0;
       let stuff = store.objectsOnMap.find(el => el.posX === x && el.posY === y);
-      // let index = store.objectsOnMap.findIndex(
-      //   el => el.posX === x && el.posY === y
-      // );
-      // tank.lockedTime = Date.now() + store.defaultStuffAction * 1000;
-      // if (!stuff) return 0;
-      // let { amount, weight } = stuff;
-      // let freeSpace = tank.unit.capacity - tank.stuffCount;
-      // if (amount > freeSpace) {
-      //   amount = freeSpace;
-      //   tank.unit.stuff.push({ amount, weight });
-      //   tank.stuffCount = tank.stuffCount;
-      //   stuff.amount -= amount;
-      //   return tank.alphaCounter(`+${amount}`);
-      // }
-      gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
-      await gsap.to(stuff, {
-        x: tank.x + 50,
-        y: tank.y + 50,
-        alpha: 0,
-        duration: 1.5,
-      });
-      // tank.unit.stuff.push({ amount, weight });
-      // tank.stuffCount = tank.stuffCount;
-      // store.gameScene.removeChild(stuff);
-      // store.objectsOnMap.splice(index, 1);
+      if (stuff) {
+        gsap.to(stuff.scale, { x: 0.1, y: 0.1, duration: 1.5 });
+        await gsap.to(stuff, {
+          x: tank.x + 50,
+          y: tank.y + 50,
+          alpha: 0,
+          duration: 1.5,
+        });
+      }
     },
     checkUnits() {
       setInterval(() => {
@@ -1962,7 +1925,6 @@ export default {
       } else store.unit = {};
     },
     async unitAction(unit, target, ground) {
-      console.log(ground);
       unit.unit.direction = getDirection(unit.ground, target);
       let action = unit.unit.action;
       let crash = new AnimatedSprite(
