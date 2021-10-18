@@ -350,7 +350,7 @@
                   '👎',
                   '👊',
                 ]"
-                :key="k"
+                :key="k + Math.random()"
               >
                 {{ k }}
               </div>
@@ -1832,9 +1832,13 @@ export default {
           withCredentials: false,
         });
         evtSource.onmessage = event => {
-          let arr = JSON.parse(event.data);
-          let station = arr.find(el => el.station === "nightride");
-          if (station) this.musicTitle = station.title;
+          try {
+            let arr = JSON.parse(event.data);
+            let station = arr.find(el => el.station === "nightride");
+            if (station) this.musicTitle = station.title;
+          } catch (e) {
+            console.log("bad radio");
+          }
         };
       }, 2000);
     },

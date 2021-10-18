@@ -154,7 +154,7 @@ function isAvailableMove(unit, target) {
   else return true;
 }
 function isAvailableAttack(unit, target) {
-  if (!unit || !target) return false;
+  if (!unit || !target || !unit.unit) return false;
   let radius = unit.unit.fire_radius;
   let available = isNaN(radius) ? 1 : radius;
   available++;
