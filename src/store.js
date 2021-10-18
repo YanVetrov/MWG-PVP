@@ -1017,10 +1017,13 @@ async function pickgarage({ location }) {
   let account = await store.user.getAccountName();
   let response = await transaction({
     user: store.user,
-    name: "pickgarage",
-    account: "metalwargame",
+    name: "transfer",
+    account: "metalwarmint",
     data: {
-      location,
+      from: account,
+      memo: "pickgarage:" + location,
+      quantity: 10000 + " MECH",
+      to: "metalwargame",
     },
   });
   return errorHandler(response);
