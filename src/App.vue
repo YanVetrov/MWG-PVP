@@ -342,7 +342,6 @@
                   '😏',
                   '🙄',
                   '😎',
-                  '😭',
                   '🤪',
                   '😡',
                   '😈',
@@ -498,7 +497,7 @@
             <div
               class="geysers_block"
               v-for="k in store.geysers"
-              :key="JSON.stringify(k)"
+              :key="k.posX + k.posY"
               @click="teleportation({ x: k.posX, y: k.posY })"
             >
               <img src="./assets/geyser4.png" />
@@ -512,7 +511,7 @@
             <div
               class="geysers_block"
               v-for="k in store.stuff"
-              :key="JSON.stringify(k)"
+              :key="k.posX + k.posY"
               @click="teleportation({ x: k.posX, y: k.posY })"
             >
               <img src="./assets/metal/6.png" />
@@ -1064,6 +1063,7 @@ export default {
         .forEach(el => store.gameScene.removeChild(el));
       store.objectsOnMap = store.objectsOnMap.filter(el => el.type !== "stuff");
       let stuffs = Object.values(objStuff)
+        .filter(el => el.location)
         .map(el => {
           let posX = parseInt(el.location / 100000);
           let posY = parseInt(el.location % 100000);
