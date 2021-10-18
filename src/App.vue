@@ -312,8 +312,25 @@
               v-for="mes in store.messages"
               :key="mes.text"
             >
-              <div class="message_owner">{{ mes.owner }}</div>
-              <div class="message_text">{{ mes.text }}</div>
+              <div
+                class="message_owner"
+                style="display:flex;align-items:center;justify-content:space-between"
+              >
+                {{ mes.owner
+                }}<button
+                  v-if="mes.id"
+                  style="transform:scale(0.8)"
+                  @click="findUnit(mes.id)"
+                >
+                  look
+                </button>
+              </div>
+              <div
+                class="message_text"
+                :style="isEmoji(mes.text) ? { fontSize: '25px' } : {}"
+              >
+                {{ mes.text }}
+              </div>
             </div>
           </div>
           <div class="chat_input">
@@ -339,27 +356,31 @@
                 {{ k }}
               </div>
             </div>
-            <input
-              @keyup.enter="
-                sendMessage({
-                  text: store.message,
-                  owner: store.user.accountName,
-                });
-                store.message = '';
-              "
-              v-model="store.message"
-              placeholder="Message..."
-            /><button
-              @click="
-                sendMessage({
-                  text: store.message,
-                  owner: store.user.accountName,
-                });
-                store.message = '';
-              "
+            <div
+              style="display:flex;justify-content:space-around;align-items:center"
             >
-              send
-            </button>
+              <input
+                @keyup.enter="
+                  sendMessage({
+                    text: store.message,
+                    owner: store.user.accountName,
+                  });
+                  store.message = '';
+                "
+                v-model="store.message"
+                placeholder="Message..."
+              /><button
+                @click="
+                  sendMessage({
+                    text: store.message,
+                    owner: store.user.accountName,
+                  });
+                  store.message = '';
+                "
+              >
+                send
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -539,9 +560,11 @@
           :PDT="store.unique.PDT"
           :MDT="store.unique.MDT"
           :scanlines="scanlines"
+          :chatsound="chatsound"
           :players="store.allUnits"
           @friends="store.friends = $event"
           @musicEnabled="changeMusic"
+          @chatsound="changeChatSound"
           @repair="repair"
           @order="orderRent"
           @claimRent="claimRent"
@@ -760,6 +783,7 @@ export default {
       activeInfo: false,
       chat_count: 0,
       scanlines: JSON.parse(localStorage.getItem("scanlines")) ?? true,
+      chatsound: JSON.parse(localStorage.getItem("chatsound")) ?? true,
       posX: 1,
       posY: 1,
       musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
@@ -850,6 +874,17 @@ export default {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
     },
+    findUnit(id) {
+      let tank = store.unitsFromKeys[id];
+      console.log(tank);
+      if (tank) {
+        this.teleportation({ x: tank.posX, y: tank.posY });
+      }
+    },
+    isEmoji(text) {
+      if (/\p{Extended_Pictographic}/u.test(text)) return true;
+      else return false;
+    },
     onChatMessage(message) {
       this.store.messages.push(message);
       let chat = this.$refs.chat_block;
@@ -858,6 +893,12 @@ export default {
       }, 100);
       if (this.chat_hidden) {
         this.chat_count++;
+        if (this.chatsound) {
+          Sound.from({
+            url: `./assets/chat.mp3`,
+            volume: 1,
+          }).play();
+        }
       }
       if (message.id) {
         let tank = store.unitsFromKeys[message.id];
@@ -898,6 +939,10 @@ export default {
     changeScanlines(val) {
       this.scanlines = val;
       localStorage.setItem("scanlines", val);
+    },
+    changeChatSound(val) {
+      this.chatsound = val;
+      localStorage.setItem("chatsound", val);
     },
     changeTab(num) {
       if (this.tab === this.tabs[num] && this.show) this.show = false;
@@ -1476,7 +1521,7 @@ export default {
         await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
         return 0;
       }
-      moveUnit(tank, ground);
+      await moveUnit(tank, ground);
       if (ground.type === "garage") {
         let tp = new AnimatedSprite(
           ["1.png", "2.png", "3.png"].map(el =>
@@ -1492,7 +1537,10 @@ export default {
         tank.addChild(tp);
         window.sound("teleport");
         setTimeout(async () => {
+          gsap.to(tank.scale, { x: 1.1, y: 1.1, duration: 1 });
           await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
+          tank.scale.x = 1;
+          tank.scale.y = 1;
           tank.removeChild(tp);
         }, 1000);
       }

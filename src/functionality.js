@@ -205,7 +205,7 @@ async function enableInteractiveMap(target, zone, renderMap, vue) {
   target.addEventListener("mousewheel", e => {
     let { x, y } = zone.scale;
     let k = 1.02;
-    if (e.deltaY > 0 && x > 0.1) {
+    if (e.deltaY > 0 && x > 0.3) {
       zone.y +=
         ((store.cellsInLine * (128 - 2)) / 2) * zone.scale.y * (1 - 1 / k);
       zone.scale.x /= k;
@@ -290,7 +290,7 @@ async function enableInteractiveMap(target, zone, renderMap, vue) {
       var diff2 = tpCache.rightFinger.clientX - rightFinger.clientX;
       let diff = -(diff1 + diff2);
 
-      if ((diff > 0 && x < 1.5) || (diff < 0 && x > 0.05)) {
+      if ((diff > 0 && x < 1.5) || (diff < 0 && x > 0.4)) {
         zone.scale.x += diff / 300;
         zone.scale.y += diff / 300;
         zone.x -= diff;

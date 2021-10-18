@@ -304,7 +304,7 @@ function createUnits(arr, handler) {
           },
         };
       }
-      if (text.length === 2) options.fontSize = 55;
+      if (/\p{Extended_Pictographic}/u.test(text)) options.fontSize = 55;
       let node = new Text(text, options);
       node.zIndex = 12;
       this.addChild(node);
