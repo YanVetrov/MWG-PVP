@@ -231,13 +231,19 @@ select {
   overflow: visible !important;
 }
 
-canvas {
+body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -webkit-overflow-scrolling: touch;
   overflow: hidden;
   font-family: "metalwar", sans-serif;
   font-weight: bold;
+}
+
+.chat_container {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -webkit-overflow-scrolling: auto;
 }
 
 button {

@@ -1319,6 +1319,7 @@ export default {
         };
         this.store.selfUnits.push(vueTank);
       }
+      sortUnit(newTank, store.unit, store.visibleZone, store.gameScene);
       return newTank;
     },
     setObjectOnMap(el) {

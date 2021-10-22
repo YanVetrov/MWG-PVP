@@ -528,6 +528,7 @@ function createUnits(arr, handler) {
       container.scale.y = 1.3;
     }
     container.health = el.hp;
+    container.zIndex = el.x + el.y;
     return container;
   });
 }
@@ -654,7 +655,6 @@ async function getIngameTanks(
         handler();
       } else {
         let allTanks = Object.values(units);
-        console.log(allTanks);
         allTanks.forEach(async el => {
           unitChanges(el);
         });
@@ -663,7 +663,6 @@ async function getIngameTanks(
       try {
         let data = JSON.parse(message.data);
         if (data.type === "units" && data.data) {
-          console.log(data);
           let allTanks = Object.values(units);
           allTanks.forEach(el => unitChanges(el));
         }
