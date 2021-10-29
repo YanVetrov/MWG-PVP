@@ -1075,7 +1075,7 @@ export default {
       stuffs.forEach(el => {
         let stuff = createObjectOnMap({
           name: "stuff",
-          image: `metal/7`,
+          image: el.type === "PUMPKIN" ? "pumpkin" : `metal/7`,
           posX: el.posX,
           posY: el.posY,
           scaled: 0.35,
