@@ -381,6 +381,7 @@ function getDirection(fromPlace = {}, toPlace = {}) {
   return "ul";
 }
 function setUnit(unit, ground, unclickable = false, type) {
+  if (!unit || !ground) return 0;
   if (type === "garage") {
     unit.posX = ground.posX;
     unit.posY = ground.posY;
