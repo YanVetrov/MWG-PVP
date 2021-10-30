@@ -206,6 +206,8 @@
               <span>{{ store.unique.MWM }} MWM</span>
               |
               <span> {{ store.unique.MECH }} MECH </span>
+              |
+              <span> {{ store.unique.PUMPKIN }} PUMPKIN </span>
             </div>
 
             <div
@@ -564,6 +566,7 @@
           :CDT="store.unique.CDT"
           :PDT="store.unique.PDT"
           :MDT="store.unique.MDT"
+          :pumpkin="store.unique.PUMPKIN"
           :scanlines="scanlines"
           :chatsound="chatsound"
           :players="store.allUnits"

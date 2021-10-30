@@ -964,6 +964,8 @@ async function report({ order_id }) {
 }
 async function shardsToNft({ shardCode }) {
   let account = await store.user.getAccountName();
+  let limit = 500;
+  if (shardCode === "PUMPKIN") limit = 1000;
   let response = await transaction({
     user: store.user,
     name: "transfer",
@@ -972,7 +974,7 @@ async function shardsToNft({ shardCode }) {
       from: account,
       to: "metalwargame",
       memo: `craft:${shardCode}`,
-      quantity: `500 ${shardCode}`,
+      quantity: `${limit} ${shardCode}`,
     },
   });
   return errorHandler(response);

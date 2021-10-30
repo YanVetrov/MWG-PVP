@@ -1,22 +1,28 @@
 <template>
   <div>
     <span class="shards_name">{{ name }}</span>
-    <img :key="0" :src="require(`~/assets/${image.split('.')[0]}_crash.png`)" />
+    <img
+      v-if="code !== 'PUMPKIN'"
+      :key="0"
+      :src="require(`~/assets/${image.split('.')[0]}_crash.png`)"
+    />
+    <img v-else style="filter:none" :key="0" src="../assets/pumpkin_card.png" />
     <span style="font-size:17px"
-      ><span :style="{ color: shards < 500 ? 'orange' : 'green' }">{{
+      ><span :style="{ color: shards < limit ? 'orange' : 'green' }">{{
         shards
       }}</span
-      >/500</span
+      >/{{ limit }}</span
     >
     <div
       @click="$emit('shardsToNft', { shardCode: code })"
-      :style="{ opacity: shards < 500 ? 0.5 : 1 }"
+      :style="{ opacity: shards < limit ? 0.5 : 1 }"
       class="button raid"
     >
       CRAFT UNIT
     </div>
     <div
       style="display:flex;justify-content:space-around;width:100%;align-items:center"
+      v-if="code !== 'PUMPKIN'"
     >
       <div
         style="padding:2px;margin:2px"
@@ -39,6 +45,7 @@
     <div
       @click="$emit('craftMech', { count, shardCode: code })"
       class="button raid"
+      v-if="code !== 'PUMPKIN'"
     >
       GET {{ mechFromShards }} MECH TOKENS
     </div>
@@ -88,6 +95,10 @@ export default {
   computed: {
     mechFromShards() {
       return this.count * this.mechShard ?? 0;
+    },
+    limit() {
+      if (this.code === "PUMPKIN") return 1000;
+      else return 500;
     },
   },
 };

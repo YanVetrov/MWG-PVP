@@ -14,6 +14,16 @@
         :code="tank.shardCode"
         :mechShard="tank.mechShard"
       />
+      <shard
+        class="shards_point"
+        @shardsToNft="$emit('shardsToNft', $event)"
+        @craftMech="$emit('craftMech', $event)"
+        :ident="2"
+        :name="'pumpkin'"
+        :shards="pumpkin"
+        :code="'PUMPKIN'"
+        :mechShard="0"
+      />
     </div>
     <!-- <div class="shards_line" style="height:9%">
       <div
@@ -47,6 +57,6 @@
 import shard from "./shard.vue";
 export default {
   components: { shard },
-  props: ["shards", "balance"],
+  props: ["shards", "balance", "pumpkin"],
 };
 </script>
