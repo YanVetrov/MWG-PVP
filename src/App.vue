@@ -133,7 +133,7 @@
             <div class="bar_unit" v-for="k in filteredUnits" :key="k.asset_id">
               <img
                 @click="uiClick(k)"
-                :src="`./assets/cards/${k.name}/dr.png`"
+                :src="`./assets/cards/${k.image}/dr.png`"
               />
               <timer
                 style="position:absolute;top:0;color:gray"
