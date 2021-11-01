@@ -2,7 +2,7 @@
   <div class="units_container">
     <div class="units_line" v-for="tank in unusedUnits" :key="tank.id">
       <div class="units_image" @click="$emit('stakeUnit', { id: tank.id })">
-        <img :src="require(`~/assets/cards/${tank.name}/dr.png`)" />
+        <img :src="require(`~/assets/cards/${tank.image}/dr.png`)" />
         Click to use in game
       </div>
     </div>
