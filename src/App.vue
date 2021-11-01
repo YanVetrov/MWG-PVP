@@ -1935,6 +1935,15 @@ export default {
     },
     async unitAction(unit, target, ground) {
       unit.unit.direction = getDirection(unit.ground, target);
+      if (unit.unit.name === "trilobit") {
+        let { x, y } = unit;
+        await gsap.to(unit, { x: target.x, y: target.y });
+        await shuffleUnit(unit);
+        await shuffleUnit(unit);
+        await shuffleUnit(unit);
+        await gsap.to(unit, { x, y });
+        return true;
+      }
       let action = unit.unit.action;
       let crash = new AnimatedSprite(
         action.crash.map(el => Texture.from(`./assets/${el}`))

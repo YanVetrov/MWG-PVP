@@ -185,7 +185,7 @@ function createUnits(arr, handler) {
     );
     directions.forEach(key => {
       sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`);
-      if (el.type !== "validator") {
+      if (el.type !== "validator" && !el.monster) {
         if (!sprite.broken) sprite.broken = {};
         sprite.broken[key] = Texture.from(
           `./assets/cards/${el.image}/broken/${key}.png`
@@ -266,7 +266,7 @@ function createUnits(arr, handler) {
     });
     let color = el.self ? 0x00ffaa : 0xff3377;
     if (store.friends[el.owner]) color = 0x3377ff;
-    if (store.npc[el.owner]) color = 0xc3c507;
+    if (store.npc[el.owner] || el.monster) color = 0xc3c507;
     container.owner = new Text(
       `${el.owner || "Enemy"}${store.npc[el.owner] ? "[NPC]" : ""}`,
       {
@@ -277,6 +277,7 @@ function createUnits(arr, handler) {
         strokeThickness: 2,
       }
     );
+    if (el.monster) container.owner.text = el.name;
     container.owner.zIndex = 4;
     if (store.admins[el.owner]) container.admin = true;
     container.alphaCounter = async function(
@@ -371,7 +372,7 @@ function createUnits(arr, handler) {
     let capacityBar = new Container();
     capacityBar.x = 50;
     capacityBar.y = 30;
-    container.addChild(capacityBar);
+    if (!el.monster) container.addChild(capacityBar);
     capacityBar.zIndex = 3;
     let innerBar1 = new Graphics();
     innerBar1.beginFill(0x333);
