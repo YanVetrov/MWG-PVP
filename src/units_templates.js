@@ -251,7 +251,7 @@ let base = [
     locked: false,
     unlockedTime: 0,
     inGame: false,
-    image: "elephantor",
+    image: "pumpkin_elephantor",
     shards: null,
     shardCode: "SHE",
     shardCount: 10,
