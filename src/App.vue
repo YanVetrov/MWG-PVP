@@ -1360,7 +1360,7 @@ export default {
       }
       let x = !isNaN(el.posX) && el.posY <= 300 ? el.posX - 1 : randomX;
       let y = !isNaN(el.posY) && el.posX <= 300 ? el.posY - 1 : randomY;
-      console.log()
+      console.log();
       if (!store.map.length) return 0;
       setUnit(el, store.map[y][x], true, el.type);
       store.gameScene.addChild(el);
@@ -1545,7 +1545,7 @@ export default {
         return 0;
       } else {
         let actionLog = {
-          unit: tank.unit.name,
+          unit: tank.unit.image,
           x: tank.posX,
           y: tank.posY,
           time: Date.now(),
