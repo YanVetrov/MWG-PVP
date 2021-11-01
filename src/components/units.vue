@@ -42,7 +42,7 @@
           </div>
           <img
             :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
-            :src="require(`~/assets/cards/${tank.name}/dr.png`)"
+            :src="require(`~/assets/cards/${tank.image}/dr.png`)"
           />
           <button
             @click="$emit('unstake', { id: tank.asset_id })"
