@@ -631,6 +631,8 @@ async function getIngameTanks(
       if (Object.keys(units).length > 1000) {
         store.vue.loadings.push("units ready");
         let allTanks = Object.values(units);
+
+        console.log(allTanks.filter(el => el.owner === "metalwartest"));
         store.vue.store.allUnits = units;
         store.vue.store.players.all = allTanks.length;
         let arr = [];
