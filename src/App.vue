@@ -2277,9 +2277,11 @@ export default {
       });
       let cpu = await store.user.rpc.get_account(store.user.accountName);
       this.store.cpu = cpu.cpu_limit;
-      this.store.waxBalance = Number(
-        cpu.core_liquid_balance.split(" ")[0]
-      ).toFixed(2);
+      if (cpu && cpu.core_liquid_balance)
+        this.store.waxBalance = Number(
+          cpu.core_liquid_balance.split(" ")[0]
+        ).toFixed(2);
+
       let collectibles = res2.rows.reduce((acc, el) => {
         let tank = unique_templates.find(key => el.template_id === key.id);
         if (!tank) return acc;
