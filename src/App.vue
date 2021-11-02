@@ -1936,12 +1936,14 @@ export default {
     async unitAction(unit, target, ground) {
       unit.unit.direction = getDirection(unit.ground, target);
       if (unit.unit.name === "trilobit") {
-        let { x, y } = unit;
-        await gsap.to(unit, { x: target.x, y: target.y });
-        await shuffleUnit(unit);
-        await shuffleUnit(unit);
-        await shuffleUnit(unit);
-        await gsap.to(unit, { x, y });
+        setTimeout(async () => {
+          let { x, y } = unit;
+          await gsap.to(unit, { x: target.x, y: target.y });
+          await shuffleUnit(unit);
+          await shuffleUnit(unit);
+          await shuffleUnit(unit);
+          await gsap.to(unit, { x, y });
+        }, 2000);
         return true;
       }
       let action = unit.unit.action;
