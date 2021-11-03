@@ -1,5 +1,10 @@
 <template>
   <div class="shards_cards" style="height:88%">
+    <div class="end_shards">
+      <span> remaining time of unit crafting </span>[<timer
+        :time="new Date('2021-11-07T19:00:00')"
+      />]
+    </div>
     <div class="shards_line">
       <shard
         class="shards_point"
@@ -55,8 +60,17 @@
 </template>
 <script>
 import shard from "./shard.vue";
+import timer from "./timer.vue";
 export default {
-  components: { shard },
+  components: { shard, timer },
   props: ["shards", "balance", "pumpkin"],
 };
 </script>
+<style scoped>
+.end_shards {
+  color: red;
+  display: flex;
+  justify-content: center;
+  font-size: 25px;
+}
+</style>

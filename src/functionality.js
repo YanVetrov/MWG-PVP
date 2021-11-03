@@ -146,7 +146,7 @@ async function sortUnit(unit, activeUnit, zone, container) {
 }
 function isAvailableMove(unit, target) {
   if (!unit || !target) return false;
-  if (unit.unit.name === "trilobit") return true;
+  if (unit.unit && unit.unit.monster) return true;
   let multiX = Math.abs(unit.posX - target.posX);
   let multiY = Math.abs(unit.posY - target.posY);
   let available = 1;

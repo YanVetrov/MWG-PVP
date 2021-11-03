@@ -658,6 +658,7 @@ async function getIngameTanks(
         handler();
       } else {
         let allTanks = Object.values(units);
+        console.log(allTanks);
         allTanks.forEach(async el => {
           unitChanges(el);
         });
@@ -667,6 +668,7 @@ async function getIngameTanks(
         let data = JSON.parse(message.data);
         if (data.type === "units" && data.data) {
           let allTanks = Object.values(units);
+          console.log(allTanks);
           allTanks.forEach(el => unitChanges(el));
         }
         if (data.text && data.owner) {
