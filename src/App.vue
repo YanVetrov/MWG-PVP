@@ -289,6 +289,18 @@
               <div>PLAYERS</div>
               <img src="./assets/users.svg" />
             </div>
+            <div
+              class="bar_button"
+              :class="{ active_bar_button: tab === tabs[8] && show }"
+              @click="
+                changeTab(8);
+                changeLastRead();
+              "
+            >
+              <div>NEWS</div>
+              <span v-if="news_count" class="red_dot">!</span>
+              <img src="./assets/news.svg" />
+            </div>
           </div>
         </div>
         <div class="chat_container" :class="{ chat_hidden }" v-show="!show">
@@ -626,6 +638,7 @@ import unique from "./components/unique.vue";
 import packs from "./components/packs.vue";
 import settings from "./components/settings.vue";
 import orders from "./components/orders.vue";
+import news from "./components/news.vue";
 import notify from "./components/notify.vue";
 import players from "./components/players.vue";
 import base from "./units_templates.js";
@@ -639,6 +652,7 @@ let tabs = [
   { name: "Settings", component: settings },
   { name: "Stake units", component: unusedUnits },
   { name: "Players", component: players },
+  { name: "News", component: news },
   // { name: "Game", component: game },
 ];
 let packs_templates = [
@@ -794,6 +808,8 @@ export default {
       chatsound: JSON.parse(localStorage.getItem("chatsound")) ?? true,
       posX: 1,
       posY: 1,
+      last_news: 1636137080275,
+      last_read: JSON.parse(localStorage.getItem("last_read")) ?? 0,
       musicEnabled: JSON.parse(localStorage.getItem("musicEnabled")),
       musicTitle: "MWG Radio - vol.1",
       confirms: {
@@ -853,6 +869,13 @@ export default {
         el => el.posX === this.store.garageX && el.posY === this.store.garageY
       );
     },
+    news_count() {
+      if (this.last_news > this.last_read) {
+        return 1;
+      } else {
+        return 0;
+      }
+    },
     garages() {
       return store.objectsOnMap.filter(el => el.type === "garage");
     },
@@ -881,6 +904,10 @@ export default {
   methods: {
     dropStuffTransaction(ev) {
       return dropStuffTransaction(ev);
+    },
+    changeLastRead() {
+      this.last_read = Date.now();
+      localStorage.setItem("last_read", this.last_read);
     },
     findUnit(id) {
       let tank = store.unitsFromKeys[id];
