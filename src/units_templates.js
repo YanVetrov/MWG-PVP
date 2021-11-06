@@ -35,8 +35,8 @@ let base = [
     load: true,
     lvl: 4,
     repairing: false,
-    diffX: 50,
-    diffY: -30,
+    diffX: 60,
+    diffY: -10,
     mechShard: 7,
     size: 150,
     action: {
@@ -75,8 +75,8 @@ let base = [
     load: true,
     lvl: 3,
     repairing: false,
-    diffX: 50,
-    diffY: -30,
+    diffX: 60,
+    diffY: -20,
     mechShard: 10,
     size: 150,
     action: {
@@ -179,8 +179,8 @@ let base = [
     discountTypeEnabled: false,
     lvl: 5,
     repairing: false,
-    diffX: 60,
-    diffY: -30,
+    diffX: 70,
+    diffY: -10,
     mechShard: 6,
     size: 130,
     action: {

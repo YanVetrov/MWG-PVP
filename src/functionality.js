@@ -42,15 +42,16 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
 function getMontain(frames, store, id) {
   let names = Object.keys(frames);
   let container = new Container();
-  let sprite = new Sprite(id["Wall005.png"]);
+  let sprite = Sprite.from("./assets/Wall005.png");
   let random = Math.ceil(Math.random() * names.length - 1);
   let name = names[random];
   let mountain = new Sprite(store[name]);
   mountain.width = 200;
-  mountain.height = 200;
+  mountain.height = 150;
   sprite.width = 256;
-  container.height = 128;
-  mountain.x = 30;
+  container.height = 150;
+  container.width = 256;
+  mountain.x = 1;
   mountain.y = -70;
   container.addChild(sprite);
   container.addChild(mountain);
@@ -120,7 +121,7 @@ function initMap(arr, store, count) {
     let name = arr[random];
     let sprite;
     if (x <= 10 && y <= 10) sprite = Sprite.from("./assets/city.png");
-    else sprite = new Sprite(store[name]);
+    else sprite = Sprite.from(`./assets/${arr[random]}`);
     sprite.posX = x;
     sprite.posY = y;
     if (i % multiplier === 0) map.push([]);
@@ -178,7 +179,7 @@ function centerVisibleZone(zone, renderMap) {
   }
 
   let dx = ((256 - 2) / 2) * zone.scale.x;
-  let dy = ((128 - 2) / 2) * zone.scale.y;
+  let dy = ((150 - 2) / 2) * zone.scale.y;
 
   let centerX = window.innerWidth / 2;
   let centerY = window.innerHeight / 2 - dy * store.cellsInLine + dy * 3;
@@ -208,13 +209,13 @@ async function enableInteractiveMap(target, zone, renderMap, vue) {
     let k = 1.02;
     if (e.deltaY > 0 && x > 0.3) {
       zone.y +=
-        ((store.cellsInLine * (128 - 2)) / 2) * zone.scale.y * (1 - 1 / k);
+        ((store.cellsInLine * (150 - 2)) / 2) * zone.scale.y * (1 - 1 / k);
       zone.scale.x /= k;
       zone.scale.y /= k;
     }
     if (e.deltaY < 0 && x < 1.5) {
       zone.y +=
-        ((store.cellsInLine * (128 - 2)) / 2) * zone.scale.y * (1 - 1 * k);
+        ((store.cellsInLine * (150 - 2)) / 2) * zone.scale.y * (1 - 1 * k);
       zone.scale.x *= k;
       zone.scale.y *= k;
     }

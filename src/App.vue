@@ -1624,17 +1624,18 @@ export default {
     },
     addSprite(target, i) {
       let index = i;
-      let multipler = (128 - 2) * Math.ceil(i / store.cellsInLine) - 1;
-      let multiplerX = -(256 * Math.floor(i / store.cellsInLine));
+      let multipler = (150 - 2) * Math.ceil(i / store.cellsInLine) - 1;
+      let multiplerX = -(256 * Math.floor(i / store.cellsInLine)) ;
       // let multiplerX = 0;
       if (multipler === 0) multipler = 200;
       // if (index === 0) i = 1;
       i = i % store.cellsInLine;
       target.x = (i * (256 - 2)) / 2 - 250 + multiplerX / 2 + i;
       if (i === 0) i = 1;
-      target.y = (i * (128 - 2)) / 2 - 250 + multipler / 2;
+      target.y = (i * (150 - 2)) / 2 - 250 + multipler / 2;
       target.interactive = true;
       target.buttonMode = true;
+      // if (!target.isSprite) target.zIndex = store.cellsInLine - i;
 
       store.gameScene.addChild(target);
       if (target.unclickable) return 0;
@@ -1686,10 +1687,10 @@ export default {
         }
       });
       target.on("pointerup", e => this.clickSprite(target, event));
-      target.hitArea = new Polygon([0, 64, 127, 0, 254, 64, 129, 127]);
+      target.hitArea = new Polygon([0, 75, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(target.unit);
+      console.log(target);
       try {
         if (target.blocked) return 0;
         target.blocked = true;
