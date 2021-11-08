@@ -182,7 +182,7 @@ let base = [
     diffX: 70,
     diffY: -10,
     mechShard: 6,
-    size: 130,
+    size: 180,
     action: {
       ur: { x: 150, y: -120, angle: 50 },
       r: { x: 250, y: 15, angle: 100 },

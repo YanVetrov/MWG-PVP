@@ -1154,10 +1154,11 @@ export default {
     },
     async checkUnitChange(unit) {
       this.store.allUnits[unit.asset_id] = unit;
-      
+
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
-        return this.addUnit(unit);
+        if (unit.action_data === "unitmove") return this.addUnit(unit);
+        else return 0;
       }
       if (unit.owner === store.user.accountName) {
         let vueTank = this.store.selfUnits.find(
@@ -1182,7 +1183,6 @@ export default {
         this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
       }
       if (localTank.lockedTime !== unit.next_availability * 1000) {
-        
         localTank.lockedTime = unit.next_availability * 1000;
       }
       if (
@@ -1972,7 +1972,11 @@ export default {
           await shuffleUnit(unit);
           await shuffleUnit(unit);
           await shuffleUnit(unit);
-          await gsap.to(unit, { x, y });
+          this.onUnitMove({
+            id: unit.unit.asset_id,
+            x: unit.posX,
+            y: unit.posY,
+          });
         }, 2000);
         return true;
       }
