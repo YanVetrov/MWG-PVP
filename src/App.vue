@@ -1154,9 +1154,7 @@ export default {
     },
     async checkUnitChange(unit) {
       this.store.allUnits[unit.asset_id] = unit;
-      if (unit.owner === "metalwartest") {
-        let localTank = store.unitsFromKeys[unit.asset_id];
-      }
+      
       let localTank = store.unitsFromKeys[unit.asset_id];
       if (!localTank) {
         return this.addUnit(unit);
@@ -1184,6 +1182,7 @@ export default {
         this.onUnitMove({ id: unit.asset_id, x: unit.x, y: unit.y });
       }
       if (localTank.lockedTime !== unit.next_availability * 1000) {
+        
         localTank.lockedTime = unit.next_availability * 1000;
       }
       if (
@@ -1446,6 +1445,9 @@ export default {
       store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
+      store.gameScene.children.forEach(el => store.gameScene.removeChild(el));
       store.visibleZone.forEach((el, i) => this.addSprite(el, i));
       store.unitsInVisibleZone.forEach(el =>
         sortUnit(el, store.unit, store.visibleZone, store.gameScene)
@@ -1625,7 +1627,7 @@ export default {
     addSprite(target, i) {
       let index = i;
       let multipler = (150 - 2) * Math.ceil(i / store.cellsInLine) - 1;
-      let multiplerX = -(256 * Math.floor(i / store.cellsInLine)) ;
+      let multiplerX = -(256 * Math.floor(i / store.cellsInLine));
       // let multiplerX = 0;
       if (multipler === 0) multipler = 200;
       // if (index === 0) i = 1;
