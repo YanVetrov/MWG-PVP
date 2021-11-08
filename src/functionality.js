@@ -42,7 +42,7 @@ function createJoystic({ x = 0, y = 0, angle = 0 }, handler) {
 function getMontain(frames, store, id) {
   let names = Object.keys(frames);
   let container = new Container();
-  let sprite = Sprite.from("./assets/Wall005.png");
+  let sprite = Sprite.from("./assets/sWall005.png");
   let random = Math.ceil(Math.random() * names.length - 1);
   let name = names[random];
   let mountain = new Sprite(store[name]);
@@ -121,7 +121,7 @@ function initMap(arr, store, count) {
     let name = arr[random];
     let sprite;
     if (x <= 10 && y <= 10) sprite = Sprite.from("./assets/city.png");
-    else sprite = Sprite.from(`./assets/${arr[random]}`);
+    else sprite = Sprite.from(`./assets/s${arr[random]}`);
     sprite.posX = x;
     sprite.posY = y;
     if (i % multiplier === 0) map.push([]);

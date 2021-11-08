@@ -303,7 +303,7 @@ let base = [
     lvl: 6,
     repairing: false,
     mechShard: 4,
-    size: 120,
+    size: 180,
     action: defaultAction,
   },
   {
