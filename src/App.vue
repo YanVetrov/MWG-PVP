@@ -1542,7 +1542,62 @@ export default {
         await sortUnit(tank, store.unit, store.visibleZone, store.gameScene);
         return 0;
       }
+      tank.unit.direction = getDirection(tank.ground, ground);
+      let direction = tank.unit.direction;
+      let dust = new AnimatedSprite(
+        [
+          "1.png",
+          "2.png",
+          "3.png",
+          "4.png",
+          "5.png",
+          "6.png",
+          "7.png",
+        ].map(el => Texture.from(`./assets/dust/${el}`))
+      );
+      let dir = {
+        ur: { x: -20, y: 20 },
+        r: { x: -20, y: 0 },
+        dr: { x: -20, y: -20 },
+        u: { x: 0, y: 10 },
+
+        ul: { x: 20, y: 20 },
+        l: { x: 20, y: 0 },
+        dl: { x: 20, y: -20 },
+        d: { x: 0, y: -20 },
+      };
+      dust.x = tank.x + dir[direction].x;
+      dust.y = tank.y + dir[direction].y;
+      dust.animationSpeed = 0.5;
+      dust.play();
+      dust.width = tank.unit.width / 1.5;
+      dust.height = tank.unit.height / 1.5;
+
+      store.gameScene.addChild(dust);
+      await gsap.to(dust, {
+        duration: 0.5,
+        delay: 0.5,
+        alpha: 0,
+        onComplete: () => {
+          store.gameScene.removeChild(dust);
+        },
+      });
+      console.log(dust);
+      let dustFinish = Sprite.from(`./assets/dust_finish/${direction}.png`);
+      dustFinish.x = tank.unit.x + dir[direction].x;
+      dustFinish.y = tank.unit.y + dir[direction].y;
+      dustFinish.width = tank.unit.width;
+      dustFinish.height = tank.unit.width;
+      tank.addChild(dustFinish);
       await moveUnit(tank, ground);
+      gsap.to(dustFinish, {
+        duration: 1,
+        alpha: 0,
+        onComplete: () => {
+          tank.removeChild(dustFinish);
+        },
+      });
+      console.log(dustFinish);
       if (ground.type === "garage") {
         let tp = new AnimatedSprite(
           ["1.png", "2.png", "3.png"].map(el =>
@@ -1903,7 +1958,7 @@ export default {
             el.unit.alpha = 1;
             el.stopTimer();
           } else {
-            el.unit.alpha = 0.7;
+            el.unit.alpha = 1;
             // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
             el.setTimer(Math.ceil(el.lockedTime));
           }

@@ -179,8 +179,8 @@ let base = [
     discountTypeEnabled: false,
     lvl: 5,
     repairing: false,
-    diffX: 70,
-    diffY: -10,
+    diffX: 50,
+    diffY: -20,
     mechShard: 6,
     size: 180,
     action: {
