@@ -1386,7 +1386,6 @@ export default {
       }
       let x = !isNaN(el.posX) && el.posY <= 300 ? el.posX - 1 : randomX;
       let y = !isNaN(el.posY) && el.posX <= 300 ? el.posY - 1 : randomY;
-      console.log();
       if (!store.map.length) return 0;
       setUnit(el, store.map[y][x], true, el.type);
       store.gameScene.addChild(el);
@@ -1559,10 +1558,7 @@ export default {
         tank.addChild(tp);
         window.sound("teleport");
         setTimeout(async () => {
-          gsap.to(tank.scale, { x: 1.1, y: 1.1, duration: 1 });
           await gsap.to(tank, { alpha: 0, y: tank.y - 200, duration: 1 });
-          tank.scale.x = 1;
-          tank.scale.y = 1;
           tank.removeChild(tp);
         }, 1000);
       }
@@ -1692,7 +1688,6 @@ export default {
       target.hitArea = new Polygon([0, 75, 127, 0, 254, 64, 129, 127]);
     },
     async clickSprite(target, event) {
-      console.log(target);
       try {
         if (target.blocked) return 0;
         target.blocked = true;

@@ -221,11 +221,8 @@ function createUnits(arr, handler) {
       },
       set(val) {
         if (!val) return "invalid";
-        let scale = this.scale.x;
         this.dir = val;
         this.texture = this[val];
-        this.scale.x = scale;
-        this.scale.y = scale;
       },
     });
     container.name = el.name;
