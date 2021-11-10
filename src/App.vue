@@ -2096,6 +2096,12 @@ export default {
           ease: "Expo.easeIn",
         });
       }
+      gsap.to(target.unit, {
+        x: target.unit.x + 2,
+        y: target.unit.y + 2,
+        duration: 0.1,
+        repeat: 3,
+      });
       try {
         Sound.from({
           url: `./assets/cards/${unit.unit.name}/destroy.mp3`,

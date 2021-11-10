@@ -187,8 +187,16 @@ function createUnits(arr, handler) {
       sprite[key] = Texture.from(`./assets/cards/${el.image}/${key}.png`);
       if (el.type !== "validator" && !el.monster) {
         if (!sprite.broken) sprite.broken = {};
+        if (!sprite.hp20) sprite.hp20 = {};
+        if (!sprite.hp50) sprite.hp50 = {};
         sprite.broken[key] = Texture.from(
           `./assets/cards/${el.image}/broken/${key}.png`
+        );
+        sprite.hp20[key] = Texture.from(
+          `./assets/cards/${el.image}/20hp/${key}.png`
+        );
+        sprite.hp50[key] = Texture.from(
+          `./assets/cards/${el.image}/50hp/${key}.png`
         );
       }
       if (el.type === "validator") {
@@ -222,7 +230,10 @@ function createUnits(arr, handler) {
       set(val) {
         if (!val) return "invalid";
         this.dir = val;
-        this.texture = this[val];
+        let percent = (this.hp / this.strength) * 100;
+        if (percent <= 50) return (this.texture = this.hp50[val]);
+        if (percent <= 30) return (this.texture = this.hp20[val]);
+        if (percent > 50) this.texture = this[val];
       },
     });
     container.name = el.name;
@@ -483,8 +494,14 @@ function createUnits(arr, handler) {
       async set(val) {
         let color = 0x00ff00;
         let percent = (val / this.unit.strength) * 100;
-        if (percent < 30) color = 0xff9999;
-        if (this.unit.hp === 0 && val > 0) {
+        if (percent <= 50) {
+          this.unit.texture = this.unit.hp50[this.unit.direction];
+        }
+        if (percent <= 30) {
+          this.unit.texture = this.unit.hp20[this.unit.direction];
+          color = 0xff9999;
+        }
+        if (percent > 50) {
           this.unit.texture = this.unit[this.unit.direction];
         }
         this.healthBar.width = (val / this.unit.strength) * 100 || 1;
