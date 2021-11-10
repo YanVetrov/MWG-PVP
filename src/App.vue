@@ -1574,6 +1574,7 @@ export default {
       dust.height = tank.unit.height / 1.5;
 
       store.gameScene.addChild(dust);
+      gsap.to(tank.unit, { x: tank.unit.x + 2, duration: 0.2, repeat: 5 });
       await gsap.to(dust, {
         duration: 0.5,
         delay: 0.5,
@@ -1583,7 +1584,13 @@ export default {
         },
       });
       console.log(dust);
-      let dustFinish = Sprite.from(`./assets/dust_finish/${direction}.png`);
+      let dustFinish = new AnimatedSprite(
+        [`2${direction}.png`, `${direction}.png`].map(el =>
+          Texture.from(`./assets/dust_finish/${el}`)
+        )
+      );
+      dustFinish.play();
+      dustFinish.animationSpeed = 0.1;
       dustFinish.x = tank.unit.x + dir[direction].x;
       dustFinish.y = tank.unit.y + dir[direction].y;
       dustFinish.width = tank.unit.width;

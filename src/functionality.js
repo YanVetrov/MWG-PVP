@@ -351,7 +351,7 @@ async function moveUnit(unit, ground) {
     x: ground.x + x,
     y: ground.y + y,
     duration: 0.5,
-    ease: "back.out(1)",
+    ease: "back.inOut(1)",
   });
   // unit.lockedTime = Date.now() + 10000;
   return true;
