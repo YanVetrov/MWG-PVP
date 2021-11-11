@@ -2102,6 +2102,24 @@ export default {
         duration: 0.1,
         repeat: 3,
       });
+      let details = new AnimatedSprite(
+        [1, 2, 3, 4, 5].map(el => Texture.from(`./assets/details/${el}.png`))
+      );
+      details.animationSpeed = 0.3;
+      details.width = 150;
+      details.height = 150;
+      details.x = 75;
+      details.zIndex = 4;
+      target.addChild(details);
+      details.play();
+      gsap.to(details, {
+        alpha: 0,
+        duration: 0.5,
+        delay: 0.2,
+        ease: "Expo.easeIn",
+        onComplete:()=>target.removeChild(details)
+      });
+      console.log(details);
       try {
         Sound.from({
           url: `./assets/cards/${unit.unit.name}/destroy.mp3`,
