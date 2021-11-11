@@ -603,6 +603,18 @@ async function getIngameTanks(
       })
     );
   });
+  objectsOnMap.push(
+    createObjectOnMap({
+      name: "labaratory",
+      image: "labaratory",
+      posX: 3,
+      posY: 3,
+      scaled: 0.7,
+      diffX: 5,
+      diffY: -80,
+      type: "labaratory",
+    })
+  );
   anuses.rows.forEach(el => {
     let posX = parseInt(el.location / 100000);
     let posY = parseInt(el.location % 100000);
