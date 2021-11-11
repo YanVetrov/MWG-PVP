@@ -607,8 +607,8 @@ async function getIngameTanks(
     createObjectOnMap({
       name: "labaratory",
       image: "labaratory",
-      posX: 3,
-      posY: 3,
+      posX: 7,
+      posY: 7,
       scaled: 0.7,
       diffX: 5,
       diffY: -80,
