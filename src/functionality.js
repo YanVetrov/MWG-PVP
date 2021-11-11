@@ -391,6 +391,14 @@ function setUnit(unit, ground, unclickable = false, type) {
     ground.type = type;
     return 0;
   }
+  if (type === "labaratory") {
+    unit.posX = ground.posX;
+    unit.posY = ground.posY;
+    unit.ground = ground;
+    ground.unit = unit;
+    ground.unclickable = true;
+    return 0;
+  }
   if (type === "geyser") {
     unit.posX = ground.posX;
     unit.posY = ground.posY;
