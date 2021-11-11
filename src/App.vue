@@ -2022,7 +2022,7 @@ export default {
     },
     async unitAction(unit, target, ground) {
       unit.unit.direction = getDirection(unit.ground, target);
-      if (unit.unit.name === "trilobit") {
+      if (unit.unit.name === "trilobit" || unit.unit.name === "scorpio") {
         setTimeout(async () => {
           let { x, y } = unit;
           await gsap.to(unit, { x: target.x, y: target.y });
@@ -2117,7 +2117,7 @@ export default {
         duration: 0.5,
         delay: 0.2,
         ease: "Expo.easeIn",
-        onComplete:()=>target.removeChild(details)
+        onComplete: () => target.removeChild(details),
       });
       console.log(details);
       try {

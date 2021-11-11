@@ -663,6 +663,7 @@ async function getIngameTanks(
         store.vue.store.allUnits = units;
         store.vue.store.players.all = allTanks.length;
         let arr = [];
+
         allTanks.forEach(el => {
           let tank = parseUnit(el);
           if (tank) arr.push(tank);
@@ -678,6 +679,7 @@ async function getIngameTanks(
         });
         store.vue.store.players.onmap = arr.length;
         console.log(arr.length);
+
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
         store.unitsGetted = true;
