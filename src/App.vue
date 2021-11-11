@@ -1086,6 +1086,9 @@ export default {
       }
     },
     async renderStuff(objStuff) {
+      if (JSON.stringify(objStuff) === store.cashStuff)
+        return console.log("no changes");
+      store.cashStuff = JSON.stringify(objStuff);
       store.gameScene.children
         .filter(el => el.type === "stuff")
         .forEach(el => store.gameScene.removeChild(el));
@@ -1963,11 +1966,11 @@ export default {
           if (Date.now() > el.lockedTime) {
             el.lockedTime = 0;
             el.unit.alpha = 1;
-            el.stopTimer();
+            // el.stopTimer();
           } else {
             el.unit.alpha = 1;
             // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
-            el.setTimer(Math.ceil(el.lockedTime));
+            // el.setTimer(Math.ceil(el.lockedTime));
           }
         });
       }, 1000);

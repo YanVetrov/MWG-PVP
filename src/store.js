@@ -660,7 +660,7 @@ async function getIngameTanks(
         let allTanks = Object.values(units);
 
         console.log(allTanks.filter(el => el.owner === "metalwartest"));
-        store.vue.store.allUnits = units;
+        // store.vue.store.allUnits = units;
         store.vue.store.players.all = allTanks.length;
         let arr = [];
 
@@ -677,9 +677,9 @@ async function getIngameTanks(
           )
             return true;
         });
+        store.vue.store.allUnits = arr;
         store.vue.store.players.onmap = arr.length;
         console.log(arr.length);
-
         store.units = createUnits([...arr], unitOnClickHandler);
         // store.unit = store.units[0];
         store.unitsGetted = true;
