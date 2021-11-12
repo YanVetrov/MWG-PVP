@@ -1966,11 +1966,11 @@ export default {
           if (Date.now() > el.lockedTime) {
             el.lockedTime = 0;
             el.unit.alpha = 1;
-            // el.stopTimer();
+            el.stopTimer();
           } else {
             el.unit.alpha = 1;
             // el.timer = Math.ceil((el.lockedTime - Date.now()) / 1000);
-            // el.setTimer(Math.ceil(el.lockedTime));
+            el.setTimer(Math.ceil(el.lockedTime));
           }
         });
       }, 1000);
