@@ -2025,7 +2025,11 @@ export default {
     },
     async unitAction(unit, target, ground) {
       unit.unit.direction = getDirection(unit.ground, target);
-      if (unit.unit.name === "trilobit" || unit.unit.name === "scorpio") {
+      if (
+        unit.unit.name === "trilobit" ||
+        unit.unit.name === "scorpio" ||
+        unit.unit.name === "spider"
+      ) {
         setTimeout(async () => {
           let { x, y } = unit;
           await gsap.to(unit, { x: target.x, y: target.y });

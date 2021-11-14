@@ -231,9 +231,11 @@ function createUnits(arr, handler) {
         if (!val) return "invalid";
         this.dir = val;
         let percent = (this.hp / this.strength) * 100;
-        if (percent <= 50) return (this.texture = this.hp50[val]);
-        if (percent <= 30) return (this.texture = this.hp20[val]);
-        if (percent > 50) this.texture = this[val];
+        if (!this.unit.monster) {
+          if (percent <= 50) return (this.texture = this.hp50[val]);
+          if (percent <= 30) return (this.texture = this.hp20[val]);
+          if (percent > 50) this.texture = this[val];
+        } else this.texture = this[val];
       },
     });
     container.name = el.name;
@@ -494,15 +496,19 @@ function createUnits(arr, handler) {
       async set(val) {
         let color = 0x00ff00;
         let percent = (val / this.unit.strength) * 100;
-        if (percent <= 50) {
-          this.unit.texture = this.unit.hp50[this.unit.direction];
+        if (!this.unit.monster) {
+          if (percent <= 50) {
+            this.unit.texture = this.unit.hp50[this.unit.direction];
+          }
+          if (percent <= 30) {
+            this.unit.texture = this.unit.hp20[this.unit.direction];
+          }
+          if (percent > 50) {
+            this.unit.texture = this.unit[this.unit.direction];
+          }
         }
         if (percent <= 30) {
-          this.unit.texture = this.unit.hp20[this.unit.direction];
           color = 0xff9999;
-        }
-        if (percent > 50) {
-          this.unit.texture = this.unit[this.unit.direction];
         }
         this.healthBar.width = (val / this.unit.strength) * 100 || 1;
         this.healthBar.tint = color;
