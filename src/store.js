@@ -231,7 +231,7 @@ function createUnits(arr, handler) {
         if (!val) return "invalid";
         this.dir = val;
         let percent = (this.hp / this.strength) * 100;
-        if (!this.unit.monster) {
+        if (!this.monster) {
           if (percent <= 50) return (this.texture = this.hp50[val]);
           if (percent <= 30) return (this.texture = this.hp20[val]);
           if (percent > 50) this.texture = this[val];
