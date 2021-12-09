@@ -40,6 +40,9 @@
               {{ tank.selected ? "-" : "+" }}
             </div>
           </div>
+          <div class="rarity" :class="tank.rarity.toLowerCase()">
+            {{ tank.rarity }}
+          </div>
           <img
             :style="{ opacity: tank.load && !tank.repairing ? 1 : 0.5 }"
             :src="require(`~/assets/cards/${tank.image}/dr.png`)"

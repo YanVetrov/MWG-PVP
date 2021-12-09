@@ -803,6 +803,7 @@ function parseUnit(el) {
   tank = {
     ...el,
     ...tank,
+    rarity: el.rarity,
     inGame: true,
     id: el.asset_id,
     repair: Math.ceil((el.strength - el.hp) / 2),
