@@ -1643,7 +1643,7 @@ export default {
           y: tank.posY,
           time: Date.now(),
           enemy: targetTank.unit.owner,
-          enemyUnit: targetTank.unit.name,
+          enemyUnit: targetTank.unit.image,
           fire: tank.unit.action.textures[2],
         };
         if (this.events[tank.unit.owner])
