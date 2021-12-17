@@ -251,6 +251,10 @@ body {
   color: lightblue;
     text-shadow: 1px 1px 2px darkcyan;
 }
+.epic{
+  color: purple;
+    text-shadow: 1px 1px 1px red;
+}
 .legendary{
   color: whitesmoke;
     text-shadow: 1px 1px 1px red;
