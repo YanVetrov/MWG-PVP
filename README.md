@@ -1,8 +1,8 @@
 # MWG-PVP
 
-######https://game2.metal-war.com/ - PVE
-######https://pvp.metal-war.com/ - PVP
-######https://metal-war.com/ - PROMO LANDING
+#####https://game2.metal-war.com/ - PVE
+#####https://pvp.metal-war.com/ - PVP
+#####https://metal-war.com/ - PROMO LANDING
 ### RU
 Клиентская пвп версия игры METAL WAR GAME, основана на Vue.js и canvas webGL (pixi.js). Не может работать автономно и требует подключения к серверам metal war, блокчейну wax и владению как минимум 1 NFT ассета в коллекции metalwar на аккаунте atomichub. Весь код и ассеты разрешены для любого использования.
 
